@@ -11,7 +11,15 @@ attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap
 L.control.scale({imperial: true, metric: true}).addTo(map);
 
 // shows gpx track on map, currently just one static file
-var gpx = 'static/bennevis.gpx';
-new L.GPX(gpx, {async: true}).on('loaded', function(e) {
-map.fitBounds(e.target.getBounds());
+new L.GPX('static/bennevis.gpx', {
+    async: true,
+    marker_options: {
+      startIconUrl: 'static/pinstart.png',
+      endIconUrl:   'static/pinend.png',
+      shadowUrl: null,
+    },
+  }).on('loaded', function(e) {
+    var gpx = e.target;
+    map.fitBounds(gpx.getBounds());
+    control.addOverlay(gpx, gpx.get_name());
 }).addTo(map);
