@@ -1,5 +1,7 @@
 from app import app
+from flask import render_template
 
+# render map page from templates
 @app.route('/')
-def index():
-    return '<h1>Hello world</h1>'
+def map():
+    return render_template('map.html', title='Map')
