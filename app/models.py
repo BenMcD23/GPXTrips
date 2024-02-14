@@ -14,7 +14,7 @@ class Route(db.Model):
 
 class Plan(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    monthly_cost = db.Column(db.Decimal)
+    monthly_cost = db.Column(db.Float)
 
 class Subscription(db.Model):
     id = db.Column(db.Integer, primary_key=True)
