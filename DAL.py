@@ -18,4 +18,4 @@ def get_route_test():
 
     gpx = route.gpx_data.decode('ascii')
 
-    print(gpx)
+    return gpx
