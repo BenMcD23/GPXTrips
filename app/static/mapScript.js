@@ -1,3 +1,4 @@
+
 // initialize Leaflet
 var map = L.map('map').setView({lon: 0, lat: 0}, 2);
 
@@ -10,16 +11,8 @@ attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap
 // for scale bar, bottom left
 L.control.scale({imperial: true, metric: true}).addTo(map);
 
-// shows gpx track on map, currently just one static file
-new L.GPX('static/bennevis.gpx', {
-    async: true,
-    marker_options: {
-      startIconUrl: 'static/pinstart.png',
-      endIconUrl:   'static/pinend.png',
-      shadowUrl: null,
-    },
-  }).on('loaded', function(e) {
-    var gpx = e.target;
-    map.fitBounds(gpx.getBounds());
-    control.addOverlay(gpx, gpx.get_name());
-}).addTo(map);
+// converts passed GPX into something the API can use
+// why? as when passing the route, all the <> turned into &lt and &gt
+var gpxConvert = function(convert){
+  return $("<span />", { html: convert }).text();
+};

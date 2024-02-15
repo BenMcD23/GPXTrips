@@ -11,17 +11,38 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/gpx.min.js"></script>
     <link rel="stylesheet" href="static/stylesheet.css"/>
 
+    <script src = "https://code.jquery.com/jquery-1.10.2.js"></script>
+
   </head>
   <body>
     <div id="map"></div>
     <script src="static/mapScript.js"></script>
-
+    <script>
+      // for adding the route onto the map
+      new L.GPX(gpxConvert('{{ route }}'), {
+        async: true,
+        marker_options: {
+          startIconUrl: 'static/pinstart.png',
+          endIconUrl:   'static/pinend.png',
+          shadowUrl: null,
+        },
+      }).on('loaded', function(e) {
+        var gpx = e.target;
+        map.fitBounds(gpx.getBounds());
+        control.addOverlay(gpx, gpx.get_name());
+    }).addTo(map);
+  </script>
 
     <h1>File Upload</h1>
-    <form method="POST" action="" enctype="multipart/form-data">
-        <p><input type="file" name="file" accept=".gpx" multiple></p>
-        <p><input type="submit" value="Submit"></p>
-    </form>
+    <div class="form">
+      <form method="POST" action="" name="fileUpload" enctype="multipart/form-data">
+          {{ FileUploadForm.hidden_tag() }}
+          <label for="email">Email</label>
 
+          {{ FileUploadForm.file_upload }}
+          {{ FileUploadForm.submit_file }}
+      </form>
+
+      <p>{{ route }}</p>
   </body>
 </html>
