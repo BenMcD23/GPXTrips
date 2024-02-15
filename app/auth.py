@@ -3,15 +3,25 @@ from app import app, db, bcrypt
 from flask_login import login_user, login_required, logout_user
 from .models import User
 from .forms import RegistrationForm, LoginForm
+from datetime import datetime
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
     form = RegistrationForm()
 
     if form.validate_on_submit():
-        username = request.form.get("username")
+        email = request.form.get("email")
+        first_name = request.form.get("first_name")
+        last_name = request.form.get("last_name")
         password = request.form.get("password")
         confirm_password = request.form.get("confirm_password")
+
+        existing_email = User.query.filter_by(email=email).first()
+        if existing_email:
+            flash(
+                "Email already in use. Please choose a different email.", "error"
+            )
+            return render_template("register.html", title="Register", form=form)
 
         if password != confirm_password:
             flash(
@@ -20,15 +30,18 @@ def register():
             )
             return render_template("register.html", title="Register", form=form)
 
-        existing_user = User.query.filter_by(username=username).first()
-        if existing_user:
-            flash(
-                "Username already taken. Please choose a different username.", "error"
-            )
-            return render_template("register.html", title="Register", form=form)
+        selected_option = form.options.data
+        if selected_option == 'option1':
+            answer = 'You selected Option 1'
+        elif selected_option == 'option2':
+            answer = 'You selected Option 2'
+        elif selected_option == 'option3':
+            answer = 'You selected Option 3'
+        else:
+            answer = 'Invalid option'
 
         hashed_password = bcrypt.generate_password_hash(password)
-        user = User(username=username, password=hashed_password)
+        user = User(email=email, first_name=first_name, last_name=last_name, password_hash=hashed_password, date_created=datetime.now())
         db.session.add(user)
         db.session.commit()
 
@@ -43,7 +56,7 @@ def login():
     form = LoginForm()
 
     if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
+        user = User.query.filter_by(email=form.email.data).first()
         if user:
             if bcrypt.check_password_hash(user.password, form.password.data):
                 flash("Logged in!", category="success")
@@ -53,7 +66,7 @@ def login():
                 flash("Password is wrong!", category="error")
                 return redirect(url_for("login"))
         else:
-            flash("Username does not exist!", category="error")
+            flash("Account does not exist!", category="error")
             return redirect(url_for("login"))
 
     return render_template("login.html", title="Login", form=form)
