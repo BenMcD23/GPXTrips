@@ -8,6 +8,7 @@ def create_route_test():
     gpx_blob = data.encode('ascii')
 
     route = models.Route(
+        user_id=0,
         gpx_data=gpx_blob
     )
     db.session.add(route)

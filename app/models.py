@@ -7,7 +7,7 @@ class User(db.Model):
     first_name = db.Column(db.String(128))
     last_name = db.Column(db.String(128))
     password_hash = db.Column(db.String(128), nullable=False)
-    subscription_id = db.Column(db.Integer, db.ForeignKey('subscription.id'))
+    subscription_id = db.Column(db.Integer)
     date_created = db.Column(db.DateTime, nullable=False)
 
     subsciptions = db.relationship('Subscription', backref='user', lazy=True)
