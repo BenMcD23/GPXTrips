@@ -1,0 +1,95 @@
+<!-- Content for post-login view of a user -->
+{% extends 'base_post_login.html' %}
+
+{% block title %}User Home{% endblock %}
+
+{% block content %}
+    <h2>Main Content Area for User Home</h2>
+    <head>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    </head>
+
+    <div style="margin-bottom: 20px;">
+        <h3>Uploaded GPX Files</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>File Name</th>
+                    <th>Upload Date</th>
+                    <th>Display on Map</th> <!-- Checkbox (View in Map) -->
+                    <th>Public</th> <!-- Checkbox (Visible to friends?) -->
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Backend Data (for loop)-->
+                <tr>
+                    <td>example.gpx</td>
+                    <td>2024-02-17</td>
+                    <td>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="" id="displayCheckbox1">
+                            <label class="form-check-label" for="displayCheckbox1">
+                                Show on Map?
+                            </label>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="" id="publicCheckbox1">
+                            <label class="form-check-label" for="publicCheckbox1">
+                                Public
+                            </label>
+                        </div>
+                    </td>
+                </tr>
+                <!-- for loop? -->
+            </tbody>
+        </table>
+    </div>
+    
+
+    <!-- Add Friends and View Their Trips Section -->
+    <div style="margin-bottom: 20px;">
+        <h3>Friends and Their Trips</h3>
+        <!-- Form to add friends -->
+        <form action="/add_friend" method="post">
+            <div class="form-group">
+                <label for="friendEmail">Friend's Email:</label>
+                <input type="email" class="form-control" id="friendEmail" name="friend_email">
+            </div>
+            <button type="submit" class="btn btn-primary">Add Friend</button>
+        </form>
+        <!-- Display list of friends and their trips -->
+        <ul class="list-group">
+            <li class="list-group-item">
+                Friend 1
+                <button type="button" class="btn btn-link float-right">View Trips</button> <!-- Upon clicking view trips show the trips on a pop-up map? -->
+            </li>
+            <li class="list-group-item">
+                Friend 2
+                <button type="button" class="btn btn-link float-right">View Trips</button>
+            </li>
+            <!-- For loop to display all friends -->
+        </ul>
+    </div>
+
+    <body>
+        <!-- Plug In application function to upload GPX File.(DB Storagte As Well?) -->
+        <div id="map"></div>
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <input type="file" name="file">
+            <button type="submit">Upload GPX</button>
+        </form>
+        <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+        <script>
+            var map = L.map('map').setView([51.505, -0.09], 13);
+            //Copyright Information
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            // When a checkbox is clicked, show/hide the corresponding GPX file on the map
+        </script>
+    </body>
+{% endblock %}
+
