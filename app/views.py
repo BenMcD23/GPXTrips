@@ -1,5 +1,3 @@
-import re
-
 from app import app, db, models
 from flask import render_template, request, redirect, url_for, send_file
 from .forms import FileUploadForm
@@ -17,6 +15,7 @@ def map():
     # file upload form
     file_upload_form = FileUploadForm()
 
+    route = None
     # if submit button is pressed and the file is valid
     if (file_upload_form.submit_file.data and
             file_upload_form.validate_on_submit()):

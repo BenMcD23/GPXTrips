@@ -39,10 +39,8 @@
           {{ FileUploadForm.hidden_tag() }}
           <label for="email">Email</label>
 
-          {{ FileUploadForm.file_upload }}
+          {{ FileUploadForm.file_upload(accept=".gpx") }}
           {{ FileUploadForm.submit_file }}
       </form>
-
-      <p>{{ route }}</p>
   </body>
 </html>
