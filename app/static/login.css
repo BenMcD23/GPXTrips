@@ -1,0 +1,36 @@
+#login_body {
+    background-image: url('https://www.publicdomainpictures.net/pictures/170000/velka/jogging-at-sunset-1461853562JAu.jpg');
+    background-repeat: repeat-y;
+    background-size: cover;
+    /* or background-size: contain; depending on your preference */
+    background-position: center;
+}
+
+.card {
+    opacity: 0.83;
+    overflow: auto;
+    width: fit-content;
+    height: fit-content;
+    border-radius: 9%;
+    font-size: 1.8vh;
+}
+
+::placeholder {
+    text-align: center;
+}
+
+.card:hover {
+    opacity: 1;
+}
+
+.active {
+    font-weight: bold;
+}
+
+input {
+    text-align: center;
+}
+
+a:hover {
+    font-weight: bold;
+}
