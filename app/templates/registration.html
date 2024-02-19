@@ -1,0 +1,59 @@
+{% extends "base_login_reg.html" %}
+{% block content %} 
+<div class="d-flex justify-content-center align-items-center vh-100">
+    <div class = "row justify-content-center flex-sm-row">
+        <div class="col-auto">
+            <div id="cardNumberOne" class="card p-5 text-center">
+                <a class="mb-1" style="width: fit-content; height: fit-content">Back</a>
+                <h2>Register</h1>
+                <hr>
+                <input class="mb-2" type="text" placeholder="First Name">
+                <input class="mb-2" type="text" placeholder="Last Name">
+                <input class="mb-2" type="text" placeholder="Email Address">
+                <input class="mb-2" type="text" placeholder="Password">
+                <input type="text" placeholder="Confirm Password">
+                <hr>
+                <h5>Payment Plan</h5>
+                <div>
+                    <input id="PP1" type="checkbox" onclick="check('#PP1')">
+                    <label class="ml-1" for="PP1">1 Year - £70</label>
+                </div>
+                <div>
+                    <input id="PP2" type="checkbox" onclick="check('#PP2')">
+                    <label class="ml-1" for="PP2">1 Month - £35</label>
+                </div>
+                <div>
+                    <input id="PP3" type="checkbox" onclick="check('#PP3')">
+                    <label class="ml-1" for="PP3">1 Week - £10</label>
+                </div>
+                <hr>
+                <div>
+                    <input id="TandCConfirm" type="checkbox">
+                    <label class="ml-1" for="TandCConfirm">I Agree to the <a id="TandCLink"><u>Terms and Conditions</u></a></label>
+                </div>
+                <br>
+                <button class="btn btn-outline-dark">Register</button>
+            </div>
+        </div>
+        <div class="col-auto text-center">
+            <div id="cardNumberTwoREG" class="card p-5">
+                <h1>MyGPS</h1>
+                <hr>
+                <h4><u>Terms and Conditions</u></h4>
+                <br>
+                <div>
+                    <p>By Signing up to this app, you agree the to the following:</p>
+                    <ul>
+                        <li class="mb-1">You may not cancel your subscription once payment has been made.</li>
+                        <li class="mb-1">You give MyGPS the right to store your data on our server.</li>
+                        <li class="mb-1">That MyGPS will not accept legal responsibility regarding the loss of your personal data.</li>
+                        <li class="mb-1">That I can confirm that I am over 13 years of age.</li>
+                        <li class="mb-1">That I realise my account may be suspended for improper usage of the application</li>
+                        <li class="mb-1">That unless cancelled, your subscription will renew at the end of your current subscription period</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

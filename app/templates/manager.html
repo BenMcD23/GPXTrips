@@ -1,0 +1,41 @@
+<!-- Content for post-login view of a manager -->
+{% extends 'base_post_login.html' %}
+
+{% block title %}Manager Home{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <h2>Manager Dashboard</h2>
+        <div class="list-group">
+            <a href="/manage_users" class="list-group-item list-group-item-action">
+                <i class="fas fa-users mr-2"></i> View and Manage Registered Users
+            </a>
+            <a href="/view_subscriptions" class="list-group-item list-group-item-action">
+                <i class="fas fa-file-alt mr-2"></i> View Subscriptions
+            </a>
+            <a href="/amend_pricing" class="list-group-item list-group-item-action">
+                <i class="fas fa-dollar-sign mr-2"></i> Amend Pricing Information
+            </a>
+            <a href="/faq_management" class="list-group-item list-group-item-action">
+                <i class="fas fa-question-circle mr-2"></i> FAQ Management
+            </a>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <h2>Recent User Activity</h2>
+        <div class="list-group">
+            <a href="#" class="list-group-item list-group-item-action">
+                <i class="fas fa-user mr-2"></i> User John Doe has registered
+            </a>
+            <a href="#" class="list-group-item list-group-item-action">
+                <i class="fas fa-user mr-2"></i> User Jane Smith has registered
+            </a>
+            <a href="#" class="list-group-item list-group-item-action">
+                <i class="fas fa-user mr-2"></i> User John Doe has uploaded a GPX file
+            </a>
+            <a href="#" class="list-group>
+    </div>
+</div>
+
+{% endblock %}
