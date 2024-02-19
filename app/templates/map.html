@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html lang="en">
+  <head>
+    <!-- this stuff should all be in base file -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <!-- leaflet -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- GPX plugin for leaflet -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/gpx.min.js"></script>
+    <link rel="stylesheet" href="static/stylesheet.css"/>
+
+    <script src = "https://code.jquery.com/jquery-1.10.2.js"></script>
+
+  </head>
+  <body>
+    <div id="map"></div>
+    <script src="static/mapScript.js"></script>
+    <script>
+      // for adding the route onto the map
+      new L.GPX(gpxConvert('{{ route }}'), {
+        async: true,
+        marker_options: {
+          startIconUrl: 'static/pinstart.png',
+          endIconUrl:   'static/pinend.png',
+          shadowUrl: null,
+        },
+      }).on('loaded', function(e) {
+        var gpx = e.target;
+        map.fitBounds(gpx.getBounds());
+        control.addOverlay(gpx, gpx.get_name());
+    }).addTo(map);
+  </script>
+
+    <h1>File Upload</h1>
+    <div class="form">
+      <form method="POST" action="" name="fileUpload" enctype="multipart/form-data">
+          {{ FileUploadForm.hidden_tag() }}
+          <label for="email">Email</label>
+
+          {{ FileUploadForm.file_upload(accept=".gpx") }}
+          {{ FileUploadForm.submit_file }}
+      </form>
+  </body>
+</html>
