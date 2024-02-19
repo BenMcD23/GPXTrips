@@ -31,3 +31,7 @@ class LoginForm(FlaskForm):
     password = PasswordField(
         "Password", validators=[InputRequired(), Length(min=8, max=16)]
     )
+
+class FileUploadForm(FlaskForm):
+    file_upload = FileField('File')
+    submit_file = SubmitField('Submit')
