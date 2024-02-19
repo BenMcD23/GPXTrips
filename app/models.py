@@ -31,4 +31,8 @@ class Subscription(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     plan_id = db.Column(db.Integer, db.ForeignKey('plan.id'))
     date_start = db.Column(db.DateTime, nullable=False)
+<<<<<<< HEAD
     date_end = db.Column(db.DateTime)
+=======
+    date_end = db.Column(db.DateTime)
+>>>>>>> gpxDb
