@@ -1,5 +1,5 @@
 from app import app, db, models
-from flask import render_template, request, redirect, url_for, send_file
+from flask import Flask, render_template, request, redirect, url_for, send_file
 from .forms import FileUploadForm
 from werkzeug.utils import secure_filename
 from DAL import add_route, get_route
@@ -34,3 +34,19 @@ def map():
         route = "".join(splitData)[2:][:-1]
 
     return render_template('map.html', title='Map', FileUploadForm=file_upload_form, route=route)
+  
+@app.route('/login')
+def login():
+    return render_template('login.html')
+
+@app.route('/registration')
+def registration():
+    return render_template('registration.html')
+
+@app.route('/manager')
+def manager():
+    return render_template("manager.html")
+
+@app.route('/user')
+def user():
+    return render_template("user.html")
