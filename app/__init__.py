@@ -23,5 +23,5 @@ migrate = Migrate(app, db)
 from app import views, models, auth
 
 @login_manager.user_loader
-def load_user(id):
-    return models.User.query.get(int(id))
+def load_user(user_id):
+    return get_user(user_id)

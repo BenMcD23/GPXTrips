@@ -30,12 +30,12 @@ def register():
             )
             return render_template("register.html", title="Register", form=form)
 
-        selected_option = form.options.data
-        if selected_option == 'option1':
+        selected_plan = form.plan.data
+        if selected_plan == 'option1':
             answer = 'You selected Option 1'
-        elif selected_option == 'option2':
+        elif selected_plan == 'option2':
             answer = 'You selected Option 2'
-        elif selected_option == 'option3':
+        elif selected_plan == 'option3':
             answer = 'You selected Option 3'
         else:
             answer = 'Invalid option'
@@ -58,10 +58,10 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
         if user:
-            if bcrypt.check_password_hash(user.password, form.password.data):
+            if bcrypt.check_password_hash(user.password_hash, form.password.data):
                 flash("Logged in!", category="success")
                 login_user(user, remember=True)
-                return redirect(url_for("home"))
+                return redirect(url_for("map"))
             else:
                 flash("Password is wrong!", category="error")
                 return redirect(url_for("login"))
