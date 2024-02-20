@@ -1,7 +1,5 @@
 from flask_wtf import FlaskForm
-from flask_wtf.file import FileField
-from wtforms import SubmitField
-from wtforms import StringField, PasswordField, EmailField, RadioField
+from wtforms import StringField, PasswordField, EmailField, RadioField, FileField, SubmitField
 from wtforms.validators import InputRequired, Length, Email
 
 
@@ -10,19 +8,19 @@ class RegistrationForm(FlaskForm):
         "Email", validators=[InputRequired(), Email()]
     )
     first_name = StringField(
-        "FirstName", validators=[InputRequired(), Length(min=3, max=16)]
+        "First Name", validators=[InputRequired(), Length(min=3, max=128)]
     )
     last_name = StringField(
-        "LastName", validators=[InputRequired(), Length(min=3, max=16)]
+        "Last Name", validators=[InputRequired(), Length(min=3, max=128)]
     )
     password = PasswordField(
-        "Password", validators=[InputRequired(), Length(min=8, max=16)]
+        "Password", validators=[InputRequired(), Length(min=8, max=32)]
     )
     confirm_password = PasswordField(
         "Confirm Password", validators=[InputRequired()]
     )
-    options = RadioField(
-        'Options', choices=[('option1', 'Option 1'), ('option2', 'Option 2'), ('option3', 'Option 3')], validators=[InputRequired()]
+    plan = RadioField(
+        'Plan', choices=[('plan1', 'Plan 1'), ('plan2', 'Plan 2'), ('plan3', 'Plan 3')], validators=[InputRequired()]
     )
 
 
