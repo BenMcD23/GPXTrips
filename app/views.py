@@ -1,43 +1,13 @@
 from app import app, db, models, bcrypt
 from .models import User
 from flask import Flask, render_template, request, redirect, url_for, send_file, flash
-from flask_login import login_user, login_required, logout_user
+from flask_login import login_user, login_required, logout_user, current_user
 from .forms import FileUploadForm, RegistrationForm, LoginForm
 from werkzeug.utils import secure_filename
 from DAL import add_route, get_route
 from datetime import datetime
 
 
-@app.route('/', methods=['GET', 'POST'])
-def map():
-    """render map page from templates
-
-    Returns:
-        render_template: render template, with map.html
-    """
-    # file upload form
-    file_upload_form = FileUploadForm()
-
-    route = None
-    # if submit button is pressed and the file is valid
-    if (file_upload_form.submit_file.data and
-            file_upload_form.validate_on_submit()):
-
-        #  get the file uploaded
-        uploadedFile = request.files['file_upload']
-        # read the data
-        data = str(uploadedFile.read())
-
-        # adds to database
-        add_route(data)
-
-        # this gets rid of all the \n in the string, cant be used with them
-        route = get_route()
-        splitData = route.split("\\n")
-        route = "".join(splitData)[2:][:-1]
-
-    return render_template('map.html', title='Map', FileUploadForm=file_upload_form, route=route)
-  
 @app.route("/login", methods=["GET", "POST"])
 def login():
     form = LoginForm()
@@ -114,6 +84,46 @@ def logout():
 def manager():
     return render_template("manager.html")
 
-@app.route('/user')
+
+@app.route('/user',  methods=['GET', 'POST'])
+@login_required
 def user():
-    return render_template("user.html")
+    """render map page from templates
+
+    Returns:
+        render_template: render template, with map.html
+    """
+    # file upload form
+    file_upload_form = FileUploadForm()
+
+    route = None
+    # if submit button is pressed and the file is valid
+    if (file_upload_form.submit_file.data and
+            file_upload_form.validate_on_submit()):
+
+        #  get the file uploaded
+        uploadedFile = request.files['file_upload']
+        # read the data
+        data = str(uploadedFile.read())
+
+        # adds to database, waiting for login system to be implemented to test
+
+        # Generate BLOB from GPX data
+        gpx_blob = data.encode('ascii')
+        # create database entry, currently RouteTest just for testing
+        route = models.Route(
+            gpx_data=gpx_blob
+        )
+        # add to database
+
+        current_user.routes.append(route)
+        db.session.add(current_user)
+        db.session.add(route)
+        db.session.commit()
+
+        # this gets rid of all the \n in the string, cant be used with them
+        # route = get_route()
+        # splitData = route.split("\\n")
+        # route = "".join(splitData)[2:][:-1]
+
+    return render_template("user.html", title='Map', FileUploadForm=file_upload_form, route=route)
