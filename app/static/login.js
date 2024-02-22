@@ -6,9 +6,9 @@ $(document).ready(function()
     $("#cardNumberTwoREG").hide();
 
     
-    $("#cardNumberOne").fadeIn(1000, function()
+    $("#cardNumberOne").fadeIn(900, function()
     { // Animation for card display on page load/refresh
-        $("#cardNumberTwo").fadeIn(1000);
+        $("#cardNumberTwo").fadeIn(900);
     })
 
     $("#linkTwo").click(function()
@@ -73,18 +73,3 @@ $(document).ready(function()
 
     
 })
-
-function check(id)
-{ // Ensures only 1 checkbox can be checked at once on the registration page
-    // Uncheck all checkboxes to begin with
-    $("#PP1").prop("checked", false);
-    $("#PP2").prop("checked", false);
-    $("#PP3").prop("checked", false);
-    // Check the checkbox that the user actually clicked (passed in as a parameter)
-    $(id).prop("checked", true);
-}
-
-
-
-
-

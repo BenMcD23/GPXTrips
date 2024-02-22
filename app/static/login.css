@@ -32,6 +32,17 @@ input {
     text-align: center;
 }
 
+input[type="text"],
+input[type="submit"],
+input[type="password"],
+input[type="email"] {
+    width: 100%;
+}
+
 a:hover {
     font-weight: bold;
+}
+
+.flashedMessage {
+    color: red;
 }
