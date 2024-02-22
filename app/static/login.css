@@ -24,6 +24,10 @@
     opacity: 1;
 }
 
+a {
+    text-decoration: underline;
+}
+
 .active {
     font-weight: bold;
 }
