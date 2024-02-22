@@ -8,9 +8,9 @@
                 <form action="" method="post" name="loginForm">
                     {{ form.hidden_tag() }}
                     <hr>
-                    <p class="mb-0">{{ form.email(placeholder="Email") }}</p>
+                    <p aria-label="Enter Your Email Here" id="emailField" class="mb-0">{{ form.email(placeholder="Email") }}</p>
                     <br>
-                    <p class="mt-0">{{ form.password(placeholder="Password") }}</p>
+                    <p aria-label="Enter Your Password Here" class="mt-0">{{ form.password(placeholder="Password") }}</p>
                     {% with messages = get_flashed_messages() %}
                         {% if messages %}
                             <ul class="list-unstyled">
@@ -23,10 +23,10 @@
                    <br>
                     <div>
                         <input id="rememberMe" type="checkbox">
-                        <label for="rememberMe ml-1">Remember Me</label>
+                        <label for="rememberMe">Remember Me</label>
                     </div>
                     <br>
-                    <input type="submit" value="Log In" class="btn btn-outline-dark"></input>
+                    <input aria-label="Log In" type="submit" value="Log In" class="btn btn-outline-dark"></input>
                 </form>
                 <hr>
                 <p>Don't have an account <a href="/register"><u><b>Create One</b></u></a></p>

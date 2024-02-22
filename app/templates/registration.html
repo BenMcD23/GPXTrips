@@ -9,11 +9,11 @@
                 <hr>
                 <form action="" method="post" name="RegistrationForm">
                     {{ form.hidden_tag() }}
-                    <p class="mb-0">{{ form.first_name(placeholder="First Name")}}</p>
-                    <p class="mt-1 mb-0">{{ form.last_name(placeholder="Last Name")}}</p>
-                    <p class="mt-1 mb-0">{{ form.email(placeholder="Email Address")}}</p>
-                    <p class="mt-1 mb-0">{{ form.password(placeholder="Password")}}</p>
-                    <p class="mt-1">{{ form.confirm_password(placeholder="Confirm Password")}}</p>
+                    <p aria-label="Enter Your First Name Here" class="mb-0">{{ form.first_name(placeholder="First Name")}}</p>
+                    <p aria-label="Enter Your Last Name Here" class="mt-1 mb-0">{{ form.last_name(placeholder="Last Name")}}</p>
+                    <p aria-label="Enter Your Email Address Here" class="mt-1 mb-0">{{ form.email(placeholder="Email Address")}}</p>
+                    <p aria-label="Enter Your Password Here" class="mt-1 mb-0">{{ form.password(placeholder="Password")}}</p>
+                    <p aria-label="Re-enter Your Password Here To Confirm" class="mt-1">{{ form.confirm_password(placeholder="Confirm Password")}}</p>
                     {% with messages = get_flashed_messages() %}
                         {% if messages %}
                             <ul class="list-unstyled">
@@ -28,17 +28,17 @@
 
                     {% for choice in form.plan %}
                         <div>
-                        <input type="radio" id="{{ choice.id }}" name="PaymentPlanRadioButton" value="{{ choice.data }}">
-                        <label class="m-0" for="{{ choice.id }}">{{ choice.label }}</label>
+                        <input type="radio" id="{{ choice.id }}" name="{{ choice.id }}" value="{{ choice.data }}">
+                        <span class="m-0" for="{{ choice.id }}">{{ choice.label }}</span>
                         </div>
                     {% endfor %}
                     <hr>
                     <div>
-                        <input id="TandCConfirm" type="checkbox">
+                        <input aria-label="Accept Terms and Conditions" id="TandCConfirm" type="checkbox">
                         <label class="ml-1" for="TandCConfirm">I Agree to the <a id="TandCLink"><u>Terms and Conditions</u></a></label>
                     </div>
                     <br>
-                    <input type="submit" value="Register" class="btn btn-outline-dark"></input>
+                    <input aria-label="Register" type="submit" value="Register" class="btn btn-outline-dark"></input>
                 <form>
             </div>
         </div>
