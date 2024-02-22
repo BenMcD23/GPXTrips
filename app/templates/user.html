@@ -57,7 +57,12 @@
                 <label for="friendEmail">Friend's Email:</label>
                 <input type="email" class="form-control" id="friendEmail" name="friend_email">
             </div>
-            <button type="submit" class="btn btn-primary">Add Friend</button>
+            
+
+            <button type="submit" id="addFriendButton" class="btn btn-primary" name="addFriendButton">Add Friend</button>
+
+
+
         </form>
         <!-- Display list of friends and their trips -->
         <ul class="list-group">
@@ -77,8 +82,11 @@
         <!-- Plug In application function to upload GPX File.(DB Storagte As Well?) -->
         <div id="map"></div>
         <form action="/upload" method="post" enctype="multipart/form-data">
-            <input type="file" name="file">
+            <input type="file" id="file" name="file">
+            <label for="file">Select File:</label>
             <button type="submit">Upload GPX</button>
+
+
         </form>
         <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
         <script>
