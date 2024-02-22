@@ -17,24 +17,22 @@
                     {% with messages = get_flashed_messages() %}
                         {% if messages %}
                             <ul class="list-unstyled">
-                            {% for message in messages %}
-                            <li class="flashedMessage">{{ message }} </li>
-                            {% endfor %}
+                                {% for message in messages %}
+                                    <li class="flashedMessage">{{ message }} </li>
+                                {% endfor %}
                             </ul>
-                    {% endif %}
+                        {% endif %}
                     {% endwith %}
                     <hr>
-
                     <fieldset>
-                    <legend>Payment Plan</legend>
-                    {% for choice in form.plan %}
-                        <div>
-                        <input type="radio" id="{{ choice.id }}" name="RadioButtons" value="{{ choice.data }}">
-                        <span class="m-0" for="{{ choice.id }}">{{ choice.label }}</span>
-                        </div>
-                    {% endfor %}
+                        <legend>Payment Plan</legend>
+                        {% for choice in form.plan %}
+                            <div>
+                                <input type="radio" id="{{ choice.id }}" name="RadioButtons" value="{{ choice.data }}">
+                                <span class="m-0" for="{{ choice.id }}">{{ choice.label }}</span>
+                            </div>
+                        {% endfor %}
                     </fieldset>
-
                     <hr>
                     <div>
                         <input aria-label="Accept Terms and Conditions" id="TandCConfirm" type="checkbox">
@@ -42,7 +40,7 @@
                     </div>
                     <br>
                     <input aria-label="Register" type="submit" value="Register" class="btn btn-outline-dark"></input>
-                <form>
+                </form>
             </div>
         </div>
         <div class="col-auto text-center">
