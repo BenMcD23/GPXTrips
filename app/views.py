@@ -12,7 +12,7 @@ from datetime import datetime
 def login():
     form = LoginForm()
 
-    if form.validate_on_submit():
+    if request.method == 'POST':
         user = User.query.filter_by(email=form.email.data).first()
         if user:
             if bcrypt.check_password_hash(user.password_hash, form.password.data):
@@ -32,7 +32,7 @@ def login():
 def register():
     form = RegistrationForm()
 
-    if form.validate_on_submit():
+    if request.method == 'POST':
         email = request.form.get("email")
         first_name = request.form.get("first_name")
         last_name = request.form.get("last_name")
@@ -53,7 +53,7 @@ def register():
             )
             return render_template("registration.html", title="Register", form=form)
 
-        selected_plan = form.plan.data
+        selected_plan = request.form.get("plan")
         if selected_plan == 'option1':
             answer = 'You selected Option 1'
         elif selected_plan == 'option2':
