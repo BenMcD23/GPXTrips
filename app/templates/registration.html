@@ -4,42 +4,50 @@
     <div class = "row justify-content-center flex-sm-row">
         <div class="col-auto">
             <div id="cardNumberOne" class="card p-5 text-center">
-                <a class="mb-1" style="width: fit-content; height: fit-content">Back</a>
-                <h2>Register</h1>
+                <a class="mb-1" style="width: fit-content; height: fit-content" href="/login"><b>Back</b></a>
+                <h2>Register</h2>
                 <hr>
-                <input class="mb-2" type="text" placeholder="First Name">
-                <input class="mb-2" type="text" placeholder="Last Name">
-                <input class="mb-2" type="text" placeholder="Email Address">
-                <input class="mb-2" type="text" placeholder="Password">
-                <input type="text" placeholder="Confirm Password">
-                <hr>
-                <h5>Payment Plan</h5>
-                <div>
-                    <input id="PP1" type="checkbox" onclick="check('#PP1')">
-                    <label class="ml-1" for="PP1">1 Year - £70</label>
-                </div>
-                <div>
-                    <input id="PP2" type="checkbox" onclick="check('#PP2')">
-                    <label class="ml-1" for="PP2">1 Month - £35</label>
-                </div>
-                <div>
-                    <input id="PP3" type="checkbox" onclick="check('#PP3')">
-                    <label class="ml-1" for="PP3">1 Week - £10</label>
-                </div>
-                <hr>
-                <div>
-                    <input id="TandCConfirm" type="checkbox">
-                    <label class="ml-1" for="TandCConfirm">I Agree to the <a id="TandCLink"><u>Terms and Conditions</u></a></label>
-                </div>
-                <br>
-                <button class="btn btn-outline-dark">Register</button>
+                <form action="" method="post" name="RegistrationForm">
+                    {{ form.hidden_tag() }}
+                    <p aria-label="Enter Your First Name Here" class="mb-0">{{ form.first_name(placeholder="First Name")}}</p>
+                    <p aria-label="Enter Your Last Name Here" class="mt-1 mb-0">{{ form.last_name(placeholder="Last Name")}}</p>
+                    <p aria-label="Enter Your Email Address Here" class="mt-1 mb-0">{{ form.email(placeholder="Email Address")}}</p>
+                    <p aria-label="Enter Your Password Here" class="mt-1 mb-0">{{ form.password(placeholder="Password")}}</p>
+                    <p aria-label="Re-enter Your Password Here To Confirm" class="mt-1">{{ form.confirm_password(placeholder="Confirm Password")}}</p>
+                    {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                            <ul class="list-unstyled">
+                                {% for message in messages %}
+                                    <li class="flashedMessage">{{ message }} </li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    {% endwith %}
+                    <hr>
+                    <fieldset>
+                        <legend>Payment Plan</legend>
+                        {% for choice in form.plan %}
+                            <div>
+                                <input type="radio" id="{{ choice.id }}" name="RadioButtons" value="{{ choice.data }}">
+                                <span class="m-0" for="{{ choice.id }}">{{ choice.label }}</span>
+                            </div>
+                        {% endfor %}
+                    </fieldset>
+                    <hr>
+                    <div>
+                        <input aria-label="Accept Terms and Conditions" id="TandCConfirm" type="checkbox">
+                        <label class="ml-1" for="TandCConfirm">I Agree to the <a id="TandCLink"><u>Terms and Conditions</u></a></label>
+                    </div>
+                    <br>
+                    <input aria-label="Register" type="submit" value="Register" class="btn btn-outline-dark"></input>
+                </form>
             </div>
         </div>
         <div class="col-auto text-center">
             <div id="cardNumberTwoREG" class="card p-5">
                 <h1>MyGPS</h1>
                 <hr>
-                <h4><u>Terms and Conditions</u></h4>
+                <h2>Terms and Conditions</h2>
                 <br>
                 <div>
                     <p>By Signing up to this app, you agree the to the following:</p>
