@@ -6,6 +6,7 @@ from .forms import FileUploadForm, RegistrationForm, LoginForm
 from werkzeug.utils import secure_filename
 from DAL import add_route, get_route
 from datetime import datetime
+import json 
 
 @app.route("/", methods=["GET", "POST"])
 def login():
@@ -94,6 +95,7 @@ def user():
     """
     # file upload form
     file_upload_form = FileUploadForm()
+    routes = current_user.routes
 
     route = None
     # if submit button is pressed and the file is valid
@@ -111,6 +113,8 @@ def user():
         gpx_blob = data.encode('ascii')
         # create database entry, currently RouteTest just for testing
         route = models.Route(
+            name=uploadedFile.filename,
+            upload_time=datetime.now().date(),
             gpx_data=gpx_blob
         )
         # add to database
@@ -125,4 +129,26 @@ def user():
         # splitData = route.split("\\n")
         # route = "".join(splitData)[2:][:-1]
 
-    return render_template("user.html", title='Map', FileUploadForm=file_upload_form, route=route)
+    return render_template("user.html", title='Map', FileUploadForm=file_upload_form, route=route, routes=routes)
+
+
+# AJAX stuff 
+
+# post all routes to JavaScript
+@app.route('/getRoute', methods=['GET'])
+def getRoute():
+    # get the current logged in users routes
+    routes = current_user.routes
+
+    # dic for all data go in, goes into json
+    data = {}
+    # loop for all the routes
+    for i in routes:
+        # decode each route and get rid of \n
+        route = i.gpx_data.decode('ascii')
+        splitData = route.split("\\n")
+        route = "".join(splitData)[2:][:-1]
+        data[i.id] = route
+
+    # return as a json
+    return json.dumps(data)
