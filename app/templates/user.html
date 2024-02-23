@@ -48,7 +48,7 @@
     </div>
     
 
-    <!-- Add Friends and View Their Trips Section -->
+    <!-- Add Friends and View Their Trips Section (Acessibility To be considered)-->
     <div style="margin-bottom: 20px;">
         <h3>Friends and Their Trips</h3>
         <!-- Form to add friends -->
@@ -57,7 +57,12 @@
                 <label for="friendEmail">Friend's Email:</label>
                 <input type="email" class="form-control" id="friendEmail" name="friend_email">
             </div>
-            <button type="submit" class="btn btn-primary">Add Friend</button>
+            
+
+            <button type="submit" id="addFriendButton" class="btn btn-primary" name="addFriendButton">Add Friend</button>
+
+
+
         </form>
         <!-- Display list of friends and their trips -->
         <ul class="list-group">
@@ -76,7 +81,14 @@
     <body>
         <!-- Plug In application function to upload GPX File.(DB Storagte As Well?) -->
         <div id="map"></div>
-        <script src="static/mapScript.js"></script>
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <input type="file" id="file" name="file">
+            <label for="file">Select File:</label>
+            <button type="submit">Upload GPX</button>
+
+
+        </form>
+        <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
         <script>
             // for adding the route onto the map
             new L.GPX(gpxConvert('{{ route }}'), {

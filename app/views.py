@@ -7,8 +7,7 @@ from werkzeug.utils import secure_filename
 from DAL import add_route, get_route
 from datetime import datetime
 
-
-@app.route("/login", methods=["GET", "POST"])
+@app.route("/", methods=["GET", "POST"])
 def login():
     form = LoginForm()
 

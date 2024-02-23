@@ -21,7 +21,7 @@ class RegistrationForm(FlaskForm):
         "Confirm Password", validators=[InputRequired()]
     )
     plan = RadioField(
-        'Plan', choices=[('plan1', 'Plan 1'), ('plan2', 'Plan 2'), ('plan3', 'Plan 3')], validators=[InputRequired()]
+        'Plan', choices=[('plan1', '1 Year - £70'), ('plan2', '1 Month - £35'), ('plan3', '1 Week - £10')], validators=[InputRequired()]
     )
 
 
