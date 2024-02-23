@@ -90,14 +90,29 @@
         </form>
         <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
         <script>
-            var map = L.map('map').setView([51.505, -0.09], 13);
-            //Copyright Information
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(map);
-
-            // When a checkbox is clicked, show/hide the corresponding GPX file on the map
+            // for adding the route onto the map
+            new L.GPX(gpxConvert('{{ route }}'), {
+              async: true,
+              marker_options: {
+                startIconUrl: 'static/pinstart.png',
+                endIconUrl:   'static/pinend.png',
+                shadowUrl: null,
+              },
+            }).on('loaded', function(e) {
+              var gpx = e.target;
+              map.fitBounds(gpx.getBounds());
+              control.addOverlay(gpx, gpx.get_name());
+          }).addTo(map);
         </script>
+        <div class="form">
+            <form method="POST" action="" name="fileUpload" enctype="multipart/form-data">
+                {{ FileUploadForm.hidden_tag() }}
+                <label for="fileUpload">File Upload</label>
+      
+                {{ FileUploadForm.file_upload(accept=".gpx") }}
+                {{ FileUploadForm.submit_file }}
+            </form>
+        </div>
     </body>
 {% endblock %}
 
