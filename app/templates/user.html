@@ -7,7 +7,6 @@
     <h2>Main Content Area for User Home</h2>
     <head>
         <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-        <body onload="getRoutes()">
 
         <!-- leaflet -->
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
@@ -15,7 +14,7 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/gpx.min.js"></script>
     </head>
 
-    <div style="margin-bottom: 20px;">
+    <div class="smallGap">
         <h3>Uploaded GPX Files</h3>
         <table class="table table-striped">
             <thead>
@@ -55,7 +54,7 @@
     
 
     <!-- Add Friends and View Their Trips Section (Acessibility To be considered)-->
-    <div style="margin-bottom: 20px;">
+    <div class="smallGap">
         <h3>Friends and Their Trips</h3>
         <!-- Form to add friends -->
         <form action="/add_friend" method="post">
