@@ -14,3 +14,7 @@
     background-color: transparent; 
     border: none; 
 }
+
+.smallGap {
+    margin-bottom: 20px;
+}

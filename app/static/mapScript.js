@@ -1,6 +1,7 @@
 // get all the routes
 var user_routes;
-function getRoutes(){
+$(document).ready(function()
+{
   $.ajax({ 
     type: "GET",
     url: "http://127.0.0.1:5000/getRoute", 
@@ -12,8 +13,8 @@ function getRoutes(){
     {
     alert("request failed");
     }
-  });
-}
+  })
+})
 
 // initialize Leaflet
 

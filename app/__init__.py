@@ -35,7 +35,6 @@ def load_user(user_id):
 
 csp = {
     'default-src': [
-        '\'unsafe-inline\'',
         '\'self\'',
         'https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js',
         'https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js',
@@ -57,6 +56,8 @@ csp = {
         'https://www.publicdomainpictures.net/pictures/170000/velka/jogging-at-sunset-1461853562JAu.jpg'
     ]
 }
+
+nonce_list = ['default-src', 'img-src']
 # HTTP Strict Transport Security (HSTS) Header
 hsts = {
     'max-age': 31536000,
@@ -73,3 +74,4 @@ talisman.frame_options_allow_from = 'https://www.google.com'
 # Add the headers to Talisman
 talisman.content_security_policy = csp
 talisman.strict_transport_security = hsts
+talisman.content_security_policy_nonce_in = nonce_list

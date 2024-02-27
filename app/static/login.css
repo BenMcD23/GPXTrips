@@ -50,3 +50,18 @@ a:hover {
 .flashedMessage {
     color: red;
 }
+
+.cardOneStyle {
+    width: 30vw;
+}
+
+.cardTwoStyle {
+    width: 40vw; 
+    max-width: 100%; 
+    height: 60vh;
+}
+
+.linkStyle {
+    width: fit-content; 
+    height: fit-content;
+}
