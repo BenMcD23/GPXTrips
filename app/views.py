@@ -4,9 +4,9 @@ from flask import Flask, render_template, request, redirect, url_for, send_file,
 from flask_login import login_user, login_required, logout_user, current_user
 from .forms import FileUploadForm, RegistrationForm, LoginForm
 from werkzeug.utils import secure_filename
-from DAL import add_route, get_route
 from datetime import datetime
 import json 
+
 
 @app.route("/", methods=["GET", "POST"])
 def login():
