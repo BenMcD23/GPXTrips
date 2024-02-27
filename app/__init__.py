@@ -66,7 +66,7 @@ hsts = {
 talisman.force_https = True
 talisman.force_file_save = True
 talisman.x_xss_protection = True
-talisman.session_cookie_secure = False
+talisman.session_cookie_secure = True
 talisman.session_cookie_samesite = 'Lax'
 talisman.frame_options_allow_from = 'https://www.google.com'
  
