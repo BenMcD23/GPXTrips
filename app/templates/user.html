@@ -1,105 +1,117 @@
-<!-- Content for post-login view of a user -->
 {% extends 'base_post_login.html' %}
 
 {% block title %}User Home{% endblock %}
 
 {% block content %}
-    <h2>Main Content Area for User Home</h2>
-    <head>
-        <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-
-        <!-- leaflet -->
-        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-        <!-- GPX plugin for leaflet -->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/gpx.min.js"></script>
-    </head>
-
-    <div class="smallGap">
-        <h3>Uploaded GPX Files</h3>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>File Name</th>
-                    <th>Upload Date</th>
-                    <th>Display on Map</th> <!-- Checkbox (View in Map) -->
-                    <th>Public</th> <!-- Checkbox (Visible to friends?) -->
-                </tr>
-            </thead>
-            <tbody>
-                {% for i in routes %}
-                <tr>
-                    <td>{{ i.name }}</td>
-                    <td>{{ i.upload_time }}</td>
-                    <td>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="addToMap" id="{{ i.id }}">
-                            <label class="form-check-label" for="{{ i.id }}">
-                                Show on Map?
-                            </label>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="" id="publicCheckbox1">
-                            <label class="form-check-label" for="publicCheckbox1">
-                                Public
-                            </label>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    
-
-    <!-- Add Friends and View Their Trips Section (Acessibility To be considered)-->
-    <div class="smallGap">
-        <h3>Friends and Their Trips</h3>
-        <!-- Form to add friends -->
-        <form action="/add_friend" method="post">
-            <div class="form-group">
-                <label for="friendEmail">Friend's Email:</label>
-                <input type="email" class="form-control" id="friendEmail" name="friend_email">
+<h2>Main Content Area for User Home</h2>
+<div class="container-fluid">
+    <div class="row">
+        <!-- Left Column for Uploaded GPX Files -->
+        <div class="col-md-6">
+            <div class="smallGap">
+                <h3>Uploaded GPX Files</h3>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>File Name</th>
+                            <th>Upload Date</th>
+                            <th>Display on Map</th>
+                            <th>Published by</th>
+                            <!-- <th>Public></th> -->
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for i in routes %}
+                        <tr>
+                            <td>{{ i.name }}</td>
+                            <td>{{ i.upload_time }}</td>
+                            <td>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="addToMap" id="{{ i.id }}">
+                                    <label class="form-check-label" for="{{ i.id }}"></label>
+                                </div>
+                            </td>
+                            <td>{{ i.user.first_name}} {{i.user.last_name}}</td>
+                            <!-- <td>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="" id="publicCheckbox1">
+                                    <label class="form-check-label" for="publicCheckbox1">Public</label>
+                                </div>
+                            </td> -->
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
-            
 
-            <button type="submit" id="addFriendButton" class="btn btn-primary" name="addFriendButton">Add Friend</button>
+            <!-- File Upload Section -->
+            <div class="form">
+                <form method="POST" action="" name="fileUpload" enctype="multipart/form-data">
+                    {{ FileUploadForm.hidden_tag() }}
+                    <div class="form-group">
+                        <label for="fileUpload" class="form-label">Choose a GPX file to upload:</label>
+                        <div class="input-group">
+                            <input type="file" class="form-control" id="fileUpload" name="fileUpload" accept=".gpx">
+                            <button type="submit" class="btn btn-primary">Upload</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
 
-
-
-        </form>
-        <!-- Display list of friends and their trips -->
-        <ul class="list-group">
-            <li class="list-group-item">
-                Friend 1
-                <button type="button" class="btn btn-link float-right">View Trips</button> <!-- Upon clicking view trips show the trips on a pop-up map? -->
-            </li>
-            <li class="list-group-item">
-                Friend 2
-                <button type="button" class="btn btn-link float-right">View Trips</button>
-            </li>
-            <!-- For loop to display all friends OK-->
-        </ul>
+        <!-- Right Column for Friends and Their Trips -->
+        <div class="col-md-6">
+            <div class="smallGap">
+                <h3>Friends and Their Trips</h3>
+                <!-- Form to add friends -->
+                <form action="/add_friend" method="post">
+                    <div class="form-group">
+                        <label for="friendEmail">Friend's Email:</label>
+                        <input type="email" class="form-control" id="friendEmail" name="friend_email">
+                    </div>
+                    <button type="submit" id="addFriendButton" class="btn btn-primary" name="addFriendButton">Add Friend</button>
+                </form>
+                <!-- Display list of friends and their trips -->
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Surname</th>
+                            <th>Email</th>
+                            <!-- <th>View Trips</th> -->
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Loop through each friend -->
+                        <tr>
+                            <td> John </td>
+                            <td> Doe </td>
+                            <td> johndoe@gmail.com </td>
+                            <!-- <td>
+                                <button type="button" class="btn btn-link">View Trips</button>
+                            </td> -->
+                        </tr>
+                        <tr>
+                            <td>John</td>
+                            <td> Cena </td>
+                            <td> jcena@gmail.com </td>
+                            <!-- <td>
+                                <button type="button" class="btn btn-link">View Trips</button>
+                            </td> -->
+                        </tr>
+                        <!-- Add more rows for each friend -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
+</div>
 
-    <body>
-        <!-- Plug In application function to upload GPX File.(DB Storagte As Well?) -->
-        <div id="test">
-            <div id="map"></div>
-        </div>
-        <script src="static/mapScript.js"></script>
-
-        
-        <div class="form">
-            <form method="POST" action="" name="fileUpload" enctype="multipart/form-data">
-                {{ FileUploadForm.hidden_tag() }}
-                <label for="fileUpload">File Upload</label>
-      
-                {{ FileUploadForm.file_upload(accept=".gpx") }}
-                {{ FileUploadForm.submit_file }}
-            </form>
-        </div>
-    </body>
+<!-- Leaflet Map Section -->
+<div id="test">
+    <div id="map"></div>
+</div>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/gpx.min.js"></script>
+<script src="static/mapScript.js"></script>
 {% endblock %}
-

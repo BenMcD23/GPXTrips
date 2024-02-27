@@ -94,6 +94,7 @@ def user():
         render_template: render template, with map.html
     """
     # file upload form
+    all_routes = models.Route.query.all()
     file_upload_form = FileUploadForm()
     routes = current_user.routes
 
@@ -129,7 +130,7 @@ def user():
         # splitData = route.split("\\n")
         # route = "".join(splitData)[2:][:-1]
 
-    return render_template("user.html", title='Map', FileUploadForm=file_upload_form, route=route, routes=routes)
+    return render_template("user.html", title='Map', FileUploadForm=file_upload_form, route=route, routes=routes, all_routes=all_routes)
 
 
 # AJAX stuff 
@@ -152,3 +153,5 @@ def getRoute():
 
     # return as a json
     return json.dumps(data)
+
+
