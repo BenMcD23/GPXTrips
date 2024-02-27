@@ -16,6 +16,13 @@ $(document).ready(function()
   })
 })
 
+// listents for when checkbox's are checked
+let checkboxes = $("input[type=checkbox][name=addToMap]")
+
+checkboxes.change(function() {
+  displayOnMap(this.id);
+});
+
 // initialize Leaflet
 
 // add the OpenStreetMap tiles
@@ -34,7 +41,7 @@ let GPX = {};
 // ran when a checkbox is checked
 function displayOnMap(id) {
   // get if its been checked or unchecked
-  const checkbox_state = document.getElementById('displayCheckbox'+id);
+  const checkbox_state = document.getElementById(id);
 
   // if its checked
   if (checkbox_state.checked) {
