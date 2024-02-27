@@ -10,7 +10,8 @@ from flask_talisman import Talisman
 app = Flask(__name__)
 app.config.from_object('config')
 FLASK_DEBUG=1
-# security stuff - https://github.com/GoogleCloudPlatform/flask-talisman
+
+# security stuff, conifgured below
 talisman = Talisman(app)
 
 db = SQLAlchemy(app)
@@ -32,8 +33,8 @@ def load_user(user_id):
     return models.User.query.get(int(user_id))
 
 # configure talisman
-
 csp = {
+    # all the external links
     'default-src': [
         '\'self\'',
         'https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js',
@@ -48,6 +49,7 @@ csp = {
         'https://b.tile.openstreetmap.org/',
         'https://c.tile.openstreetmap.org/',
     ],
+    # external image links
     'img-src': [
         "'self' data:",
         'https://a.tile.openstreetmap.org/',
@@ -57,6 +59,7 @@ csp = {
     ]
 }
 
+# this allows scripts to be used
 nonce_list = ['default-src', 'img-src']
 # HTTP Strict Transport Security (HSTS) Header
 hsts = {
@@ -71,7 +74,7 @@ talisman.session_cookie_secure = True
 talisman.session_cookie_samesite = 'Lax'
 talisman.frame_options_allow_from = 'https://www.google.com'
  
-# Add the headers to Talisman
+# add to Talisman
 talisman.content_security_policy = csp
 talisman.strict_transport_security = hsts
 talisman.content_security_policy_nonce_in = nonce_list

@@ -32,8 +32,8 @@
                     <td>{{ i.upload_time }}</td>
                     <td>
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="" id="displayCheckbox{{ i.id }}" onchange="displayOnMap({{ i.id }})">
-                            <label class="form-check-label" for="displayCheckbox{{ i.id }}">
+                            <input class="form-check-input" type="checkbox" name="addToMap" id="{{ i.id }}">
+                            <label class="form-check-label" for="{{ i.id }}">
                                 Show on Map?
                             </label>
                         </div>
