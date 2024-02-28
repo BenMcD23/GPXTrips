@@ -1,4 +1,3 @@
-# test_app.py
 import pytest
 from app import app, db, bcrypt
 from app.models import User
@@ -8,7 +7,8 @@ from datetime import datetime
 def client():
     app.config['TESTING'] = True
     app.config['WTF_CSRF_ENABLED'] = False
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     client = app.test_client()
 
     with app.app_context():
