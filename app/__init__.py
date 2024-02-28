@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, jsonify
 
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
@@ -6,6 +6,9 @@ from flask_bcrypt import Bcrypt
 from flask_wtf.csrf import CSRFProtect
 from flask_migrate import Migrate
 from flask_talisman import Talisman
+
+import os
+import stripe
 
 app = Flask(__name__)
 app.config.from_object('config')
@@ -48,6 +51,7 @@ csp = {
         'https://a.tile.openstreetmap.org/',
         'https://b.tile.openstreetmap.org/',
         'https://c.tile.openstreetmap.org/',
+        'https://js.stripe.com/v3/',
     ],
     # external image links
     'img-src': [
@@ -66,15 +70,21 @@ hsts = {
     'max-age': 31536000,
     'includeSubDomains': True
 }
-# Enforce HTTPS and other headers
+# Enforce HTTPS and other headersMou
 talisman.force_https = True
 talisman.force_file_save = True
-talisman.x_xss_protection = True
-talisman.session_cookie_secure = True
-talisman.session_cookie_samesite = 'Lax'
 talisman.frame_options_allow_from = 'https://www.google.com'
  
 # add to Talisman
 talisman.content_security_policy = csp
 talisman.strict_transport_security = hsts
 talisman.content_security_policy_nonce_in = nonce_list
+
+# Stripe
+
+app.stripe_keys = {
+    "secret_key": os.environ["STRIPE_SECRET_KEY"],
+    "publishable_key": os.environ["STRIPE_PUBLISHABLE_KEY"]
+}
+
+stripe.api_key = app.stripe_keys["secret_key"]
