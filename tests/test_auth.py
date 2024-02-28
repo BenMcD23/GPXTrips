@@ -1,7 +1,6 @@
 # test_app.py
 import pytest
 from app import app, db, bcrypt
-from app.forms import RegistrationForm, LoginForm
 from app.models import User
 from datetime import datetime
 
@@ -76,7 +75,7 @@ def test_login(client):
         'email': 'testuser@example.com',
         'password': 'password123',
     }
-    response = client.post('/login', data=data, follow_redirects=True)
+    response = client.post('/', data=data, follow_redirects=True)
     assert b"Logged in!" in response.data
 
 def test_login_incorrect_password(client):
@@ -86,7 +85,7 @@ def test_login_incorrect_password(client):
     db.session.add(user)
     db.session.commit()
 
-    response = client.post('/login', data={
+    response = client.post('/', data={
         'email': 'testuser@example.com',
         'password': 'password456',
     }, follow_redirects=True)
@@ -98,5 +97,5 @@ def test_login_nonexistent_user(client):
         'email': 'testuser@example.com',
         'password': 'password123',
     }
-    response = client.post('/login', data=data, follow_redirects=True)
+    response = client.post('/', data=data, follow_redirects=True)
     assert b"Account does not exist!" in response.data
