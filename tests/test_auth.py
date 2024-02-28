@@ -18,6 +18,12 @@ def client():
     with app.app_context():
         db.drop_all()
 
+# Fixture to create a new user and handle session cleanup
+@pytest.fixture
+def new_user():
+    user = User(email='testuser@example.com', password_hash=bcrypt.generate_password_hash('password123'), date_created=datetime.now())
+    return user  # Do not commit the user here
+
 def test_registration(client):
     data = {
         'email': 'test@example.com',
@@ -25,7 +31,6 @@ def test_registration(client):
         'last_name': 'Doe',
         'password': 'password123',
         'confirm_password': 'password123',
-        'plan': 'plan1',
     }
     response = client.post('/register', data=data, follow_redirects=True)
     assert b"User added successfully!" in response.data
@@ -36,35 +41,29 @@ def test_registration_password_mismatch(client):
         'first_name': 'John',
         'last_name': 'Doe',
         'password': 'password123',
-        'confirm_password': 'password456',  # Mismatched password
-        'plan': 'plan1',
+        'confirm_password': 'password456',
     }
     response = client.post('/register', data=data, follow_redirects=True)
     assert b"Passwords do not match." in response.data
 
-
-def test_registration_existing_user(client):
-    existing_user = User(email='testuser@example.com', password_hash=bcrypt.generate_password_hash('password123'), date_created=datetime.now())
-    db.session.add(existing_user)
-    db.session.commit()
-
+def test_registration_existing_user(client, new_user):
+    with app.app_context():
+        db.session.add(new_user)
+        db.session.commit()
     data = {
         'email': 'testuser@example.com',
         'first_name': 'John',
         'last_name': 'Doe',
         'password': 'password123',
         'confirm_password': 'password123',
-        'plan': 'plan1',
     }
     response = client.post('/register', data=data, follow_redirects=True)
     assert b"Email already in use." in response.data
 
-def test_login(client):
-    # Create a user for testing login
-    user = User(email='testuser@example.com', password_hash=bcrypt.generate_password_hash('password123'), date_created=datetime.now())
-    db.session.add(user)
-    db.session.commit()
-
+def test_login(client, new_user):
+    with app.app_context():
+        db.session.add(new_user)
+        db.session.commit()
     data = {
         'email': 'testuser@example.com',
         'password': 'password123',
@@ -72,12 +71,10 @@ def test_login(client):
     response = client.post('/', data=data, follow_redirects=True)
     assert b"Logged in!" in response.data
 
-def test_login_incorrect_password(client):
-    # Create a user for testing
-    user = User(email='testuser@example.com', password_hash=bcrypt.generate_password_hash('password123'), date_created=datetime.now())
-    db.session.add(user)
-    db.session.commit()
-
+def test_login_incorrect_password(client, new_user):
+    with app.app_context():
+        db.session.add(new_user)
+        db.session.commit()
     response = client.post('/', data={
         'email': 'testuser@example.com',
         'password': 'password456',
