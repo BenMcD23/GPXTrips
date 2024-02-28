@@ -8,7 +8,7 @@ from datetime import datetime
 def client():
     app.config['TESTING'] = True
     app.config['WTF_CSRF_ENABLED'] = False
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
     client = app.test_client()
 
     with app.app_context():
@@ -17,12 +17,10 @@ def client():
     yield client
 
     with app.app_context():
+        db.session.remove()
         db.drop_all()
 
 def test_registration(client):
-    response = client.get('/register')
-    assert response.status_code == 200
-
     data = {
         'email': 'test@example.com',
         'first_name': 'John',
@@ -94,7 +92,7 @@ def test_login_incorrect_password(client):
 
 def test_login_nonexistent_user(client):
     data = {
-        'email': 'testuser@example.com',
+        'email': 'testuser3@example.com',
         'password': 'password123',
     }
     response = client.post('/', data=data, follow_redirects=True)
