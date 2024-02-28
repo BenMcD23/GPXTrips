@@ -8,7 +8,6 @@ def client():
     app.config['TESTING'] = True
     app.config['WTF_CSRF_ENABLED'] = False
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     client = app.test_client()
 
     with app.app_context():
@@ -17,7 +16,6 @@ def client():
     yield client
 
     with app.app_context():
-        db.session.remove()
         db.drop_all()
 
 def test_registration(client):
@@ -46,8 +44,7 @@ def test_registration_password_mismatch(client):
 
 
 def test_registration_existing_user(client):
-    # Create a user with the same username
-    existing_user = User(email='testuser@example.com', password_hash='hashed_password', date_created=datetime.now())
+    existing_user = User(email='testuser@example.com', password_hash=bcrypt.generate_password_hash('password123'), date_created=datetime.now())
     db.session.add(existing_user)
     db.session.commit()
 
@@ -64,8 +61,7 @@ def test_registration_existing_user(client):
 
 def test_login(client):
     # Create a user for testing login
-    hashed_password = bcrypt.generate_password_hash('password123')
-    user = User(email='testuser@example.com', password_hash=hashed_password, date_created=datetime.now())
+    user = User(email='testuser@example.com', password_hash=bcrypt.generate_password_hash('password123'), date_created=datetime.now())
     db.session.add(user)
     db.session.commit()
 
@@ -78,8 +74,7 @@ def test_login(client):
 
 def test_login_incorrect_password(client):
     # Create a user for testing
-    hashed_password = bcrypt.generate_password_hash('password')
-    user = User(email='testuser@example.com', password_hash=hashed_password, date_created=datetime.now())
+    user = User(email='testuser@example.com', password_hash=bcrypt.generate_password_hash('password123'), date_created=datetime.now())
     db.session.add(user)
     db.session.commit()
 
@@ -92,7 +87,7 @@ def test_login_incorrect_password(client):
 
 def test_login_nonexistent_user(client):
     data = {
-        'email': 'testuser3@example.com',
+        'email': 'testuser@example.com',
         'password': 'password123',
     }
     response = client.post('/', data=data, follow_redirects=True)
