@@ -4,9 +4,10 @@ from flask import Flask, render_template, request, redirect, url_for, send_file,
 from flask_login import login_user, login_required, logout_user, current_user
 from .forms import FileUploadForm, RegistrationForm, LoginForm
 from werkzeug.utils import secure_filename
+from DAL import add_route, get_route
 from datetime import datetime
-import json 
-
+import json
+import gpxpy
 
 @app.route("/", methods=["GET", "POST"])
 def login():
@@ -84,50 +85,54 @@ def logout():
 def manager():
     return render_template("manager.html")
 
-
-@app.route('/user',  methods=['GET', 'POST'])
+@app.route('/user', methods=['GET', 'POST'])
 @login_required
 def user():
-    """render map page from templates
+    """Render map page from templates.
 
     Returns:
         render_template: render template, with map.html
     """
-    # file upload form
+    # File upload form
     file_upload_form = FileUploadForm()
     routes = current_user.routes
 
     route = None
-    # if submit button is pressed and the file is valid
-    if (file_upload_form.submit_file.data and
-            file_upload_form.validate_on_submit()):
 
-        #  get the file uploaded
-        uploadedFile = request.files['file_upload']
-        # read the data
-        data = str(uploadedFile.read())
+    # If the form is submitted and is valid
+    if request.method == 'POST' and file_upload_form.validate_on_submit():
+        # Get the uploaded file
+        uploaded_file = request.files['file_upload']
+        
+        # Read the data from the file
+        gpx_data = uploaded_file.read()
 
-        # adds to database, waiting for login system to be implemented to test
+        # Check GPX file structure validation
+        if is_valid_gpx_structure(gpx_data):
+            try:
+                # Generate BLOB from GPX data
+                gpx_blob = gpx_data
 
-        # Generate BLOB from GPX data
-        gpx_blob = data.encode('ascii')
-        # create database entry, currently RouteTest just for testing
-        route = models.Route(
-            name=uploadedFile.filename,
-            upload_time=datetime.now().date(),
-            gpx_data=gpx_blob
-        )
-        # add to database
+                # Create a database entry
+                route = models.Route(
+                    name=uploaded_file.filename,
+                    upload_time=datetime.now(),
+                    gpx_data=gpx_blob
+                )
 
-        current_user.routes.append(route)
-        db.session.add(current_user)
-        db.session.add(route)
-        db.session.commit()
+                # Add to the current user's routes
+                current_user.routes.append(route)
 
-        # this gets rid of all the \n in the string, cant be used with them
-        # route = get_route()
-        # splitData = route.split("\\n")
-        # route = "".join(splitData)[2:][:-1]
+                # Commit changes to the database
+                db.session.commit()
+
+                flash("GPX file uploaded successfully!", "success")
+            except Exception as e:
+                db.session.rollback()  # Rollback changes if an exception occurs
+                print(f"Error: {e}")
+                flash("An error occurred while processing the GPX file.", "danger")
+        else:
+            flash("Invalid GPX file structure. Please upload a valid GPX file.", "danger")
 
     return render_template("user.html", title='Map', FileUploadForm=file_upload_form, route=route, routes=routes)
 
@@ -152,3 +157,16 @@ def getRoute():
 
     # return as a json
     return json.dumps(data)
+
+
+def is_valid_gpx_structure(gpx_data):
+    try:
+        # Parse GPX data
+        gpx = gpxpy.parse(gpx_data)
+
+        # No exception means the GPX data is structurally valid
+        return True
+
+    except gpxpy.gpx.GPXException as e:
+        print(f"GPX parsing error: {e}")
+        return False

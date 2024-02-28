@@ -4,9 +4,17 @@
 {% block title %}User Home{% endblock %}
 
 {% block content %}
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                {{ message }}
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
     <h2>Main Content Area for User Home</h2>
     <head>
         <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+        <body onload="getRoutes()">
 
         <!-- leaflet -->
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
@@ -14,7 +22,7 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/gpx.min.js"></script>
     </head>
 
-    <div class="smallGap">
+    <div style="margin-bottom: 20px;">
         <h3>Uploaded GPX Files</h3>
         <table class="table table-striped">
             <thead>
@@ -32,8 +40,8 @@
                     <td>{{ i.upload_time }}</td>
                     <td>
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="addToMap" id="{{ i.id }}">
-                            <label class="form-check-label" for="{{ i.id }}">
+                            <input class="form-check-input" type="checkbox" value="" id="displayCheckbox{{ i.id }}" onchange="displayOnMap({{ i.id }})">
+                            <label class="form-check-label" for="displayCheckbox{{ i.id }}">
                                 Show on Map?
                             </label>
                         </div>
@@ -54,7 +62,7 @@
     
 
     <!-- Add Friends and View Their Trips Section (Acessibility To be considered)-->
-    <div class="smallGap">
+    <div style="margin-bottom: 20px;">
         <h3>Friends and Their Trips</h3>
         <!-- Form to add friends -->
         <form action="/add_friend" method="post">
