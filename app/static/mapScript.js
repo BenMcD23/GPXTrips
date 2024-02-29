@@ -69,3 +69,4 @@ function displayOnMap(id) {
     GPX[id].remove(map);
  }
 }
+

@@ -3,7 +3,6 @@
 {% block title %}User Home{% endblock %}
 
 {% block content %}
-<h2>Main Content Area for User Home</h2>
 <div class="container-fluid">
     <div class="row">
         <!-- Left Column for Uploaded GPX Files -->
@@ -43,24 +42,6 @@
                     </tbody>
                 </table>
             </div>
-
-            <!-- File Upload Section -->
-            <div class="form">
-                <form method="POST" action="" name="fileUpload" enctype="multipart/form-data">
-                    {{ FileUploadForm.hidden_tag() }}
-                    <div class="form-group">
-                        <label for="fileUpload" class="form-label">Choose a GPX file to upload:</label>
-                        <div class="input-group">
-                            <input type="file" class="form-control" id="fileUpload" name="fileUpload" accept=".gpx">
-                            <button type="submit" class="btn btn-primary">Upload</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Right Column for Friends and Their Trips -->
-        <div class="col-md-6">
             <div class="smallGap">
                 <h3>Friends and Their Trips</h3>
                 <!-- Form to add friends -->
@@ -91,25 +72,32 @@
                                 <button type="button" class="btn btn-link">View Trips</button>
                             </td> -->
                         </tr>
-                        <tr>
-                            <td>John</td>
-                            <td> Cena </td>
-                            <td> jcena@gmail.com </td>
-                            <!-- <td>
-                                <button type="button" class="btn btn-link">View Trips</button>
-                            </td> -->
-                        </tr>
-                        <!-- Add more rows for each friend -->
                     </tbody>
                 </table>
             </div>
         </div>
+        <!-- File Upload Section -->
+        <div class="form">
+            <form method="POST" action="" name="fileUpload" enctype="multipart/form-data">
+                {{ FileUploadForm.hidden_tag() }}
+                <div class="form-group">
+                    <label for="fileUpload" class="form-label">Choose a GPX file to upload:</label>
+                    <div class="input-group">
+                        <input type="file" class="form-control" id="fileUpload" name="fileUpload" accept=".gpx">
+                        <button type="submit" class="btn btn-primary">Upload</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
     </div>
 </div>
 
 <!-- Leaflet Map Section -->
 <div id="test">
     <div id="map"></div>
+
+
 </div>
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/gpx.min.js"></script>
