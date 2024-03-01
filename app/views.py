@@ -9,37 +9,48 @@ from datetime import datetime
 import json
 import gpxpy
 
+# Login route
 @app.route("/", methods=["GET", "POST"])
 def login():
+    # Create an instance of the LoginForm
     form = LoginForm()
 
     if request.method == 'POST':
+        # Query the user by email
         user = User.query.filter_by(email=form.email.data).first()
+
         if user:
             if bcrypt.check_password_hash(user.password_hash, form.password.data):
+                # Login user and redirect to user route after successful login
                 flash("Logged in!", category="success")
                 login_user(user, remember=True)
                 return redirect(url_for("user"))
             else:
+                # Redirect to back login if password is incorrect
                 flash("Password is wrong!", category="error")
                 return redirect(url_for("login"))
         else:
+            # Redirect to back login if account does not exist
             flash("Account does not exist!", category="error")
             return redirect(url_for("login"))
 
     return render_template("login.html", title="Login", form=form)
 
+# Register route
 @app.route("/register", methods=["GET", "POST"])
 def register():
+    # Create an instance of the RegistrationForm
     form = RegistrationForm()
 
     if request.method == 'POST':
+        # Request data from form
         email = request.form.get("email")
         first_name = request.form.get("first_name")
         last_name = request.form.get("last_name")
         password = request.form.get("password")
         confirm_password = request.form.get("confirm_password")
 
+        # Check provided email has an account that exists
         existing_email = User.query.filter_by(email=email).first()
         if existing_email:
             flash(
@@ -47,6 +58,7 @@ def register():
             )
             return render_template("registration.html", title="Register", form=form)
 
+        # Password validation
         if password != confirm_password:
             flash(
                 "Passwords do not match. Please make sure your passwords match.",
@@ -54,6 +66,7 @@ def register():
             )
             return render_template("registration.html", title="Register", form=form)
 
+        # Stubs for plan selection
         selected_plan = request.form.get("plan")
         if selected_plan == 'option1':
             answer = 'You selected Option 1'
@@ -64,6 +77,7 @@ def register():
         else:
             answer = 'Invalid option'
 
+        # Hash password and add used to the database
         hashed_password = bcrypt.generate_password_hash(password)
         user = User(email=email, first_name=first_name, last_name=last_name, password_hash=hashed_password, date_created=datetime.now())
         db.session.add(user)
@@ -71,13 +85,16 @@ def register():
 
         flash("User added successfully!", "success")
 
-        return redirect(url_for("login"))
+        # Redirect to login after successful registration
+        return redirect(url_for("login")) 
 
     return render_template("registration.html", title="Register", form=form)
 
+# Logout route
 @app.route("/logout", methods=["GET", "POST"])
 @login_required
 def logout():
+    # Logout user and redirect to login
     logout_user()
     return redirect(url_for("login"))
 
