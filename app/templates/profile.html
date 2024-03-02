@@ -1,0 +1,18 @@
+{% extends 'base_post_login.html' %}
+
+{% block title %}User Home{% endblock %}
+
+{% block content %}
+
+
+<div class="profileCls">
+    <h1>User Information</h1>
+    <div>
+        <p><strong>First Name:</strong> {{ current_user.first_name }}</p>
+        <p><strong>Second Name:</strong> {{ current_user.last_name }}
+        <p><strong>Email:</strong> {{ current_user.email }}</p>
+        <p><strong>Payment Plan:</strong> {{ current_user.plan_name }}</p>
+    </div>
+</div>
+
+{% endblock %}

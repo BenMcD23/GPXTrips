@@ -84,6 +84,23 @@ def logout():
 def manager():
     return render_template("manager.html")
 
+@app.route('/friends')
+@login_required
+def friends():
+    #Query all friends of the current user + pending friends requests
+    return render_template("friends.html",current_user=current_user)
+
+@app.route('/profile')
+@login_required
+def profile():
+    #Pass data to retrive user details
+    return render_template("profile.html",current_user=current_user)
+
+@app.route('/settings')
+@login_required
+def settings():
+    #Pass data and receive user changes (i.e email/name/payment changes)
+    return render_template("settings.html",current_user=current_user)
 
 @app.route('/user',  methods=['GET', 'POST'])
 @login_required

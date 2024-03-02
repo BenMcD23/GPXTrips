@@ -1,0 +1,16 @@
+.container-fluid {
+    padding: 20px;
+    margin-top: 80px;
+
+}
+
+.footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: black;
+    color: white;
+    padding: 5px 0;
+    text-align: center;
+}

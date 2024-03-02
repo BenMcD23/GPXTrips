@@ -3,80 +3,43 @@
 {% block title %}User Home{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row">
-        <!-- Left Column for Uploaded GPX Files -->
-        <div class="col-md-6">
-            <div class="smallGap">
-                <h3>Uploaded GPX Files</h3>
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>File Name</th>
-                            <th>Upload Date</th>
-                            <th>Display on Map</th>
-                            <th>Published by</th>
-                            <!-- <th>Public></th> -->
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for i in routes %}
-                        <tr>
-                            <td>{{ i.name }}</td>
-                            <td>{{ i.upload_time }}</td>
-                            <td>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="addToMap" id="{{ i.id }}">
-                                    <label class="form-check-label" for="{{ i.id }}"></label>
-                                </div>
-                            </td>
-                            <td>{{ i.user.first_name}} {{i.user.last_name}}</td>
-                            <!-- <td>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" value="" id="publicCheckbox1">
-                                    <label class="form-check-label" for="publicCheckbox1">Public</label>
-                                </div>
-                            </td> -->
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            <div class="smallGap">
-                <h3>Friends and Their Trips</h3>
-                <!-- Form to add friends -->
-                <form action="/add_friend" method="post">
-                    <div class="form-group">
-                        <label for="friendEmail">Friend's Email:</label>
-                        <input type="email" class="form-control" id="friendEmail" name="friend_email">
-                    </div>
-                    <button type="submit" id="addFriendButton" class="btn btn-primary" name="addFriendButton">Add Friend</button>
-                </form>
-                <!-- Display list of friends and their trips -->
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Surname</th>
-                            <th>Email</th>
-                            <!-- <th>View Trips</th> -->
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Loop through each friend -->
-                        <tr>
-                            <td> John </td>
-                            <td> Doe </td>
-                            <td> johndoe@gmail.com </td>
-                            <!-- <td>
-                                <button type="button" class="btn btn-link">View Trips</button>
-                            </td> -->
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <!-- File Upload Section -->
+<div id="popupContainer" class="popupContainer">
+    <div id="popupForm" class="popupForm">
+        <span class="closeBtn" id="closeBtn">&times;</span>
+        <h1>Uploaded GPX Files</h1>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>File Name</th>
+                    <th>Upload Date</th>
+                    <th>Display on Map</th>
+                    <th>Published by</th>
+                    <!-- <th>Public></th> -->
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in routes %}
+                <tr>
+                    <td>{{ i.name }}</td>
+                    <td>{{ i.upload_time }}</td>
+                    <td>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="addToMap" id="{{ i.id }}">
+                            <label class="form-check-label" for="{{ i.id }}"></label>
+                        </div>
+                    </td>
+                    <td>{{ i.user.first_name}} {{i.user.last_name}}</td>
+                    <!-- <td>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="" id="publicCheckbox1">
+                            <label class="form-check-label" for="publicCheckbox1">Public</label>
+                        </div>
+                    </td> -->
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+            <!-- File Upload Section -->
         <div class="form">
             <form method="POST" action="" name="fileUpload" enctype="multipart/form-data">
                 {{ FileUploadForm.hidden_tag() }}
@@ -88,6 +51,15 @@
                     </div>
                 </div>
             </form>
+        </div>
+        
+    </div>
+</div>
+<div class="container-fluid">
+    <div class="row">
+        <!-- Left Column for Uploaded GPX Files -->
+        <div class="col-md-6">
+            <button id="viewRoutesBtn" class="btn btn-primary">View & Manage GPX Routes</button>
         </div>
 
     </div>

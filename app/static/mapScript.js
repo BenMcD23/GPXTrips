@@ -70,3 +70,18 @@ function displayOnMap(id) {
  }
 }
 
+//JS Code to handle pop-up forms
+
+document.addEventListener('DOMContentLoaded', function () {
+  const viewRoutesBtn = document.getElementById('viewRoutesBtn');
+  const popupContainer = document.getElementById('popupContainer');
+  const closeBtn = document.getElementById('closeBtn');
+
+  viewRoutesBtn.addEventListener('click', function () {
+      popupContainer.style.display = 'block';
+  });
+
+  closeBtn.addEventListener('click', function () {
+      popupContainer.style.display = 'none';
+  });
+});
