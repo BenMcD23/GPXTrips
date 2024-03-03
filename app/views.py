@@ -54,17 +54,17 @@ def register():
         existing_email = User.query.filter_by(email=email).first()
         if existing_email:
             flash(
-                "Email already in use. Please choose a different email.", "error"
+                "Email already in use. Please choose a different email.", category="error"
             )
-            return render_template("registration.html", title="Register", form=form)
+            return redirect(url_for("register"))
 
         # Password validation
         if password != confirm_password:
             flash(
                 "Passwords do not match. Please make sure your passwords match.",
-                "error",
+                category="error",
             )
-            return render_template("registration.html", title="Register", form=form)
+            return redirect(url_for("register"))
 
         # Stubs for plan selection
         selected_plan = request.form.get("plan")
@@ -83,7 +83,7 @@ def register():
         db.session.add(user)
         db.session.commit()
 
-        flash("User added successfully!", "success")
+        flash("User added successfully!", category="success")
 
         # Redirect to login after successful registration
         return redirect(url_for("login")) 
@@ -147,9 +147,9 @@ def user():
             except Exception as e:
                 db.session.rollback()  # Rollback changes if an exception occurs
                 print(f"Error: {e}")
-                flash("An error occurred while processing the GPX file.", "danger")
+                flash("An error occurred while processing the GPX file.", "error")
         else:
-            flash("Invalid GPX file structure. Please upload a valid GPX file.", "danger")
+            flash("Invalid GPX file structure. Please upload a valid GPX file.", "error")
 
     return render_template("user.html", title='Map', FileUploadForm=file_upload_form, route=route, routes=routes)
 
