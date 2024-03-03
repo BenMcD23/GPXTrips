@@ -90,6 +90,12 @@ def friends():
     #Query all friends of the current user + pending friends requests
     return render_template("friends.html",current_user=current_user)
 
+@app.route('/manage_users')
+@login_required
+def manage_users():
+    all_users = models.User.query.all()
+    return render_template("manage_users.html",all_users=all_users)
+
 @app.route('/profile')
 @login_required
 def profile():

@@ -1,0 +1,36 @@
+{% extends 'base_manager.html' %}
+
+{% block title %}Manager Home{% endblock %}
+
+{% block content %}
+
+<h2>Customer Information</h2>
+
+<table>
+  <tr>
+    <th>Name</th>
+    <th>Surname</th>
+    <th>Email Address</th>
+    <th>Membership</th>
+    <th>Action</th>
+  </tr>
+  {% for user in all_users %}
+  <tr>
+    <td>{{ user.first_name }}</td>
+    <td>{{ user.last_name }}</td>
+    <td>{{ user.email }}</td>
+    <td>{{ user.subscription_id }}</td>
+    <td>
+        {% if user.enabled %}
+            <button onclick="toggleAccount('{{ user.id }}', false)">Disable</button>
+        {% else %}
+            <button onclick="toggleAccount('{{ user.id }}', true)">Enable</button>
+        {% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+
+
+
+{% endblock %}
