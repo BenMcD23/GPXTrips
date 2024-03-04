@@ -1,3 +1,4 @@
+from config import stripe_keys
 from app import app, db, models, bcrypt
 from .models import User
 from flask import Flask, render_template, request, redirect, url_for, send_file, flash, jsonify
@@ -137,39 +138,38 @@ def user():
 
 # Views for handling payments
 
+
 @app.route("/manage_subscription")
 def manage_subscription():
+    # print(stripe_keys["price_id"])
     return render_template("subscription.html")
+
+# Identical to CONFIG
 
 
 @app.route("/stripe")
 def get_publishable_key():
-    stripe_config = {"publicKey": app.stripe_keys["publishable_key"]}
+    stripe_config = {"publicKey": stripe_keys["publishable_key"]}
     return jsonify(stripe_config)
 
 
 @app.route("/checkout")
 def checkout():
-    domain_url = "http://127.0.0.1:5000/"
-    stripe.api_key = app.stripe_keys["secret_key"]
+    domain_url = "http://localhost:5000/"
+    stripe.api_key = stripe_keys["secret_key"]
 
     try:
         checkout_session = stripe.checkout.Session.create(
-            # client_reference_id=current_user.id if current_user.is_authenticated else None,
-            success_url=domain_url +
+            # example: client_reference_id=user.id,
+            success_url=domain_url + \
             "success?session_id={CHECKOUT_SESSION_ID}",
-            cancel_url=domain_url + "cancelled",
+            cancel_url=domain_url + "cancel",
             payment_method_types=["card"],
-            mode="payment",
+            mode="subscription",
             line_items=[
                 {
+                    "price": stripe_keys["price_id"],
                     "quantity": 1,
-                    "price_data":
-                        {
-                            "unit_amount": "7000",
-                            "currency": "gbp",
-                            "product_data": {"name": "1 Year Subscription"}
-                        }
                 }
             ]
         )
@@ -188,23 +188,39 @@ def cancelled():
     return render_template("cancelled.html")
 
 
-@app.route("/webhook", methods=["POST"])
-def stripe_webhook():
-    payload = request.get_data(as_text=True)
-    sig_header = request.headers.get("Stripe-Signature")
+@app.route('/webhook', methods=['POST'])
+def webhook():
+    payload = request.get_data()
+    sig_header = request.headers.get('Stripe_Signature', None)
+
+    if not sig_header:
+        return 'No Signature Header!', 400
 
     try:
         event = stripe.Webhook.construct_event(
-            payload, sig_header, app.stripe_keys["endpoint_secret"]
+            payload, sig_header, stripe_keys["endpoint_secret"]
         )
-
     except ValueError as e:
-        return "Invalid payload", 400
+        # Invalid payload
+        return 'Invalid payload', 400
     except stripe.error.SignatureVerificationError as e:
-        return "Invalid signature", 400
+        # Invalid signature
+        return 'Invalid signature', 400
 
-    # Handle the checkout.session.completed event
-    if event["type"] == "checkout.session.completed":
-        print("Payment was successful.")
+    if event['type'] == 'payment_intent.succeeded':
+        # contains the email that will recive the recipt for the payment (users email usually)
+        email = event['data']['object']['receipt_email']
 
-    return "Success", 200
+        user_info['paid_50'] = True
+        user_info['email'] = email
+    if event['type'] == 'invoice.payment_succeeded':
+        # contains the email that will recive the recipt for the payment (users email usually)
+        email = event['data']['object']['customer_email']
+        # contains the customer id
+        customer_id = event['data']['object']['customer']
+
+        user_info['paid'] = True
+    else:
+        return 'Unexpected event type', 400
+
+    return '', 200

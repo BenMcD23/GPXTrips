@@ -6,7 +6,10 @@ from flask_bcrypt import Bcrypt
 from flask_wtf.csrf import CSRFProtect
 from flask_migrate import Migrate
 from flask_talisman import Talisman
+from config import stripe_keys
 
+from dotenv import load_dotenv
+load_dotenv()
 import os
 import stripe
 
@@ -15,7 +18,7 @@ app.config.from_object('config')
 FLASK_DEBUG=1
 
 # security stuff, conifgured below
-talisman = Talisman(app)
+# talisman = Talisman(app)
 
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
@@ -75,17 +78,7 @@ talisman.force_https = True
 talisman.force_file_save = True
 talisman.frame_options_allow_from = 'https://www.google.com'
  
-# add to Talisman
+# # add to Talisman
 talisman.content_security_policy = csp
 talisman.strict_transport_security = hsts
 talisman.content_security_policy_nonce_in = nonce_list
-
-# Stripe
-
-app.stripe_keys = {
-    "secret_key": os.environ["STRIPE_SECRET_KEY"],
-    "publishable_key": os.environ["STRIPE_PUBLISHABLE_KEY"],
-    "endpoint_secret": os.environ["STRIPE_ENDPOINT_SECRET"],
-}
-
-stripe.api_key = app.stripe_keys["secret_key"]
