@@ -1,8 +1,62 @@
 .container-fluid {
     padding: 20px;
-    margin-top: 80px;
+    margin-top: 20px;
 
 }
+
+/* Custom blue navbar */
+.custom-blue-bg {
+    background-color: #00B4C5 !important;
+    color: black;
+}
+
+
+/* Main manager page styling */
+h1{
+    text-align: center;
+    justify-content: center;
+}
+
+.quadrant-container {
+    position: relative;
+    width: 100%;
+    height: 60vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.top-quadrants,
+.bottom-quadrants {
+    display: flex;
+    justify-content: space-between;
+    flex: 1;
+    margin-bottom: 20px;
+}
+
+.quadrant {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background-color: #00B4C5;
+    margin: 10px;
+    color: #111111;
+}
+.oval {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    width: 300px;
+    height: 150px; 
+    border-radius: 50%; 
+    background-color: transparent;
+    margin: 20px;
+    color: black;
+    font-size: 24px;
+}
+
 
 .footer {
     position: fixed;
@@ -27,3 +81,35 @@ th, td {
 th {
     background-color: #f2f2f2;
 }
+button.enabled {
+    background-color: green;
+    color: white;
+}
+
+button.disabled {
+    background-color: red;
+    color: white;
+}
+
+
+
+
+#revenueEstimates {
+    margin-top: 20px;
+}
+
+
+
+@media screen and (max-width: 768px) {
+    .quadrant-container {
+        height: 100%;
+        flex-direction: column;
+        margin-top: 0;
+    }
+    .quadrant {
+        width: calc(50% - 40px);
+    }
+}
+
+
+

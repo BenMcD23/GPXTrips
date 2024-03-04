@@ -1,10 +1,12 @@
 {% extends 'base_manager.html' %}
 
-{% block title %}Manager Home{% endblock %}
+{% block title %}Manage Users{% endblock %}
 
 {% block content %}
 
 <h2>Customer Information</h2>
+
+<!-- This page will allow you to view and manage registered users. You can enable or disable their accounts. -->
 
 <table>
   <tr>
@@ -22,15 +24,28 @@
     <td>{{ user.subscription_id }}</td>
     <td>
         {% if user.enabled %}
-            <button onclick="toggleAccount('{{ user.id }}', false)">Disable</button>
+            <button class="disabled" onclick="toggleAccount('{{ user.id }}', false)" >Disabled</button>
         {% else %}
-            <button onclick="toggleAccount('{{ user.id }}', true)">Enable</button>
+            <button class="enabled" onclick="toggleAccount('{{ user.id }}', true)">Enabled</button>
         {% endif %}
     </td>
   </tr>
   {% endfor %}
 </table>
 
+<script>
+function toggleAccount(userId, enable) {
+//AJAX CODE NECESSARY TO MAKE THE CHANGE ON THE DB ... TO BE COMPLETED
+//This action would toggle beween enabling and disabling the account
+
+    if (enable) {
+        alert('Enabling account with ID ' + customerId);
+    } else {
+        alert('Disabling account with ID ' + customerId);
+    }
+}
+
+</script>
 
 
 {% endblock %}

@@ -84,17 +84,21 @@ def logout():
 def manager():
     return render_template("manager.html")
 
-@app.route('/friends')
-@login_required
-def friends():
-    #Query all friends of the current user + pending friends requests
-    return render_template("friends.html",current_user=current_user)
-
 @app.route('/manage_users')
 @login_required
 def manage_users():
     all_users = models.User.query.all()
     return render_template("manage_users.html",all_users=all_users)
+
+@app.route('/view_revenue')
+def view_revenue():
+    return render_template("view_revenue.html")
+
+@app.route('/friends')
+@login_required
+def friends():
+    #Query all friends of the current user + pending friends requests
+    return render_template("friends.html",current_user=current_user)
 
 @app.route('/profile')
 @login_required
