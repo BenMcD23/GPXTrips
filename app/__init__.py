@@ -84,7 +84,8 @@ talisman.content_security_policy_nonce_in = nonce_list
 
 app.stripe_keys = {
     "secret_key": os.environ["STRIPE_SECRET_KEY"],
-    "publishable_key": os.environ["STRIPE_PUBLISHABLE_KEY"]
+    "publishable_key": os.environ["STRIPE_PUBLISHABLE_KEY"],
+    "endpoint_secret": os.environ["STRIPE_ENDPOINT_SECRET"],
 }
 
 stripe.api_key = app.stripe_keys["secret_key"]

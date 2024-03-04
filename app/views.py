@@ -9,6 +9,7 @@ from datetime import datetime
 
 import stripe
 
+
 @app.route("/", methods=["GET", "POST"])
 def login():
     form = LoginForm()
@@ -28,6 +29,7 @@ def login():
             return redirect(url_for("login"))
 
     return render_template("login.html", title="Login", form=form)
+
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -65,7 +67,8 @@ def register():
             answer = 'Invalid option'
 
         hashed_password = bcrypt.generate_password_hash(password)
-        user = User(email=email, first_name=first_name, last_name=last_name, password_hash=hashed_password, date_created=datetime.now())
+        user = User(email=email, first_name=first_name, last_name=last_name,
+                    password_hash=hashed_password, date_created=datetime.now())
         db.session.add(user)
         db.session.commit()
 
@@ -75,11 +78,13 @@ def register():
 
     return render_template("registration.html", title="Register", form=form)
 
+
 @app.route("/logout", methods=["GET", "POST"])
 @login_required
 def logout():
     logout_user()
     return redirect(url_for("login"))
+
 
 @app.route('/manager')
 def manager():
@@ -136,25 +141,27 @@ def user():
 def manage_subscription():
     return render_template("subscription.html")
 
+
 @app.route("/stripe")
 def get_publishable_key():
     stripe_config = {"publicKey": app.stripe_keys["publishable_key"]}
     return jsonify(stripe_config)
+
 
 @app.route("/checkout")
 def checkout():
     domain_url = "http://127.0.0.1:5000/"
     stripe.api_key = app.stripe_keys["secret_key"]
 
- 
     try:
         checkout_session = stripe.checkout.Session.create(
-            success_url=domain_url + "success?session_id={CHECKOUT_SESSION_ID}",
+            # client_reference_id=current_user.id if current_user.is_authenticated else None,
+            success_url=domain_url +
+            "success?session_id={CHECKOUT_SESSION_ID}",
             cancel_url=domain_url + "cancelled",
             payment_method_types=["card"],
             mode="payment",
-            line_items=
-            [
+            line_items=[
                 {
                     "quantity": 1,
                     "price_data":
@@ -169,3 +176,35 @@ def checkout():
         return jsonify({"sessionId": checkout_session["id"]})
     except Exception as e:
         return jsonify(error=str(e)), 403
+
+
+@app.route("/success")
+def success():
+    return render_template("success.html")
+
+
+@app.route("/cancelled")
+def cancelled():
+    return render_template("cancelled.html")
+
+
+@app.route("/webhook", methods=["POST"])
+def stripe_webhook():
+    payload = request.get_data(as_text=True)
+    sig_header = request.headers.get("Stripe-Signature")
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, app.stripe_keys["endpoint_secret"]
+        )
+
+    except ValueError as e:
+        return "Invalid payload", 400
+    except stripe.error.SignatureVerificationError as e:
+        return "Invalid signature", 400
+
+    # Handle the checkout.session.completed event
+    if event["type"] == "checkout.session.completed":
+        print("Payment was successful.")
+
+    return "Success", 200
