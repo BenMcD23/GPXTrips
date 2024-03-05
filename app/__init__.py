@@ -3,7 +3,7 @@ from flask import Flask, jsonify
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
-from flask_wtf.csrf import CSRFProtect
+# from flask_wtf.csrf import CSRFProtect
 from flask_migrate import Migrate
 from flask_talisman import Talisman
 from config import stripe_keys
@@ -18,11 +18,11 @@ app.config.from_object('config')
 FLASK_DEBUG=1
 
 # security stuff, conifgured below
-# talisman = Talisman(app)
+talisman = Talisman(app)
 
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
-csrf = CSRFProtect(app)
+# csrf = CSRFProtect(app)
 
 login_manager = LoginManager()
 login_manager.login_view = "login"

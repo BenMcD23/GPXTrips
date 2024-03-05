@@ -188,39 +188,30 @@ def cancelled():
     return render_template("cancelled.html")
 
 
-@app.route('/webhook', methods=['POST'])
-def webhook():
-    payload = request.get_data()
-    sig_header = request.headers.get('Stripe_Signature', None)
-
-    if not sig_header:
-        return 'No Signature Header!', 400
+@app.route("/webhook", methods=["POST"])
+def stripe_webhook():
+    payload = request.get_data(as_text=True)
+    sig_header = request.headers.get("Stripe-Signature")
 
     try:
         event = stripe.Webhook.construct_event(
             payload, sig_header, stripe_keys["endpoint_secret"]
         )
+
     except ValueError as e:
-        # Invalid payload
-        return 'Invalid payload', 400
+        return "Invalid payload", 400
     except stripe.error.SignatureVerificationError as e:
-        # Invalid signature
-        return 'Invalid signature', 400
+        return "Invalid signature", 400
 
-    if event['type'] == 'payment_intent.succeeded':
-        # contains the email that will recive the recipt for the payment (users email usually)
-        email = event['data']['object']['receipt_email']
+    # Handle the checkout.session.completed event
+    if event["type"] == "checkout.session.completed":
+        session = event["data"]["object"]
 
-        user_info['paid_50'] = True
-        user_info['email'] = email
-    if event['type'] == 'invoice.payment_succeeded':
-        # contains the email that will recive the recipt for the payment (users email usually)
-        email = event['data']['object']['customer_email']
-        # contains the customer id
-        customer_id = event['data']['object']['customer']
+        # Fulfill the purchase
+        handle_checkout_session(session)
 
-        user_info['paid'] = True
-    else:
-        return 'Unexpected event type', 400
+    return "Success", 200
 
-    return '', 200
+
+def handle_checkout_session(session):
+    print("Subscription was successful.")
