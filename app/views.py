@@ -232,6 +232,15 @@ def checkout():
     except Exception as e:
         return jsonify(error=str(e)), 403
 
+@app.route("/cancel_subscription")
+def cancel_subscription():
+    stripe.api_key = stripe_keys["secret_key"]
+
+    try:
+        stripe.Subscription.cancel("") #pass subscription id here
+    except Exception as e:
+        return jsonify(error=str(e)), 403
+
 
 @app.route("/success")
 def success():
