@@ -7,7 +7,7 @@ from flask_login import login_user, login_required, logout_user, current_user
 from .forms import FileUploadForm, RegistrationForm, LoginForm
 from werkzeug.utils import secure_filename
 from DAL import add_route, get_route
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import stripe
 # Custom view class for the User model
@@ -236,9 +236,10 @@ def success():
     return render_template("success.html")
 
 
-@app.route("/cancelled")
+@app.route("/cancel")
 def cancelled():
-    return render_template("cancelled.html")
+    flash("Payment cancelled.")
+    return redirect(url_for("manage_subscription"))
 
 
 @app.route('/webhook', methods=['POST'])
@@ -253,11 +254,13 @@ def stripe_webhook():
         abort(400)
 
     if event['type'] == 'invoice.updated':
+
         invoice_data = event['data']['object']
         customer_email = invoice_data['customer_email']
 
         plan_id = invoice_data['lines']['data'][0]['plan']['id']
 
+        # user = current_user
         user = User.query.filter_by(email=customer_email).first()
 
         # Query the plan based on the plan_id of the subscription.
@@ -274,16 +277,26 @@ def stripe_webhook():
 
     return jsonify({'success': True})
 
-
 def create_subscription(user, plan):
+    if plan.name == "Weekly":
+        date_end=datetime.now()+timedelta(weeks=1)
+    elif plan.name == "Monthly":
+        date_end=datetime.now()+timedelta(weeks=4)
+    else:
+        date_end=datetime.now()+timedelta(weeks=52)
+
     subscription = Subscription(
         user=user,
         plan_id=plan.id,
         date_start=datetime.utcnow(),
-        date_end=None  # Set an end date based on subscription using some logic
+        date_end=date_end
     )
 
     db.session.add(subscription)
     db.session.commit()
 
     print(f"Subscription created for {user.email} with plan {plan.name}")
+
+def current_user_active_subscription():
+    #some code
+    return
