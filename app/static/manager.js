@@ -13,32 +13,80 @@ $(document).ready(function()
     });
 })
 
-// gets all the checkbox's
-let checkboxes = $("input[type=checkbox][name=userState]")
+// gets all the checkbox's for user account toggle
+let checkboxesUser = $("input[type=checkbox][name=userState]")
 
 // listens for when any of them get checked/unchecked
-checkboxes.change(function() {
+checkboxesUser.change(function() {
     changeUserState(this.id);
 });
 
+// gets all the checkbox's for manager toggle
+let checkboxesManger = $("input[type=checkbox][name=userManger]")
+
+// listens for when any of them get checked/unchecked
+checkboxesManger.change(function() {
+    changeMangement(this.id);
+});
+
+// changes user account state to either activated or deactivated
 function changeUserState(id){
     const checkbox_state = document.getElementById(id);
+    // get rid of all the stuff before the id
+    id = id.split('_')[1];
     var state;
     // if gets checked
     if (checkbox_state.checked) {
-        $("#text_"+id).text("True");
+        $("#textUser_"+id).text("True");
         state = true;
     }
 
     // if it gets unchecked
     else {
-        $("#text_"+id).text("False");
+        $("#textUser_"+id).text("False");
         state = false
     }
 
     // then post the state with the id, so can be changed in database
     $.ajax({ 
         url: '/accountState', 
+        type: 'POST', 
+        contentType: 'application/json', 
+        data: JSON.stringify({id, state}), 
+    
+    // if success, dont do anything
+    success: function(response) {
+        
+    },
+    // if error, console error
+    error: function(error) { 
+        console.log(error); 
+    } 
+    });
+}
+
+// changes user account state to either activated or deactivated
+function changeMangement(id){
+    const checkbox_state = document.getElementById(id);
+    // get rid of all the stuff before the id
+    id = id.split('_')[1];
+
+    var state;
+    // if gets checked
+    if (checkbox_state.checked) {
+        $("#textManager_"+id).text("True");
+        state = true;
+    }
+
+    // if it gets unchecked
+    else {
+        $("#textManager_"+id).text("False");
+        state = false
+    }
+
+    // then post the state with the id, so can be changed in database
+    $.ajax({ 
+        url: '/accountManger', 
         type: 'POST', 
         contentType: 'application/json', 
         data: JSON.stringify({id, state}), 

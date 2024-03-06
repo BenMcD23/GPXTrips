@@ -227,4 +227,15 @@ def accountState():
 
     return jsonify(data=data)
 
+@app.route('/accountManger', methods=['POST'])
+def accountManger():
+    # get data posted
+    data = request.get_json()
+
+    # change the user account state in database
+    User.query.filter_by(id=data["id"]).first().manager = data["state"]
+    db.session.commit()
+
+    return jsonify(data=data)
+
 

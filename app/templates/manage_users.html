@@ -41,6 +41,8 @@
     <th>Account Created</th>
     <th>Membership</th>
     <th>Account Activated</th>
+    <th>Manager Account</th>
+
   </tr>
   {% for user in users %}
   <tr>
@@ -50,12 +52,19 @@
     <td>{{ user.date_created }}</td>
     <td>{{ user.subscription_id }}</td>
     <td>
-        <p id="text_{{ user.id }}">{{ user.account_active }}</p>
+        <p id="textUser_{{ user.id }}">{{ user.account_active }}</p>
         <label class="switch">
-          <input id="{{ user.id }}" name="userState" type="checkbox" {% if user.account_active== True %} checked {% else %} {% endif %}>
+          <input id="user_{{ user.id }}" name="userState" type="checkbox" {% if user.account_active== True %} checked {% else %} {% endif %}>
           <span class="slider"></span>
         </label>
     </td>
+    <td>
+      <p id="textManager_{{ user.id }}">{{ user.manager }}</p>
+      <label class="switch">
+        <input id="manager_{{ user.id }}" name="userManger" type="checkbox" {% if user.manager== True %} checked {% else %} {% endif %}>
+        <span class="slider"></span>
+      </label>
+  </td>
   </tr>
   {% endfor %}
 </table>
