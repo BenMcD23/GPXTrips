@@ -13,12 +13,22 @@ class User(db.Model, UserMixin):
 
     account_active = db.Column(db.Boolean, nullable=False)
 
+    manager = db.Column(db.Boolean, nullable=False)
+
     subsciptions = db.relationship('Subscription', backref='user', lazy=True)
     routes = db.relationship('Route', backref='user', lazy=True)
 
     # returns as dict so can be used for search bar
     def email_as_dict(self):
         return {'email': self.email}
+
+    def is_manager(self):
+        if self.manager == True:
+            return True
+
+        else:
+            return False
+
 
 class Route(db.Model):
     id = db.Column(db.Integer, primary_key=True)

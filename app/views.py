@@ -1,11 +1,22 @@
 from app import app, db, models, bcrypt
 from .models import User
-from flask import Flask, render_template, request, redirect, url_for, send_file, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, send_file, flash, jsonify, abort
 from flask_login import login_user, login_required, logout_user, current_user
 from .forms import FileUploadForm, RegistrationForm, LoginForm, UserSearch
 from werkzeug.utils import secure_filename
 from datetime import datetime
 import json 
+from functools import wraps
+
+def manger_required():
+    def decorator(func):
+        @wraps(func)
+        def authorize(*args, **kwargs):
+            if not current_user.is_manager():
+                abort(401) # not authorized
+            return func(*args, **kwargs)
+        return authorize
+    return decorator
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -64,7 +75,7 @@ def register():
             answer = 'Invalid option'
 
         hashed_password = bcrypt.generate_password_hash(password)
-        user = User(email=email, first_name=first_name, last_name=last_name, password_hash=hashed_password, date_created=datetime.now(), account_active=True)
+        user = User(email=email, first_name=first_name, last_name=last_name, password_hash=hashed_password, date_created=datetime.now(), account_active=True, manager=False)
         db.session.add(user)
         db.session.commit()
 
@@ -81,6 +92,7 @@ def logout():
     return redirect(url_for("login"))
 
 @app.route('/manager')
+@manger_required()
 def manager():
     return render_template("manager.html")
 
