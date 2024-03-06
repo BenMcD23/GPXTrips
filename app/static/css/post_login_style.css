@@ -1,39 +1,39 @@
-
 /* CSS for the navbar */
 .navbar {
     position: fixed;
     top: 0;
     width: 100%;
-    z-index: 1000; 
-  }
-  
+    z-index: 1000;
+}
+
 /* CSS for the map */
 #map {
     position: fixed;
-    top: 55px; 
+    top: 55px;
     left: 0;
     width: 100%;
-    height: calc(100vh - 105px); 
-    z-index: 0; 
-    float: left; 
+    height: calc(100vh - 105px);
+    z-index: 0;
+    float: left;
 }
 
 .col-md-6 {
-    width: auto; 
-    float: right; 
+    width: auto;
+    float: right;
     margin-right: 0;
     margin-top: 0;
-    padding: 20px; 
-    position: fixed; 
-    top: 60px; 
-    right: 0; 
+    padding: 20px;
+    position: fixed;
+    top: 60px;
+    right: 0;
     /* border-style: solid; */
     /* border-radius: 15px; */
     /* border: 4px solid black;  */
     z-index: 1000;
     /* background-color: black; */
-    
+
 }
+
 .btn-primary {
     background-color: #00008B;
     border-color: #111111;
@@ -54,16 +54,31 @@
     margin-bottom: 10px;
     margin-top: 500px;
 }
-.profileCls{
+
+.profileCls {
     margin-top: 500px;
     border: #00008B;
     border-radius: 36px;
-    border-style: solid ;
+    border-style: solid;
     background-color: white;
     padding: 40px;
 }
 
-html, body {
+.card {
+    overflow: auto;
+    width: fit-content;
+    height: fit-content;
+    border-radius: 9%;
+    font-size: 1.8vh;
+}
+
+/* Background Image from: https://upload.wikimedia.org/wikipedia/commons/0/03/Manchester_Street_Plan_2011.jpg */
+.profilePage {
+    background-image: url("../Manchester_Street_Plan_2011.jpg");
+}
+
+html,
+body {
     height: 50%;
     padding: 0;
     margin: 0;
@@ -75,27 +90,29 @@ html, body {
     align-items: center;
     height: 100%;
 }
+
 #tables {
     width: 20%;
     height: 100%;
     overflow-y: auto;
-    position: fixed; 
-    top: 0; 
+    position: fixed;
+    top: 0;
     right: 0;
 }
+
 #tables:nth-of-type(2) {
-    order: 3; 
+    order: 3;
 }
 
 /* Upload button styling */
 .form {
     position: relative;
-    bottom: aito; 
-    right: 0; 
+    bottom: aito;
+    right: 0;
     width: 100%;
-    background-color: #ffffff; 
-    padding: 20px; 
-    border: 4px solid black; 
+    background-color: #ffffff;
+    padding: 20px;
+    border: 4px solid black;
     border-radius: 15px;
 }
 
@@ -127,7 +144,7 @@ html, body {
     text-align: center;
 }
 
-.openGPXRoutes{
+.openGPXRoutes {
     display: none;
     position: fixed;
     top: 100px;
@@ -144,8 +161,8 @@ html, body {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.7); 
-    z-index: 1000; 
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
 }
 
 .popupForm {
@@ -179,13 +196,13 @@ html, body {
 
     #tables {
         width: 100%;
-        height: auto; 
+        height: auto;
         overflow-y: auto;
     }
 
     #map {
         width: 100%;
-        height: 300px; 
+        height: 300px;
     }
 
 

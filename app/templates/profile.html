@@ -3,15 +3,28 @@
 {% block title %}User Home{% endblock %}
 
 {% block content %}
-
-
-<div class="profileCls">
-    <h1>User Information</h1>
-    <div>
-        <p><strong>First Name:</strong> {{ current_user.first_name }}</p>
-        <p><strong>Second Name:</strong> {{ current_user.last_name }}
-        <p><strong>Email:</strong> {{ current_user.email }}</p>
-        <p><strong>Payment Plan:</strong> {{ current_user.plan_name }}</p>
+<div class="d-flex justify-content-center align-items-center vh-100 profilePage">
+    <div class = "row justify-content-center flex-sm-row">
+        <div class="col-auto">
+            <div class="card text-center p-5">
+                <h1>{{current_user.first_name}} {{current_user.last_name}}</h1>
+                <p class="lead">{{ current_user.email }}</p>
+                <hr>
+                <h4>Manage Subscription</h4>
+                <br>
+                <div>
+                    <p>Your Current Payment Plan is currently 1 year</p>
+                    <p>It is due to <b>expire</b> on the <b>12th January 2025</b></p>
+                </div>
+                <button class="btn btn-outline-success">Renew</button>
+                <hr>
+                <h4>Manage Account</h4>
+                <br>
+                <button class="btn btn-outline-dark mb-1">Change Email</button>
+                <button class="btn btn-outline-dark mb-1">Change Password</button>
+                <button class="btn btn-outline-danger">Delete Account</button>
+            </div>
+        </div>
     </div>
 </div>
 
