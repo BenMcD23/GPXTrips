@@ -26,13 +26,24 @@ def login():
     if request.method == 'POST':
         user = User.query.filter_by(email=form.email.data).first()
         if user:
-            if bcrypt.check_password_hash(user.password_hash, form.password.data) and user.account_active==True:
+            
+            if user.account_active != True:
+                flash("Account is deactivated, please contact support.", category="error")
+                return redirect(url_for("login"))
+
+            elif bcrypt.check_password_hash(user.password_hash, form.password.data):
                 flash("Logged in!", category="success")
                 login_user(user, remember=True)
+                if user.manager == True:
+                    return redirect(url_for("manager"))
+
                 return redirect(url_for("user"))
+            
+            
             else:
                 flash("Password is wrong!", category="error")
                 return redirect(url_for("login"))
+            
         else:
             flash("Account does not exist!", category="error")
             return redirect(url_for("login"))
@@ -97,6 +108,7 @@ def manager():
     return render_template("manager.html")
 
 @app.route('/manage_users', methods=["GET", "POST"])
+@manger_required()
 def manage_users():
     UserSearchForm = UserSearch()
 
@@ -115,6 +127,7 @@ def manage_users():
     return render_template("manage_users.html", users=users, UserSearch=UserSearchForm)
 
 @app.route('/view_revenue')
+@manger_required()
 def view_revenue():
     return render_template("view_revenue.html")
 
