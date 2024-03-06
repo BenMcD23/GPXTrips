@@ -22,6 +22,7 @@ class User(db.Model, UserMixin):
     def email_as_dict(self):
         return {'email': self.email}
 
+    # returns if current user is manager or not
     def is_manager(self):
         if self.manager == True:
             return True

@@ -8,10 +8,14 @@ from datetime import datetime
 import json 
 from functools import wraps
 
+
+# role for manager pages
+# decorate manager pages with this role
 def manger_required():
     def decorator(func):
         @wraps(func)
         def authorize(*args, **kwargs):
+            # queries database to see if current user is manager
             if not current_user.is_manager():
                 abort(401) # not authorized
             return func(*args, **kwargs)
