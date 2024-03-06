@@ -23,7 +23,11 @@
     <!-- leaflet css -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 </head>
+{% if disabled %}
+<body class="disabledPage">
+{% else %}
 <body>
+{% endif %}
     <!-- <header class="bg-dark text-white text-center py-4">
         <h1>Welcome to Your Dashboard</h1>
     </header> -->

@@ -14,6 +14,17 @@ $(document).ready(function()
     alert("request failed");
     }
   })
+
+  // Enables buttons on pop-up for unsubscribed users
+  let button = document.getElementById("subButton")
+  let radioButton1 = document.getElementById("radio1")
+  let radioButton2 = document.getElementById("radio2")
+  let radioButton3 = document.getElementById("radio3")
+  button.style.pointerEvents = 'auto';
+  radioButton1.style.pointerEvents = 'auto';
+  radioButton2.style.pointerEvents = 'auto';
+  radioButton3.style.pointerEvents = 'auto';
+
 })
 
 // listents for when checkbox's are checked

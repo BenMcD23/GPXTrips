@@ -157,7 +157,7 @@ def user():
         # splitData = route.split("\\n")
         # route = "".join(splitData)[2:][:-1]
 
-    return render_template("user.html", title='Map', FileUploadForm=file_upload_form, route=route, routes=routes, all_routes=all_routes)
+    return render_template("user.html", title='Map', FileUploadForm=file_upload_form, route=route, routes=routes, all_routes=all_routes, disabled=False)
 
 
 # AJAX stuff 
