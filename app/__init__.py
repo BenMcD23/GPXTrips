@@ -85,9 +85,12 @@ hsts = {
     'max-age': 31536000,
     'includeSubDomains': True
 }
-# Enforce HTTPS and other headersMou
+# Enforce HTTPS and other headers
 talisman.force_https = True
 talisman.force_file_save = True
+talisman.x_xss_protection = True
+talisman.session_cookie_secure = True
+talisman.session_cookie_samesite = 'Lax'
 talisman.frame_options_allow_from = 'https://www.google.com'
  
 # # add to Talisman
