@@ -185,7 +185,9 @@ def user():
 @app.route("/manage_subscription")
 def manage_subscription():
     # print(stripe_keys["price_id"])
-    return render_template("subscription.html")
+    active_subscription = current_user_active_subscription()
+    return render_template("subscription.html",
+                            active_subscription=active_subscription)
 
 # Identical to CONFIG
 
@@ -298,5 +300,9 @@ def create_subscription(user, plan):
     print(f"Subscription created for {user.email} with plan {plan.name}")
 
 def current_user_active_subscription():
-    #some code
-    return
+    subscriptions = Subscription.query.filter_by(user_id=current_user.id).all()
+    for subscription in subscriptions:
+        if subscription.date_end > datetime.now():
+            return True
+
+    return False
