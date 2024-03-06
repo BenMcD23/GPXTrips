@@ -18,5 +18,7 @@ stripe_keys = {
     "secret_key": os.environ["STRIPE_SECRET_KEY"],
     "publishable_key": os.environ["STRIPE_PUBLISHABLE_KEY"],
     "endpoint_secret": os.environ["STRIPE_ENDPOINT_SECRET"],
-    "price_id": os.environ["STRIPE_PRICE_ID"],
+    "price_id_1_week": os.environ["STRIPE_PRICE_ID_1_WEEK"],
+    "price_id_1_month": os.environ["STRIPE_PRICE_ID_1_MONTH"],
+    "price_id_1_year": os.environ["STRIPE_PRICE_ID_1_YEAR"],
 }

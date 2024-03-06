@@ -3,25 +3,37 @@ from flask import Flask, jsonify
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
+from flask_admin import Admin
 # from flask_wtf.csrf import CSRFProtect
 from flask_migrate import Migrate
 from flask_talisman import Talisman
 from config import stripe_keys
-
-from dotenv import load_dotenv
-load_dotenv()
 import os
 import stripe
+from dotenv import load_dotenv
+
+# Initialise babel to use Flask-Admin
+from flask_babel import Babel
+
+load_dotenv()
 
 app = Flask(__name__)
 app.config.from_object('config')
 FLASK_DEBUG=1
+
+# For admin views in http://localhost:5000/admin
+admin = Admin(app,template_mode='bootstrap4')
 
 # security stuff, conifgured below
 talisman = Talisman(app)
 
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
+
+# Babel requried for Flask-Admin
+babel = Babel(app)
+
+# Termporarily commented out to allow for the Stripe-API to run.
 # csrf = CSRFProtect(app)
 
 login_manager = LoginManager()
@@ -30,7 +42,7 @@ login_manager.init_app(app)
 
 app.app_context().push()
 
-migrate = Migrate(app, db)
+migrate = Migrate(app, db, render_as_batch=True)
 
 from app import views, models
 

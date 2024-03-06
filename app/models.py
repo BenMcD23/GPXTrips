@@ -1,3 +1,4 @@
+from datetime import datetime
 from app import db
 from flask_login import UserMixin
 
@@ -11,7 +12,7 @@ class User(db.Model, UserMixin):
     subscription_id = db.Column(db.Integer)
     date_created = db.Column(db.DateTime, nullable=False)
 
-    subsciptions = db.relationship('Subscription', backref='user', lazy=True)
+    subscriptions = db.relationship('Subscription', backref='user', lazy=True)
     routes = db.relationship('Route', backref='user', lazy=True)
 
 
@@ -27,6 +28,7 @@ class Plan(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128), unique=True, nullable=False)
     monthly_cost = db.Column(db.Float)
+    stripe_price_id = db.Column(db.String(255), nullable=False)
 
 
 class Subscription(db.Model):
@@ -35,3 +37,12 @@ class Subscription(db.Model):
     plan_id = db.Column(db.Integer, db.ForeignKey('plan.id'))
     date_start = db.Column(db.DateTime, nullable=False)
     date_end = db.Column(db.DateTime)
+
+    plan = db.relationship('Plan', backref='subscriptions')
+
+
+class StripeCustomer(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    stripeCustomerId = db.Column(db.String(255), nullable=False)
+    stripeSubscriptionId = db.Column(db.String(255), nullable=False)

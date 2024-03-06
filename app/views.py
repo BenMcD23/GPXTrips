@@ -1,6 +1,7 @@
 from config import stripe_keys
-from app import app, db, models, bcrypt
-from .models import User
+from app import app, db, models, admin, bcrypt
+from flask_admin.contrib.sqla import ModelView
+from .models import User, Plan, Subscription, Route, StripeCustomer
 from flask import Flask, render_template, request, redirect, url_for, send_file, flash, jsonify
 from flask_login import login_user, login_required, logout_user, current_user
 from .forms import FileUploadForm, RegistrationForm, LoginForm
@@ -9,6 +10,48 @@ from DAL import add_route, get_route
 from datetime import datetime
 
 import stripe
+# Custom view class for the User model
+
+
+class UserView(ModelView):
+    column_list = ['email', 'first_name', 'last_name', 'date_created']
+    # Add other configurations as needed
+
+# Custom view class for the Route model
+
+
+class RouteView(ModelView):
+    column_list = ['name', 'upload_time']
+    # Add other configurations as needed
+
+# Custom view class for the Plan model
+
+
+class PlanView(ModelView):
+    column_list = ['name', 'monthly_cost', 'stripe_price_id']
+    # Add other configurations as needed
+
+# Custom view class for the Subscription model
+
+
+class SubscriptionView(ModelView):
+    column_list = ['user', 'plan', 'date_start', 'date_end']
+    # Add other configurations as needed
+
+# Custom view class for the StripeCustomer model
+
+
+class StripeCustomerView(ModelView):
+    column_list = ['user', 'stripeCustomerId', 'stripeSubscriptionId']
+    # Add other configurations as needed
+
+
+# Add views for each model using the custom view classes
+admin.add_view(UserView(User, db.session))
+admin.add_view(RouteView(Route, db.session))
+admin.add_view(PlanView(Plan, db.session))
+admin.add_view(SubscriptionView(Subscription, db.session))
+admin.add_view(StripeCustomerView(StripeCustomer, db.session))
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -159,16 +202,26 @@ def checkout():
     stripe.api_key = stripe_keys["secret_key"]
 
     try:
+        plan_duration = request.args.get("plan_duration", "1_year")
+        # Get the corresponding price ID based on plan_duration
+        if plan_duration == "1_year":
+            price_id = stripe_keys["price_id_1_year"]
+        elif plan_duration == "1_month":
+            price_id = stripe_keys["price_id_1_month"]
+        elif plan_duration == "1_week":
+            price_id = stripe_keys["price_id_1_week"]
+        else:
+            return jsonify(error="Invalid plan duration"), 400
+
         checkout_session = stripe.checkout.Session.create(
-            # example: client_reference_id=user.id,
-            success_url=domain_url + \
+            success_url=domain_url +
             "success?session_id={CHECKOUT_SESSION_ID}",
             cancel_url=domain_url + "cancel",
             payment_method_types=["card"],
             mode="subscription",
             line_items=[
                 {
-                    "price": stripe_keys["price_id"],
+                    "price": price_id,
                     "quantity": 1,
                 }
             ]
@@ -188,30 +241,49 @@ def cancelled():
     return render_template("cancelled.html")
 
 
-@app.route("/webhook", methods=["POST"])
+@app.route('/webhook', methods=['POST'])
 def stripe_webhook():
-    payload = request.get_data(as_text=True)
-    sig_header = request.headers.get("Stripe-Signature")
+    payload = request.data
+    signature = request.headers.get('Stripe-Signature')
 
     try:
         event = stripe.Webhook.construct_event(
-            payload, sig_header, stripe_keys["endpoint_secret"]
-        )
+            payload, signature, stripe_keys["endpoint_secret"])
+    except Exception as e:
+        abort(400)
 
-    except ValueError as e:
-        return "Invalid payload", 400
-    except stripe.error.SignatureVerificationError as e:
-        return "Invalid signature", 400
+    if event['type'] == 'invoice.updated':
+        invoice_data = event['data']['object']
+        customer_email = invoice_data['customer_email']
 
-    # Handle the checkout.session.completed event
-    if event["type"] == "checkout.session.completed":
-        session = event["data"]["object"]
+        plan_id = invoice_data['lines']['data'][0]['plan']['id']
 
-        # Fulfill the purchase
-        handle_checkout_session(session)
+        user = User.query.filter_by(email=customer_email).first()
 
-    return "Success", 200
+        # Query the plan based on the plan_id of the subscription.
+        plan = Plan.query.filter_by(stripe_price_id=plan_id).first()
+
+        # Debugging test.
+        # print(user, plan, plan_id)
+
+        if user and plan:
+            create_subscription(user, plan)
+            print('Subscription created')
+        else:
+            print('User or plan not found')
+
+    return jsonify({'success': True})
 
 
-def handle_checkout_session(session):
-    print("Subscription was successful.")
+def create_subscription(user, plan):
+    subscription = Subscription(
+        user=user,
+        plan_id=plan.id,
+        date_start=datetime.utcnow(),
+        date_end=None  # Set an end date based on subscription using some logic
+    )
+
+    db.session.add(subscription)
+    db.session.commit()
+
+    print(f"Subscription created for {user.email} with plan {plan.name}")
