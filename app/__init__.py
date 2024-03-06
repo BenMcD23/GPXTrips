@@ -9,7 +9,6 @@ from flask_talisman import Talisman
 
 app = Flask(__name__)
 app.config.from_object('config')
-FLASK_DEBUG=1
 
 # security stuff, conifgured below
 talisman = Talisman(app)
@@ -48,6 +47,11 @@ csp = {
         'https://a.tile.openstreetmap.org/',
         'https://b.tile.openstreetmap.org/',
         'https://c.tile.openstreetmap.org/',
+        "https://code.jquery.com/jquery-1.10.2.js",
+        "https://code.jquery.com/ui/1.10.4/jquery-ui.js",
+        "https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css",
+        "https://unpkg.com/leaflet/dist/leaflet.js",
+        'https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js'
     ],
     # external image links
     'img-src': [
@@ -55,7 +59,9 @@ csp = {
         'https://a.tile.openstreetmap.org/',
         'https://b.tile.openstreetmap.org/',
         'https://c.tile.openstreetmap.org/',
-        'https://www.publicdomainpictures.net/pictures/170000/velka/jogging-at-sunset-1461853562JAu.jpg'
+        'https://www.publicdomainpictures.net/pictures/170000/velka/jogging-at-sunset-1461853562JAu.jpg',
+        'https://code.jquery.com/ui/1.10.4/themes/ui-lightness/images/ui-bg_glass_100_fdf5ce_1x400.png',
+        'https://code.jquery.com/ui/1.10.4/themes/ui-lightness/images/ui-bg_highlight-soft_100_eeeeee_1x100.png'
     ]
 }
 

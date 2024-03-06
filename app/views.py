@@ -1,8 +1,8 @@
 from app import app, db, models, bcrypt
 from .models import User
-from flask import Flask, render_template, request, redirect, url_for, send_file, flash
+from flask import Flask, render_template, request, redirect, url_for, send_file, flash, jsonify
 from flask_login import login_user, login_required, logout_user, current_user
-from .forms import FileUploadForm, RegistrationForm, LoginForm
+from .forms import FileUploadForm, RegistrationForm, LoginForm, UserSearch
 from werkzeug.utils import secure_filename
 from datetime import datetime
 import json 
@@ -15,7 +15,7 @@ def login():
     if request.method == 'POST':
         user = User.query.filter_by(email=form.email.data).first()
         if user:
-            if bcrypt.check_password_hash(user.password_hash, form.password.data):
+            if bcrypt.check_password_hash(user.password_hash, form.password.data) and user.account_active==True:
                 flash("Logged in!", category="success")
                 login_user(user, remember=True)
                 return redirect(url_for("user"))
@@ -64,7 +64,7 @@ def register():
             answer = 'Invalid option'
 
         hashed_password = bcrypt.generate_password_hash(password)
-        user = User(email=email, first_name=first_name, last_name=last_name, password_hash=hashed_password, date_created=datetime.now())
+        user = User(email=email, first_name=first_name, last_name=last_name, password_hash=hashed_password, date_created=datetime.now(), account_active=True)
         db.session.add(user)
         db.session.commit()
 
@@ -84,11 +84,23 @@ def logout():
 def manager():
     return render_template("manager.html")
 
-@app.route('/manage_users')
-@login_required
+@app.route('/manage_users', methods=["GET", "POST"])
 def manage_users():
-    all_users = models.User.query.all()
-    return render_template("manage_users.html",all_users=all_users)
+    UserSearchForm = UserSearch()
+
+    if (UserSearchForm.submitSearch.data and
+        UserSearchForm.validate_on_submit()):
+
+        if UserSearchForm.userEmail.data == "":
+            users = User.query.all()
+        
+        else:
+            users = User.query.filter_by(email=UserSearchForm.userEmail.data).all()
+
+    else:
+        users = User.query.all()
+
+    return render_template("manage_users.html", users=users, UserSearch=UserSearchForm)
 
 @app.route('/view_revenue')
 def view_revenue():
@@ -160,6 +172,17 @@ def user():
     return render_template("user.html", title='Map', FileUploadForm=file_upload_form, route=route, routes=routes, all_routes=all_routes)
 
 
+# for user search (manger view)
+@app.route('/emails')
+def tagsDic():
+    allEmails = User.query.all()
+    # turn all the emails into a dictionary
+    dicEmails = [i.email_as_dict() for i in allEmails]
+    # change dictionary into a json
+    return jsonify(dicEmails)
+
+
+
 # AJAX stuff 
 
 # post all routes to JavaScript
@@ -180,5 +203,16 @@ def getRoute():
 
     # return as a json
     return json.dumps(data)
+
+@app.route('/accountState', methods=['POST'])
+def accountState():
+    # get data posted
+    data = request.get_json()
+
+    # change the user account state in database
+    User.query.filter_by(id=data["id"]).first().account_active = data["state"]
+    db.session.commit()
+
+    return jsonify(data=data)
 
 

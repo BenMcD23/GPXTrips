@@ -4,48 +4,64 @@
 
 {% block content %}
 
-<h2>Customer Information</h2>
+<h1>Customer Information</h1>
 
 <!-- This page will allow you to view and manage registered users. You can enable or disable their accounts. -->
+
+<div class="form">
+  <form method="post" action="" name="searchUsers">
+      {{ UserSearch.hidden_tag() }}
+
+      <label for="userEmail">Search Users by Email</label>
+
+      {% if UserSearch.userEmail.errors %}
+      {{ UserSearch.userEmail(class="form-control form-control-lg is-invalid") }}
+      <div class="invalid-feedback">
+          {% for error in UserSearch.userEmail.errors %}
+              <span>• {{ error }}</span>
+              <br>
+          {% endfor %}
+      </div>
+      {% else %}
+      {{ UserSearch.userEmail(class="form-control", placeholder="User email") }}
+      {% endif %}
+
+      <div class="formButton">
+          {{ UserSearch.submitSearch }}
+      </div>
+  </form>
+</div>
+
 
 <table>
   <tr>
     <th>Name</th>
     <th>Surname</th>
     <th>Email Address</th>
+    <th>Account Created</th>
     <th>Membership</th>
-    <th>Action</th>
+    <th>Account Activated</th>
   </tr>
-  {% for user in all_users %}
+  {% for user in users %}
   <tr>
     <td>{{ user.first_name }}</td>
     <td>{{ user.last_name }}</td>
     <td>{{ user.email }}</td>
+    <td>{{ user.date_created }}</td>
     <td>{{ user.subscription_id }}</td>
     <td>
-        {% if user.enabled %}
-            <button class="disabled" onclick="toggleAccount('{{ user.id }}', false)" >Disabled</button>
-        {% else %}
-            <button class="enabled" onclick="toggleAccount('{{ user.id }}', true)">Enabled</button>
-        {% endif %}
+        <p id="text_{{ user.id }}">{{ user.account_active }}</p>
+        <label class="switch">
+          <input id="{{ user.id }}" name="userState" type="checkbox" {% if user.account_active== True %} checked {% else %} {% endif %}>
+          <span class="slider"></span>
+        </label>
     </td>
   </tr>
   {% endfor %}
 </table>
 
-<script>
-function toggleAccount(userId, enable) {
-//AJAX CODE NECESSARY TO MAKE THE CHANGE ON THE DB ... TO BE COMPLETED
-//This action would toggle beween enabling and disabling the account
-
-    if (enable) {
-        alert('Enabling account with ID ' + customerId);
-    } else {
-        alert('Disabling account with ID ' + customerId);
-    }
-}
-
-</script>
+<!-- LEAVE HERE AS NEEDS TO LOAD AFTER FOR CHECKBOX -->
+<script src="../static/manager.js"></script>
 
 
 {% endblock %}

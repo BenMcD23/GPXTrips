@@ -11,9 +11,14 @@ class User(db.Model, UserMixin):
     subscription_id = db.Column(db.Integer)
     date_created = db.Column(db.DateTime, nullable=False)
 
+    account_active = db.Column(db.Boolean, nullable=False)
+
     subsciptions = db.relationship('Subscription', backref='user', lazy=True)
     routes = db.relationship('Route', backref='user', lazy=True)
 
+    # returns as dict so can be used for search bar
+    def email_as_dict(self):
+        return {'email': self.email}
 
 class Route(db.Model):
     id = db.Column(db.Integer, primary_key=True)
