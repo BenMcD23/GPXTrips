@@ -24,7 +24,7 @@ FLASK_DEBUG=1
 # For admin views in http://localhost:5000/admin
 admin = Admin(app,template_mode='bootstrap4')
 
-# security stuff, conifgured below
+# security stuff, configured below
 talisman = Talisman(app)
 
 db = SQLAlchemy(app)

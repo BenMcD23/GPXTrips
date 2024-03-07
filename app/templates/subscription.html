@@ -6,14 +6,16 @@
 
 <div class="container">
     {% if active_subscription %}
-        <p>Current user has an active subscription.</p>
+    <p>Current user has an active subscription.</p>
+    <form method="post" action="{{ url_for('cancel_subscription') }}" id="cancelSubForm">
+        <button type="submit" class="btn btn-danger">Cancel Subscription</button>
+    </form>
     {% else %}
-        <p>Current user does not have an active subscription.</p>
-    {% endif %}
-
+    <p>Current user does not have an active subscription.</p>
     <button class="btn btn-primary" id="oneYearSubButton" data-duration="1_year">1 Year</button>
     <button class="btn btn-primary" id="oneMonthSubButton" data-duration="1_month">1 Month</button>
     <button class="btn btn-primary" id="oneWeekSubButton" data-duration="1_week">1 Week</button>
+    {% endif %}
 </div>
 
 {% endblock content %}

@@ -35,7 +35,8 @@ class PlanView(ModelView):
 
 
 class SubscriptionView(ModelView):
-    column_list = ['user', 'plan', 'date_start', 'date_end']
+    column_list = ['user', 'plan',
+                   'subscription_id', 'date_start', 'date_end', 'active']
     # Add other configurations as needed
 
 # Custom view class for the StripeCustomer model
@@ -180,16 +181,12 @@ def user():
 
 
 # Views for handling payments
-
-
 @app.route("/manage_subscription")
 def manage_subscription():
     # print(stripe_keys["price_id"])
     active_subscription = current_user_active_subscription()
     return render_template("subscription.html",
-                            active_subscription=active_subscription)
-
-# Identical to CONFIG
+                           active_subscription=active_subscription)
 
 
 @app.route("/stripe")
@@ -232,14 +229,30 @@ def checkout():
     except Exception as e:
         return jsonify(error=str(e)), 403
 
-@app.route("/cancel_subscription")
+
+@app.route("/cancel_subscription", methods=['POST'])
 def cancel_subscription():
     stripe.api_key = stripe_keys["secret_key"]
 
-    try:
-        stripe.Subscription.cancel("") #pass subscription id here
-    except Exception as e:
-        return jsonify(error=str(e)), 403
+    latest_subscription = Subscription.query.filter_by(
+        user_id=current_user.id, active=True).order_by(Subscription.date_start.desc()).first()
+
+    if latest_subscription:
+        try:
+            # Cancel the subscription (at the end of the billing period).
+            stripe.Subscription.cancel(
+                latest_subscription.subscription_id,
+            )
+
+            # Set the subscription as inactive.
+            latest_subscription.active = False
+            db.session.commit()
+
+            return jsonify(success=True), 200
+        except Exception as e:
+            return jsonify(error=str(e)), 403
+    else:
+        return jsonify(error="No active subscription found."), 403
 
 
 @app.route("/success")
@@ -266,12 +279,12 @@ def stripe_webhook():
 
     if event['type'] == 'invoice.updated':
 
+        # Grab data from invoice.
         invoice_data = event['data']['object']
         customer_email = invoice_data['customer_email']
-
         plan_id = invoice_data['lines']['data'][0]['plan']['id']
+        subscription_id = invoice_data['subscription']
 
-        # user = current_user
         user = User.query.filter_by(email=customer_email).first()
 
         # Query the plan based on the plan_id of the subscription.
@@ -279,28 +292,33 @@ def stripe_webhook():
 
         # Debugging test.
         # print(user, plan, plan_id)
+        # print(subscription_id)
 
         if user and plan:
-            create_subscription(user, plan)
+            create_subscription(user, plan, subscription_id)
             print('Subscription created')
         else:
             print('User or plan not found')
 
     return jsonify({'success': True})
 
-def create_subscription(user, plan):
+# Method to create a subscription in the database.
+
+
+def create_subscription(user, plan, subscription_id):
     if plan.name == "Weekly":
-        date_end=datetime.now()+timedelta(weeks=1)
+        date_end = datetime.now()+timedelta(weeks=1)
     elif plan.name == "Monthly":
-        date_end=datetime.now()+timedelta(weeks=4)
+        date_end = datetime.now()+timedelta(weeks=4)
     else:
-        date_end=datetime.now()+timedelta(weeks=52)
+        date_end = datetime.now()+timedelta(weeks=52)
 
     subscription = Subscription(
         user=user,
         plan_id=plan.id,
         date_start=datetime.utcnow(),
-        date_end=date_end
+        date_end=date_end,
+        subscription_id=subscription_id,
     )
 
     db.session.add(subscription)
@@ -308,10 +326,6 @@ def create_subscription(user, plan):
 
     print(f"Subscription created for {user.email} with plan {plan.name}")
 
-def current_user_active_subscription():
-    subscriptions = Subscription.query.filter_by(user_id=current_user.id).all()
-    for subscription in subscriptions:
-        if subscription.date_end > datetime.now():
-            return True
 
-    return False
+def current_user_active_subscription():
+    return Subscription.query.filter_by(user_id=current_user.id, active=True).count() > 0

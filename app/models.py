@@ -35,8 +35,10 @@ class Subscription(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     plan_id = db.Column(db.Integer, db.ForeignKey('plan.id'))
+    subscription_id = db.Column(db.String(255))
     date_start = db.Column(db.DateTime, nullable=False)
     date_end = db.Column(db.DateTime)
+    active = db.Column(db.Boolean, default=True)
 
     plan = db.relationship('Plan', backref='subscriptions')
 
