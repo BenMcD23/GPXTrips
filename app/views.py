@@ -314,6 +314,17 @@ def create_subscription(user, plan, subscription_id):
 
     print(f"Subscription created for {user.email} with plan {plan.name}")
 
-
+# Active subscription - the user has a current subscription with auto renewals ON
 def current_user_active_subscription():
-    return Subscription.query.filter_by(user_id=current_user.id, active=True).count() > 0
+    latest_subscription = Subscription.query.filter_by(
+            user_id=current_user.id).order_by(Subscription.date_start.desc()).first()
+    return latest_subscription.active
+
+# Current subscription - the user has a current subscription which expires some time in the future, irrespective of cancellation status
+def current_user_current_subscription():
+    subscriptions = Subscription.query.filter_by(user_id=current_user.id).all()
+    for subscription in subscriptions:
+        if subscription.date_end > datetime.now():
+            return True
+
+    return False
