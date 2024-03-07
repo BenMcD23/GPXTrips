@@ -24,16 +24,6 @@
                         {% endif %}
                     {% endwith %}
                     <hr>
-                    <fieldset>
-                        <legend>Payment Plan</legend>
-                        {% for choice in form.plan %}
-                            <div>
-                                <input type="radio" id="{{ choice.id }}" name="RadioButtons" value="{{ choice.data }}">
-                                <span class="m-0" for="{{ choice.id }}">{{ choice.label }}</span>
-                            </div>
-                        {% endfor %}
-                    </fieldset>
-                    <hr>
                     <div>
                         <input aria-label="Accept Terms and Conditions" id="TandCConfirm" type="checkbox">
                         <label class="ml-1" for="TandCConfirm">I Agree to the <a id="TandCLink"><u>Terms and Conditions</u></a></label>
