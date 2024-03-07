@@ -41,10 +41,3 @@ class Subscription(db.Model):
     active = db.Column(db.Boolean, default=True)
 
     plan = db.relationship('Plan', backref='subscriptions')
-
-
-class StripeCustomer(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    stripeCustomerId = db.Column(db.String(255), nullable=False)
-    stripeSubscriptionId = db.Column(db.String(255), nullable=False)

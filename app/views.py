@@ -1,35 +1,32 @@
 from config import stripe_keys
 from app import app, db, models, admin, bcrypt
 from flask_admin.contrib.sqla import ModelView
-from .models import User, Plan, Subscription, Route, StripeCustomer
+from .models import User, Plan, Subscription, Route
 from flask import Flask, render_template, request, redirect, url_for, send_file, flash, jsonify
 from flask_login import login_user, login_required, logout_user, current_user
 from .forms import FileUploadForm, RegistrationForm, LoginForm
 from werkzeug.utils import secure_filename
 from DAL import add_route, get_route
 from datetime import datetime, timedelta
-
 import stripe
+
 # Custom view class for the User model
 
 
 class UserView(ModelView):
     column_list = ['email', 'first_name', 'last_name', 'date_created']
-    # Add other configurations as needed
 
 # Custom view class for the Route model
 
 
 class RouteView(ModelView):
     column_list = ['name', 'upload_time']
-    # Add other configurations as needed
 
 # Custom view class for the Plan model
 
 
 class PlanView(ModelView):
     column_list = ['name', 'monthly_cost', 'stripe_price_id']
-    # Add other configurations as needed
 
 # Custom view class for the Subscription model
 
@@ -37,14 +34,6 @@ class PlanView(ModelView):
 class SubscriptionView(ModelView):
     column_list = ['user', 'plan',
                    'subscription_id', 'date_start', 'date_end', 'active']
-    # Add other configurations as needed
-
-# Custom view class for the StripeCustomer model
-
-
-class StripeCustomerView(ModelView):
-    column_list = ['user', 'stripeCustomerId', 'stripeSubscriptionId']
-    # Add other configurations as needed
 
 
 # Add views for each model using the custom view classes
@@ -52,7 +41,6 @@ admin.add_view(UserView(User, db.session))
 admin.add_view(RouteView(Route, db.session))
 admin.add_view(PlanView(Plan, db.session))
 admin.add_view(SubscriptionView(Subscription, db.session))
-admin.add_view(StripeCustomerView(StripeCustomer, db.session))
 
 
 @app.route("/", methods=["GET", "POST"])
