@@ -1,13 +1,47 @@
-from app import app, db, models, bcrypt
-from .models import User
-from flask import Flask, render_template, request, redirect, url_for, send_file, flash
+from config import stripe_keys
+from app import app, db, models, admin, bcrypt
+from flask_admin.contrib.sqla import ModelView
+from .models import User, Plan, Subscription, Route
+from flask import Flask, render_template, request, redirect, url_for, send_file, flash, jsonify
 from flask_login import login_user, login_required, logout_user, current_user
 from .forms import FileUploadForm, RegistrationForm, LoginForm
 from werkzeug.utils import secure_filename
 from DAL import add_route, get_route
-from datetime import datetime
-import json
-import gpxpy
+from datetime import datetime, timedelta
+import stripe
+
+# Custom view class for the User model
+
+
+class UserView(ModelView):
+    column_list = ['email', 'first_name', 'last_name', 'date_created']
+
+# Custom view class for the Route model
+
+
+class RouteView(ModelView):
+    column_list = ['name', 'upload_time']
+
+# Custom view class for the Plan model
+
+
+class PlanView(ModelView):
+    column_list = ['name', 'monthly_cost', 'stripe_price_id']
+
+# Custom view class for the Subscription model
+
+
+class SubscriptionView(ModelView):
+    column_list = ['user', 'plan',
+                   'subscription_id', 'date_start', 'date_end', 'active']
+
+
+# Add views for each model using the custom view classes
+admin.add_view(UserView(User, db.session))
+admin.add_view(RouteView(Route, db.session))
+admin.add_view(PlanView(Plan, db.session))
+admin.add_view(SubscriptionView(Subscription, db.session))
+
 
 # Login route
 @app.route("/", methods=["GET", "POST"])
@@ -35,7 +69,7 @@ def login():
             return redirect(url_for("login"))
 
     return render_template("login.html", title="Login", form=form)
-
+  
 # Register route
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -79,7 +113,8 @@ def register():
 
         # Hash password and add used to the database
         hashed_password = bcrypt.generate_password_hash(password)
-        user = User(email=email, first_name=first_name, last_name=last_name, password_hash=hashed_password, date_created=datetime.now())
+        user = User(email=email, first_name=first_name, last_name=last_name,
+                    password_hash=hashed_password, date_created=datetime.now())
         db.session.add(user)
         db.session.commit()
 
@@ -90,6 +125,7 @@ def register():
 
     return render_template("registration.html", title="Register", form=form)
 
+
 # Logout route
 @app.route("/logout", methods=["GET", "POST"])
 @login_required
@@ -98,9 +134,11 @@ def logout():
     logout_user()
     return redirect(url_for("login"))
 
+
 @app.route('/manager')
 def manager():
     return render_template("manager.html")
+
 
 @app.route('/user', methods=['GET', 'POST'])
 @login_required
@@ -187,3 +225,167 @@ def is_valid_gpx_structure(gpx_data):
     except gpxpy.gpx.GPXException as e:
         print(f"GPX parsing error: {e}")
         return False
+
+
+# Views for handling payments
+@app.route("/manage_subscription")
+def manage_subscription():
+    # print(stripe_keys["price_id"])
+    active_subscription = current_user_active_subscription()
+    return render_template("subscription.html",
+                           active_subscription=active_subscription)
+
+
+@app.route("/stripe")
+def get_publishable_key():
+    stripe_config = {"publicKey": stripe_keys["publishable_key"]}
+    return jsonify(stripe_config)
+
+
+@app.route("/checkout")
+def checkout():
+    domain_url = "http://localhost:5000/"
+    stripe.api_key = stripe_keys["secret_key"]
+
+    try:
+        plan_duration = request.args.get("plan_duration", "1_year")
+        # Get the corresponding price ID based on plan_duration
+        if plan_duration == "1_year":
+            price_id = stripe_keys["price_id_1_year"]
+        elif plan_duration == "1_month":
+            price_id = stripe_keys["price_id_1_month"]
+        elif plan_duration == "1_week":
+            price_id = stripe_keys["price_id_1_week"]
+        else:
+            return jsonify(error="Invalid plan duration"), 400
+
+        checkout_session = stripe.checkout.Session.create(
+            success_url=domain_url +
+            "success?session_id={CHECKOUT_SESSION_ID}",
+            cancel_url=domain_url + "cancel",
+            payment_method_types=["card"],
+            mode="subscription",
+            line_items=[
+                {
+                    "price": price_id,
+                    "quantity": 1,
+                }
+            ]
+        )
+        return jsonify({"sessionId": checkout_session["id"]})
+    except Exception as e:
+        return jsonify(error=str(e)), 403
+
+
+@app.route("/cancel_subscription", methods=['POST'])
+def cancel_subscription():
+    stripe.api_key = stripe_keys["secret_key"]
+
+    latest_subscription = Subscription.query.filter_by(
+        user_id=current_user.id, active=True).order_by(Subscription.date_start.desc()).first()
+
+    if latest_subscription:
+        try:
+            # Cancel the subscription (at the end of the billing period).
+            stripe.Subscription.cancel(
+                latest_subscription.subscription_id,
+            )
+
+            # Set the subscription as inactive.
+            latest_subscription.active = False
+            db.session.commit()
+
+            return jsonify(success=True), 200
+        except Exception as e:
+            return jsonify(error=str(e)), 403
+    else:
+        return jsonify(error="No active subscription found."), 403
+      
+@app.route("/success")
+def success():
+    return render_template("success.html")
+
+
+@app.route("/cancel")
+def cancelled():
+    flash("Payment cancelled.")
+    return redirect(url_for("manage_subscription"))
+
+
+@app.route('/webhook', methods=['POST'])
+def stripe_webhook():
+    payload = request.data
+    signature = request.headers.get('Stripe-Signature')
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, signature, stripe_keys["endpoint_secret"])
+    except Exception as e:
+        abort(400)
+
+    if event['type'] == 'invoice.updated':
+
+        # Grab data from invoice.
+        invoice_data = event['data']['object']
+        customer_email = invoice_data['customer_email']
+        plan_id = invoice_data['lines']['data'][0]['plan']['id']
+        subscription_id = invoice_data['subscription']
+
+        user = User.query.filter_by(email=customer_email).first()
+
+        # Query the plan based on the plan_id of the subscription.
+        plan = Plan.query.filter_by(stripe_price_id=plan_id).first()
+
+        # Debugging test.
+        # print(user, plan, plan_id)
+        # print(subscription_id)
+
+        if user and plan:
+            create_subscription(user, plan, subscription_id)
+            print('Subscription created')
+        else:
+            print('User or plan not found')
+
+    return jsonify({'success': True})
+
+# Method to create a subscription in the database.
+
+
+def create_subscription(user, plan, subscription_id):
+    if plan.name == "Weekly":
+        date_end = datetime.now()+timedelta(weeks=1)
+    elif plan.name == "Monthly":
+        date_end = datetime.now()+timedelta(weeks=4)
+    else:
+        date_end = datetime.now()+timedelta(weeks=52)
+
+    subscription = Subscription(
+        user=user,
+        plan_id=plan.id,
+        date_start=datetime.utcnow(),
+        date_end=date_end,
+        subscription_id=subscription_id,
+        active=True
+    )
+
+    db.session.add(subscription)
+    db.session.commit()
+
+    print(f"Subscription created for {user.email} with plan {plan.name}")
+
+# Active subscription - the user has a current subscription with auto renewals ON
+def current_user_active_subscription():
+    latest_subscription = Subscription.query.filter_by(
+            user_id=current_user.id).order_by(Subscription.date_start.desc()).first()
+    if latest_subscription:
+        return latest_subscription.active
+    return False
+
+# Current subscription - the user has a current subscription which expires some time in the future, irrespective of cancellation status
+def current_user_current_subscription():
+    subscriptions = Subscription.query.filter_by(user_id=current_user.id).all()
+    for subscription in subscriptions:
+        if subscription.date_end > datetime.now():
+            return True
+
+    return False
