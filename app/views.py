@@ -307,6 +307,7 @@ def create_subscription(user, plan, subscription_id):
         date_start=datetime.utcnow(),
         date_end=date_end,
         subscription_id=subscription_id,
+        active=True
     )
 
     db.session.add(subscription)
@@ -318,7 +319,9 @@ def create_subscription(user, plan, subscription_id):
 def current_user_active_subscription():
     latest_subscription = Subscription.query.filter_by(
             user_id=current_user.id).order_by(Subscription.date_start.desc()).first()
-    return latest_subscription.active
+    if latest_subscription:
+        return latest_subscription.active
+    return False
 
 # Current subscription - the user has a current subscription which expires some time in the future, irrespective of cancellation status
 def current_user_current_subscription():
