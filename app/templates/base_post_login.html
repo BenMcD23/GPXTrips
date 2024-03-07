@@ -22,6 +22,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/gpx.min.js"></script>
     <!-- leaflet css -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+    <!-- STRIPE HEADERS -->
+    <script src="https://js.stripe.com/v3/"></script>
+    <script src="{{ url_for('static', filename='stripe.js') }}"></script>
+
+
+
 </head>
 {% if disabled %}
 <body class="disabledPage">
