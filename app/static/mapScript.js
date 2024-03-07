@@ -81,8 +81,7 @@ function displayOnMap(id) {
  }
 }
 
-//JS Code to handle pop-up forms
-
+//JS Code to handle pop-up forms (Manage GPX Files)
 document.addEventListener('DOMContentLoaded', function () {
   const viewRoutesBtn = document.getElementById('viewRoutesBtn');
   const popupContainer = document.getElementById('popupContainer');
@@ -90,9 +89,37 @@ document.addEventListener('DOMContentLoaded', function () {
 
   viewRoutesBtn.addEventListener('click', function () {
       popupContainer.style.display = 'block';
+      viewRoutesBtn.style.display = 'none';
   });
 
   closeBtn.addEventListener('click', function () {
       popupContainer.style.display = 'none';
+      viewRoutesBtn.style.display = 'block';
   });
+});
+
+//JS Code to handle pop-up forms (Journey Stats)
+var viewInfoButtons = document.querySelectorAll('.viewInfoBtn');
+
+// Loop through each button and add click event listener
+viewInfoButtons.forEach(function(button) {
+    button.addEventListener('click', function() {
+        var routeId = button.getAttribute('data-route-id');
+        
+        var popupContainer = document.getElementById('popupDataContainer_' + routeId);
+        popupContainer.style.display = 'block';
+    });
+});
+
+// Get all close buttons
+var closeButtons = document.querySelectorAll('.closeBtn');
+
+// Loop through each close button and add click event listener
+closeButtons.forEach(function(closeBtn) {
+    closeBtn.addEventListener('click', function() {
+        var routeId = closeBtn.getAttribute('data-route-id');
+      
+        var popupContainer = document.getElementById('popupDataContainer_' + routeId);
+        popupContainer.style.display = 'none';
+    });
 });
