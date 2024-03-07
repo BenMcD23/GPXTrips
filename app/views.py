@@ -43,52 +43,64 @@ admin.add_view(PlanView(Plan, db.session))
 admin.add_view(SubscriptionView(Subscription, db.session))
 
 
+# Login route
 @app.route("/", methods=["GET", "POST"])
 def login():
+    # Create an instance of the LoginForm
     form = LoginForm()
 
     if request.method == 'POST':
+        # Query the user by email
         user = User.query.filter_by(email=form.email.data).first()
+
         if user:
             if bcrypt.check_password_hash(user.password_hash, form.password.data):
+                # Login user and redirect to user route after successful login
                 flash("Logged in!", category="success")
                 login_user(user, remember=True)
                 return redirect(url_for("user"))
             else:
+                # Redirect to back login if password is incorrect
                 flash("Password is wrong!", category="error")
                 return redirect(url_for("login"))
         else:
+            # Redirect to back login if account does not exist
             flash("Account does not exist!", category="error")
             return redirect(url_for("login"))
 
     return render_template("login.html", title="Login", form=form)
-
-
+  
+# Register route
 @app.route("/register", methods=["GET", "POST"])
 def register():
+    # Create an instance of the RegistrationForm
     form = RegistrationForm()
 
     if request.method == 'POST':
+        # Request data from form
         email = request.form.get("email")
         first_name = request.form.get("first_name")
         last_name = request.form.get("last_name")
         password = request.form.get("password")
         confirm_password = request.form.get("confirm_password")
 
+        # Check provided email has an account that exists
         existing_email = User.query.filter_by(email=email).first()
         if existing_email:
             flash(
-                "Email already in use. Please choose a different email.", "error"
+                "Email already in use. Please choose a different email.", category="error"
             )
-            return render_template("registration.html", title="Register", form=form)
+            return redirect(url_for("register"))
 
+        # Password validation
         if password != confirm_password:
             flash(
                 "Passwords do not match. Please make sure your passwords match.",
-                "error",
+                category="error",
             )
-            return render_template("registration.html", title="Register", form=form)
+            return redirect(url_for("register"))
 
+        # Stubs for plan selection
         selected_plan = request.form.get("plan")
         if selected_plan == 'option1':
             answer = 'You selected Option 1'
@@ -99,22 +111,26 @@ def register():
         else:
             answer = 'Invalid option'
 
+        # Hash password and add used to the database
         hashed_password = bcrypt.generate_password_hash(password)
         user = User(email=email, first_name=first_name, last_name=last_name,
                     password_hash=hashed_password, date_created=datetime.now())
         db.session.add(user)
         db.session.commit()
 
-        flash("User added successfully!", "success")
+        flash("User added successfully!", category="success")
 
-        return redirect(url_for("login"))
+        # Redirect to login after successful registration
+        return redirect(url_for("login")) 
 
     return render_template("registration.html", title="Register", form=form)
 
 
+# Logout route
 @app.route("/logout", methods=["GET", "POST"])
 @login_required
 def logout():
+    # Logout user and redirect to login
     logout_user()
     return redirect(url_for("login"))
 
@@ -124,48 +140,91 @@ def manager():
     return render_template("manager.html")
 
 
-@app.route('/user',  methods=['GET', 'POST'])
+@app.route('/user', methods=['GET', 'POST'])
 @login_required
 def user():
-    """render map page from templates
+    """Render map page from templates.
 
     Returns:
         render_template: render template, with map.html
     """
-    # file upload form
+    # File upload form
     file_upload_form = FileUploadForm()
+    routes = current_user.routes
 
     route = None
-    # if submit button is pressed and the file is valid
-    if (file_upload_form.submit_file.data and
-            file_upload_form.validate_on_submit()):
 
-        #  get the file uploaded
-        uploadedFile = request.files['file_upload']
-        # read the data
-        data = str(uploadedFile.read())
+    # If the form is submitted and is valid
+    if request.method == 'POST' and file_upload_form.validate_on_submit():
+        # Get the uploaded file
+        uploaded_file = request.files['file_upload']
+        
+        # Read the data from the file
+        gpx_data = uploaded_file.read()
 
-        # adds to database, waiting for login system to be implemented to test
+        # Check GPX file structure validation
+        if is_valid_gpx_structure(gpx_data):
+            try:
+                # Generate BLOB from GPX data
+                gpx_blob = gpx_data
 
-        # Generate BLOB from GPX data
-        gpx_blob = data.encode('ascii')
-        # create database entry, currently RouteTest just for testing
-        route = models.Route(
-            gpx_data=gpx_blob
-        )
-        # add to database
+                # Create a database entry
+                route = models.Route(
+                    name=uploaded_file.filename,
+                    upload_time=datetime.now(),
+                    gpx_data=gpx_blob
+                )
 
-        current_user.routes.append(route)
-        db.session.add(current_user)
-        db.session.add(route)
-        db.session.commit()
+                # Add to the current user's routes
+                current_user.routes.append(route)
 
-        # this gets rid of all the \n in the string, cant be used with them
-        # route = get_route()
-        # splitData = route.split("\\n")
-        # route = "".join(splitData)[2:][:-1]
+                # Commit changes to the database
+                db.session.commit()
 
-    return render_template("user.html", title='Map', FileUploadForm=file_upload_form, route=route)
+                flash("GPX file uploaded successfully!", "success")
+            except Exception as e:
+                db.session.rollback()  # Rollback changes if an exception occurs
+                print(f"Error: {e}")
+                flash("An error occurred while processing the GPX file.", "error")
+        else:
+            flash("Invalid GPX file structure. Please upload a valid GPX file.", "error")
+
+    return render_template("user.html", title='Map', FileUploadForm=file_upload_form, route=route, routes=routes)
+
+
+# AJAX stuff 
+
+# post all routes to JavaScript
+@app.route('/getRoute', methods=['GET'])
+def getRoute():
+    # get the current logged in users routes
+    routes = current_user.routes
+
+    # dic for all data go in, goes into json
+    data = {}
+    # loop for all the routes
+    for i in routes:
+        # decode each route and get rid of \n
+        route = i.gpx_data.decode('ascii')
+        splitData = route.split("\\n")
+        route = "".join(splitData)[2:][:-1]
+        data[i.id] = route
+
+    # return as a json
+    return json.dumps(data)
+
+
+def is_valid_gpx_structure(gpx_data):
+    try:
+        # Parse GPX data
+        gpx = gpxpy.parse(gpx_data)
+
+        # No exception means the GPX data is structurally valid
+        return True
+
+    except gpxpy.gpx.GPXException as e:
+        print(f"GPX parsing error: {e}")
+        return False
 
 
 # Views for handling payments
@@ -241,8 +300,7 @@ def cancel_subscription():
             return jsonify(error=str(e)), 403
     else:
         return jsonify(error="No active subscription found."), 403
-
-
+      
 @app.route("/success")
 def success():
     return render_template("success.html")
