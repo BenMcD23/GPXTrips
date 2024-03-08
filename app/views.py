@@ -117,41 +117,6 @@ def user():
 
     route = None
 
-    # If the form is submitted and is valid
-    '''if request.method == 'POST' and file_upload_form.validate_on_submit():
-        # Get the uploaded file
-        uploaded_file = request.files['file_upload']
-        
-        # Read the data from the file
-        gpx_data = uploaded_file.read()
-
-        # Check GPX file structure validation
-        if is_valid_gpx_structure(gpx_data):
-            try:
-                # Generate BLOB from GPX data
-                gpx_blob = str(gpx_data).encode('ascii')
-
-                # Create a database entry
-                route = models.Route(
-                    name=uploaded_file.filename,
-                    upload_time=datetime.now(),
-                    gpx_data=gpx_blob
-                )
-
-                # Add to the current user's routes
-                current_user.routes.append(route)
-
-                # Commit changes to the database
-                db.session.commit()
-
-                flash("GPX file uploaded successfully!", "success")
-            except Exception as e:
-                db.session.rollback()  # Rollback changes if an exception occurs
-                print(f"Error: {e}")
-                flash("An error occurred while processing the GPX file.", "danger")
-        else:
-            flash("Invalid GPX file structure. Please upload a valid GPX file.", "danger")'''
-
     return render_template("user.html", title='Map', FileUploadForm=file_upload_form, route=route, routes=routes)
 
 
@@ -238,3 +203,22 @@ def upload_file():
         print('Form validation failed')
         # Provide a more detailed error response for form validation failure
         return jsonify({'error': 'Form validation failed', 'errors': form.errors}), 400
+    
+@app.route('/getRouteForTable', methods=['GET'])
+def getRouteForTable():
+    # get the current logged in users routes
+    routes = current_user.routes
+
+    # list to store route information
+    route_info_list = []
+
+    # loop for all the routes
+    for route in routes:
+        route_info = {
+            'name': route.name,
+            'upload_time': route.upload_time.strftime("%Y-%m-%d %H:%M:%S")
+        }
+        route_info_list.append(route_info)
+
+    # return as JSON
+    return jsonify(route_info_list)

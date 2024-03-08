@@ -35,6 +35,9 @@ document.getElementById('fileUploadForm').addEventListener('submit', function (e
                 // Handle non-JSON response (if needed)
             } else {
                 document.getElementById('result').innerHTML = 'File uploaded successfully: ' + data.message;
+
+                // Fetch updated routes and update the table in user.html
+                updateRoutesTable();
             }
         })
         .catch(error => {
@@ -46,3 +49,42 @@ document.getElementById('fileUploadForm').addEventListener('submit', function (e
         document.getElementById('result').innerHTML = 'Please select a file';
     }
 });
+
+// Function to update the table in user.html
+function updateRoutesTable() {
+    // Fetch the updated routes
+    $.ajax({
+        type: "GET",
+        url: "/getRouteForTable",
+        dataType: "json",
+        success: function(routeInfoList) {
+            // Update the table with the new routes data
+            // Assuming you have a table with ID 'routesTable' in user.html
+            $('#table').empty(); // Clear existing rows
+
+            routeInfoList.forEach(function(routeInfo, index) {
+                var newRow = '<tr>' +
+                    '<td>' + routeInfo.name + '</td>' +
+                    '<td>' + routeInfo.upload_time + '</td>' +
+                    '<td>' +
+                        '<div class="form-check">' +
+                            '<input class="form-check-input" type="checkbox" value="" id="displayCheckbox' + routeInfo.id + '" onchange="displayOnMap(' + routeInfo.id + ')">' +
+                            '<label class="form-check-label" for="displayCheckbox' + routeInfo.id + '">Show on Map?</label>' +
+                        '</div>' +
+                    '</td>' +
+                    '<td>' +
+                        '<div class="form-check">' +
+                            '<input class="form-check-input" type="checkbox" value="" id="publicCheckbox' + routeInfo.id + '">' +
+                            '<label class="form-check-label" for="publicCheckbox' + routeInfo.id + '">Public</label>' +
+                        '</div>' +
+                    '</td>' +
+                '</tr>';
+            
+                $('#table').append(newRow);
+            });
+        },
+        error: function(request, error) {
+            console.error("Error fetching routes:", error);
+        }
+    });
+}
