@@ -20,24 +20,21 @@ fetch("/stripe")
                 });
         };
 
-        // Handle 1 year subscription button
-        document
-            .querySelector("#oneYearSubButton")
-            .addEventListener("click", () => {
+
+        $("#subButton").click(function(){
+            var subPlan = $("input[name='pp']:checked").val();
+            if(subPlan == "Year")
+            { // Year Subsciption
                 handleSubscriptionClick("1_year");
-            });
-
-        // Handle 1 month subscription button
-        document
-            .querySelector("#oneMonthSubButton")
-            .addEventListener("click", () => {
+            }
+            else if(subPlan == "Month")
+            { // Month Subscription
                 handleSubscriptionClick("1_month");
-            });
-
-        // Handle 1 week subscription button
-        document
-            .querySelector("#oneWeekSubButton")
-            .addEventListener("click", () => {
+            }
+            else
+            { // Week Subscription
                 handleSubscriptionClick("1_week");
-            });
+            }
+        });
+
     });
