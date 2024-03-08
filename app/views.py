@@ -1,6 +1,6 @@
 from app import app, db, models, bcrypt
 from .models import User
-from flask import Flask, render_template, request, redirect, url_for, send_file, flash
+from flask import Flask, render_template, request, redirect, url_for, send_file, flash, jsonify
 from flask_login import login_user, login_required, logout_user, current_user
 from .forms import FileUploadForm, RegistrationForm, LoginForm
 from werkzeug.utils import secure_filename
@@ -8,6 +8,7 @@ from DAL import add_route, get_route
 from datetime import datetime
 import json
 import gpxpy
+import os
 
 # Login route
 @app.route("/", methods=["GET", "POST"])
@@ -114,10 +115,12 @@ def user():
     file_upload_form = FileUploadForm()
     routes = current_user.routes
 
+    create_upload_folder()
+
     route = None
 
     # If the form is submitted and is valid
-    if request.method == 'POST' and file_upload_form.validate_on_submit():
+    '''if request.method == 'POST' and file_upload_form.validate_on_submit():
         # Get the uploaded file
         uploaded_file = request.files['file_upload']
         
@@ -128,7 +131,7 @@ def user():
         if is_valid_gpx_structure(gpx_data):
             try:
                 # Generate BLOB from GPX data
-                gpx_blob = gpx_data
+                gpx_blob = str(gpx_data).encode('ascii')
 
                 # Create a database entry
                 route = models.Route(
@@ -149,7 +152,7 @@ def user():
                 print(f"Error: {e}")
                 flash("An error occurred while processing the GPX file.", "danger")
         else:
-            flash("Invalid GPX file structure. Please upload a valid GPX file.", "danger")
+            flash("Invalid GPX file structure. Please upload a valid GPX file.", "danger")'''
 
     return render_template("user.html", title='Map', FileUploadForm=file_upload_form, route=route, routes=routes)
 
@@ -187,3 +190,33 @@ def is_valid_gpx_structure(gpx_data):
     except gpxpy.gpx.GPXException as e:
         print(f"GPX parsing error: {e}")
         return False
+
+def create_upload_folder():
+    if not os.path.exists(app.config['UPLOAD_FOLDER']):
+        os.makedirs(app.config['UPLOAD_FOLDER'])
+        print('Upload folder created')
+
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    create_upload_folder()
+    
+    form = FileUploadForm(request.form)
+
+    if form.validate_on_submit():
+        file = request.files['file']
+
+        if file:
+            print('File received:', file.filename)
+            # Handle file upload and database storage here
+            # Save the file to a specific folder, and save file information to the database
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
+            # You can add additional logic to save file details to the database here
+
+            return jsonify({'message': 'File uploaded successfully'})
+        else:
+            print('No file provided')
+            return jsonify({'error': 'No file provided'}), 400
+    else:
+        print('Form validation failed')
+        # Provide a more detailed error response for form validation failure
+        return jsonify({'error': 'Form validation failed', 'errors': form.errors}), 400

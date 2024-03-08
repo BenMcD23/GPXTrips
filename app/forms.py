@@ -30,7 +30,7 @@ class LoginForm(FlaskForm):
         "Email", validators=[InputRequired(), Email()]
     )
     password = PasswordField(
-        "Password", validators=[InputRequired(), Length(min=8, max=16)]
+        "Password", validators=[InputRequired(), Length(min=8, max=32)]
     )
 
 class FileUploadForm(FlaskForm):

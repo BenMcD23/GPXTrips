@@ -100,13 +100,17 @@
 
         
         <div class="form">
-            <form method="POST" action="" name="fileUpload" enctype="multipart/form-data">
+            <form method="POST" action="" id="fileUploadForm" name="fileUpload" enctype="multipart/form-data">
                 {{ FileUploadForm.hidden_tag() }}
                 <label for="fileUpload">File Upload</label>
       
-                {{ FileUploadForm.file_upload(accept=".gpx") }}
-                {{ FileUploadForm.submit_file }}
+                {{ FileUploadForm.file_upload(id="fileInput", accept=".gpx") }}
+                {{ FileUploadForm.submit_file(id=fileSubmit) }}
+                <div id="result"></div>
+
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
             </form>
+            <script src="{{ url_for('static', filename='fileUpload.js') }}"></script>
         </div>
     </body>
 {% endblock %}
