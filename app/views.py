@@ -115,8 +115,6 @@ def user():
     file_upload_form = FileUploadForm()
     routes = current_user.routes
 
-    create_upload_folder()
-
     route = None
 
     # If the form is submitted and is valid
@@ -191,15 +189,9 @@ def is_valid_gpx_structure(gpx_data):
         print(f"GPX parsing error: {e}")
         return False
 
-def create_upload_folder():
-    if not os.path.exists(app.config['UPLOAD_FOLDER']):
-        os.makedirs(app.config['UPLOAD_FOLDER'])
-        print('Upload folder created')
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
-    create_upload_folder()
-    
     form = FileUploadForm(request.form)
 
     if form.validate_on_submit():
@@ -207,12 +199,38 @@ def upload_file():
 
         if file:
             print('File received:', file.filename)
-            # Handle file upload and database storage here
-            # Save the file to a specific folder, and save file information to the database
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
-            # You can add additional logic to save file details to the database here
 
-            return jsonify({'message': 'File uploaded successfully'})
+            # Read the data from the file
+            gpx_data = file.read()
+
+            # Check GPX file structure validation
+            if is_valid_gpx_structure(gpx_data):
+                try:
+                    # Generate BLOB from GPX data
+                    gpx_blob = str(gpx_data).encode('ascii')
+
+                    # Create a database entry
+                    route = models.Route(
+                        name=file.filename,
+                        upload_time=datetime.now(),
+                        gpx_data=gpx_blob
+                    )
+
+                    current_user.routes.append(route)
+
+                    # Commit changes to the database
+                    db.session.commit()
+
+                    flash("GPX file uploaded successfully!", "success")
+                    return jsonify({'message': 'File uploaded successfully'})
+                except Exception as e:
+                    db.session.rollback()  # Rollback changes if an exception occurs
+                    print(f"Error: {e}")
+                    flash("An error occurred while processing the GPX file.", "danger")
+                    return jsonify({'error': 'Internal server error'}), 500
+            else:
+                flash("Invalid GPX file structure. Please upload a valid GPX file.", "danger")
+                return jsonify({'error': 'Invalid GPX file structure'}), 400
         else:
             print('No file provided')
             return jsonify({'error': 'No file provided'}), 400
