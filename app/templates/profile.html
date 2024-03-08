@@ -1,22 +1,28 @@
 {% extends 'base_post_login.html' %}
 
-{% block title %}User Home{% endblock %}
+{% block title %}Profile{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-center align-items-center vh-100 profilePage">
     <div class = "row justify-content-center flex-sm-row">
         <div class="col-auto">
-            <div class="card text-center p-5">
+            <div id="profileCard" class="card text-center p-5">
                 <h1>{{current_user.first_name}} {{current_user.last_name}}</h1>
                 <p class="lead">{{ current_user.email }}</p>
                 <hr>
                 <h4>Manage Subscription</h4>
                 <br>
                 <div>
-                    <p>Your Current Payment Plan is currently 1 year</p>
-                    <p>It is due to <b>expire</b> on the <b>12th January 2025</b></p>
+                    <p>Your Current Payment Plan is currently {{userPlan}}</p>
+                    <p>It is due to {% if autoRenewal %}<b>Renew</b>{% else %}<b>expire</b>{% endif %} on the <b>{{expiryDate}}</b></p>
                 </div>
-                <button class="btn btn-outline-success">Renew</button>
+                {% if autoRenewal %}
+                <form method="post" action="{{ url_for('cancel_subscription') }}" id="cancelSubForm">
+                    <button type="submit" class="btn btn-outline-danger">Cancel Subscription</button>
+                </form>
+                {% else %}
+                <button id="renewButton" class="btn btn-outline-success">Renew</button>
+                {% endif %}
                 <hr>
                 <h4>Manage Account</h4>
                 <br>
@@ -24,8 +30,45 @@
                 <button class="btn btn-outline-dark mb-1">Change Password</button>
                 <button class="btn btn-outline-danger">Delete Account</button>
             </div>
+
+            <div id="renewCard" class="overlapCard p-5">
+                <p id="backLink" class="text-left mb-1 linkStyle"><u>Back</u></p>
+                <div class="text-center">
+                    <h1>Choose your Plan</h1>
+                    <hr>
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>Plan</th>
+                            <th>Cost</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <th>52 Week</th>
+                            <td>£70.00</td>
+                            <td><input name="pp" id="radio1" type="radio" value="Year"></td>
+                        </tr>
+                        <tr>
+                            <th>4 Week</th>
+                            <td>£35.00</td>
+                            <td><input name="pp" id="radio2" type="radio" value="Month"></td>
+                        </tr>
+                        <tr>
+                            <th>1 Week</th>
+                            <td>£10.00</td>
+                            <td><input name="pp" id="radio3" type="radio" value="Week"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <p>You will be redirected for payment. <b>Disclaimer:</b> Subscription is non-refundable.</p>
+                    <button id="subButton" class="btn btn-outline-success">Renew</button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
+<script src="{{ url_for('static', filename='js/profile.js') }}"></script>
 {% endblock %}

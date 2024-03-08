@@ -21,7 +21,8 @@ fetch("/stripe")
         };
 
 
-        $("#subButton").click(function(){
+        $("#subButton").click(function()
+        { // Handles redirect on subscribe/renew button click
             var subPlan = $("input[name='pp']:checked").val();
             if(subPlan == "Year")
             { // Year Subsciption

@@ -24,6 +24,9 @@ $(document).ready(function()
   radioButton1.style.pointerEvents = 'auto';
   radioButton2.style.pointerEvents = 'auto';
   radioButton3.style.pointerEvents = 'auto';
+  // Also enable the logout button so user can logout if they don't wish to subscribe
+  let logoutButton = document.getElementById("logoutLink")
+  logoutButton.style.pointerEvents = 'auto';
 
 })
 

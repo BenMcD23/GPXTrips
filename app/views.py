@@ -2,36 +2,34 @@ from config import stripe_keys
 from app import app, db, models, admin, bcrypt
 from flask_admin.contrib.sqla import ModelView
 from .models import User, Plan, Subscription, Route
-from flask import Flask, render_template, request, redirect, url_for, send_file, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, send_file, flash, jsonify, abort
 from flask_login import login_user, login_required, logout_user, current_user
 from .forms import FileUploadForm, RegistrationForm, LoginForm
 from werkzeug.utils import secure_filename
 from DAL import add_route, get_route
 from datetime import datetime, timedelta
 import stripe
+import json
 
-# Custom view class for the User model
 
 
 class UserView(ModelView):
+    # Custom view class for the User model
     column_list = ['email', 'first_name', 'last_name', 'date_created']
-
-# Custom view class for the Route model
 
 
 class RouteView(ModelView):
+    # Custom view class for the Route model
     column_list = ['name', 'upload_time']
-
-# Custom view class for the Plan model
 
 
 class PlanView(ModelView):
+    # Custom view class for the Plan model
     column_list = ['name', 'monthly_cost', 'stripe_price_id']
-
-# Custom view class for the Subscription model
 
 
 class SubscriptionView(ModelView):
+    # Custom view class for the Subscription model
     column_list = ['user', 'plan',
                    'subscription_id', 'date_start', 'date_end', 'active']
 
@@ -43,9 +41,10 @@ admin.add_view(PlanView(Plan, db.session))
 admin.add_view(SubscriptionView(Subscription, db.session))
 
 
-# Login route
+
 @app.route("/", methods=["GET", "POST"])
 def login():
+    # Login route
     # Create an instance of the LoginForm
     form = LoginForm()
 
@@ -69,10 +68,11 @@ def login():
             return redirect(url_for("login"))
 
     return render_template("login.html", title="Login", form=form)
-  
-# Register route
+
+
 @app.route("/register", methods=["GET", "POST"])
 def register():
+    # Register route
     # Create an instance of the RegistrationForm
     form = RegistrationForm()
 
@@ -126,7 +126,6 @@ def register():
     return render_template("registration.html", title="Register", form=form)
 
 
-# Logout route
 @app.route("/logout", methods=["GET", "POST"])
 @login_required
 def logout():
@@ -139,33 +138,60 @@ def logout():
 def manager():
     return render_template("manager.html")
 
+
 @app.route('/manage_users')
 @login_required
 def manage_users():
     all_users = models.User.query.all()
     return render_template("manage_users.html",all_users=all_users)
 
+
 @app.route('/view_revenue')
 def view_revenue():
     return render_template("view_revenue.html")
+
 
 @app.route('/friends')
 @login_required
 def friends():
     #Query all friends of the current user + pending friends requests
+    if current_user_current_subscription() == False:
+        # If user doesn't have an active subscription, redirect to user page
+        return redirect(url_for('user'))
     return render_template("friends.html",current_user=current_user)
+
 
 @app.route('/profile')
 @login_required
 def profile():
-    #Pass data to retrive user details
-    return render_template("profile.html",current_user=current_user)
+    # Pass data to retrive user details
+    # Variable to keep track of subscription auto renewal status for the user. By default, set to off
+    autoRenewal = False
+
+    if current_user_current_subscription() == False:
+        # If user doesn't have an active subscription, redirect to user page
+        return redirect(url_for('user'))
+    
+    if current_user_active_subscription() != False:
+        # Auto-renewal is on
+        autoRenewal = True
+    
+    # retrieve the users plan (year/month/week) and the expiry date of plan from db
+    userPlan = models.Subscription.query.filter_by(user_id = current_user.id).first().plan.name
+    expiryDate = (models.Subscription.query.filter_by(user_id = current_user.id).first().date_end).date()
+
+    return render_template("profile.html",current_user=current_user, userPlan=userPlan, expiryDate=expiryDate, autoRenewal=autoRenewal)
+
 
 @app.route('/settings')
 @login_required
 def settings():
+    if current_user_current_subscription() == False:
+        # If user doesn't have an active subscription, redirect to user page
+        return redirect(url_for('user'))
     #Pass data and receive user changes (i.e email/name/payment changes)
     return render_template("settings.html",current_user=current_user)
+
 
 @app.route('/user',  methods=['GET', 'POST'])
 @login_required
@@ -182,6 +208,12 @@ def user():
     routes = current_user.routes
 
     route = None
+    # Disables the page unless set otherwise
+    disabled = False
+
+    # If User doesnt have an active subscription then display the subscribe card, and disable the rest of the poge
+    if current_user_current_subscription() == False:
+        disabled = True
 
     # If the form is submitted and is valid
     if request.method == 'POST' and file_upload_form.validate_on_submit():
@@ -218,14 +250,12 @@ def user():
         else:
             flash("Invalid GPX file structure. Please upload a valid GPX file.", "error")
 
-    return render_template("user.html", title='Map', FileUploadForm=file_upload_form, route=route, routes=routes, all_routes=all_routes, disabled=False)
+    return render_template("user.html", title='Map', FileUploadForm=file_upload_form, route=route, routes=routes, all_routes=all_routes, disabled=disabled)
+ 
 
-
-# AJAX stuff 
-
-# post all routes to JavaScript
 @app.route('/getRoute', methods=['GET'])
 def getRoute():
+    # post all routes to JavaScript
     # get the current logged in users routes
     routes = current_user.routes
 
@@ -254,15 +284,6 @@ def is_valid_gpx_structure(gpx_data):
     except gpxpy.gpx.GPXException as e:
         print(f"GPX parsing error: {e}")
         return False
-
-
-# Views for handling payments
-@app.route("/manage_subscription")
-def manage_subscription():
-    # print(stripe_keys["price_id"])
-    active_subscription = current_user_active_subscription()
-    return render_template("subscription.html",
-                           active_subscription=active_subscription)
 
 
 @app.route("/stripe")
@@ -324,7 +345,7 @@ def cancel_subscription():
             latest_subscription.active = False
             db.session.commit()
 
-            return jsonify(success=True), 200
+            return redirect(url_for("profile"))
         except Exception as e:
             return jsonify(error=str(e)), 403
     else:
@@ -332,7 +353,7 @@ def cancel_subscription():
       
 @app.route("/success")
 def success():
-    return render_template("success.html")
+    return redirect(url_for('user'))
 
 
 @app.route("/cancel")
@@ -343,6 +364,8 @@ def cancelled():
 
 @app.route('/webhook', methods=['POST'])
 def stripe_webhook():
+    print("webhook reached")
+
     payload = request.data
     signature = request.headers.get('Stripe-Signature')
 
@@ -350,6 +373,7 @@ def stripe_webhook():
         event = stripe.Webhook.construct_event(
             payload, signature, stripe_keys["endpoint_secret"])
     except Exception as e:
+        print(e)
         abort(400)
 
     if event['type'] == 'invoice.updated':
@@ -365,9 +389,9 @@ def stripe_webhook():
         # Query the plan based on the plan_id of the subscription.
         plan = Plan.query.filter_by(stripe_price_id=plan_id).first()
 
-        # Debugging test.
-        # print(user, plan, plan_id)
-        # print(subscription_id)
+        #Debugging test.
+        print(user, plan, plan_id)
+        print(subscription_id)
 
         if user and plan:
             create_subscription(user, plan, subscription_id)
@@ -377,10 +401,9 @@ def stripe_webhook():
 
     return jsonify({'success': True})
 
-# Method to create a subscription in the database.
-
 
 def create_subscription(user, plan, subscription_id):
+    # Method to create a subscription in the database.
     if plan.name == "Weekly":
         date_end = datetime.now()+timedelta(weeks=1)
     elif plan.name == "Monthly":
@@ -402,22 +425,21 @@ def create_subscription(user, plan, subscription_id):
 
     print(f"Subscription created for {user.email} with plan {plan.name}")
 
-# Active subscription - the user has a current subscription with auto renewals ON
+
 def current_user_active_subscription():
+    # Active subscription - the user has a current subscription with auto renewals ON
     latest_subscription = Subscription.query.filter_by(
             user_id=current_user.id).order_by(Subscription.date_start.desc()).first()
     if latest_subscription:
         return latest_subscription.active
     return False
 
-# Current subscription - the user has a current subscription which expires some time in the future, irrespective of cancellation status
+
 def current_user_current_subscription():
+    # Current subscription - the user has a current subscription which expires some time in the future, irrespective of cancellation status
     subscriptions = Subscription.query.filter_by(user_id=current_user.id).all()
     for subscription in subscriptions:
         if subscription.date_end > datetime.now():
             return True
 
     return False
-
-
-

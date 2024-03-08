@@ -105,17 +105,17 @@
                   <tr>
                     <th>52 Week</th>
                     <td>£70.00</td>
-                    <td><input name="pp" id="radio1" type="radio"></td>
+                    <td><input name="pp" id="radio1" type="radio" value="Year"></td>
                   </tr>
                   <tr>
                     <th>4 Week</th>
                     <td>£35.00</td>
-                    <td><input name="pp" id="radio2" type="radio"></td>
+                    <td><input name="pp" id="radio2" type="radio" value="Month"></td>
                   </tr>
                   <tr>
                     <th>1 Week</th>
                     <td>£10.00</td>
-                    <td><input name="pp" id="radio3" type="radio"></td>
+                    <td><input name="pp" id="radio3" type="radio" value="Week"></td>
                   </tr>
                 </tbody>
               </table>
@@ -123,10 +123,10 @@
               <button id="subButton" class="btn btn-outline-success">Subscribe</button>
         </div>
         {% endif %}
-
     </div>
+    
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/gpx.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="static/mapScript.js"></script>
+    <script src="static/js/mapScript.js"></script>
 {% endblock %}
