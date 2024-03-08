@@ -1,4 +1,4 @@
-.container-fluid {
+t.container-fluid {
     padding: 20px;
     margin-top: 20px;
 
@@ -94,9 +94,6 @@ button.disabled {
 #revenueEstimates {
     margin-top: 20px;
 }
-
-
-
 
 
 /* form */
