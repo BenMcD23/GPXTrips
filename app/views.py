@@ -4,13 +4,13 @@ from flask_admin.contrib.sqla import ModelView
 from .models import User, Plan, Subscription, Route
 from flask import Flask, render_template, request, redirect, url_for, send_file, flash, jsonify, abort
 from flask_login import login_user, login_required, logout_user, current_user
-from .forms import FileUploadForm, RegistrationForm, LoginForm
+from .forms import FileUploadForm, RegistrationForm, LoginForm, UserSearch
 from werkzeug.utils import secure_filename
 from DAL import add_route, get_route
 from datetime import datetime, timedelta
 import stripe
 import json
-
+from functools import wraps
 
 
 class UserView(ModelView):
@@ -41,6 +41,19 @@ admin.add_view(PlanView(Plan, db.session))
 admin.add_view(SubscriptionView(Subscription, db.session))
 
 
+# role for manager pages
+# decorate manager pages with this role
+def manger_required():
+    def decorator(func):
+        @wraps(func)
+        def authorize(*args, **kwargs):
+            # queries database to see if current user is manager
+            if not current_user.is_manager():
+                abort(401) # not authorized
+            return func(*args, **kwargs)
+        return authorize
+    return decorator
+
 
 @app.route("/", methods=["GET", "POST"])
 def login():
@@ -53,15 +66,27 @@ def login():
         user = User.query.filter_by(email=form.email.data).first()
 
         if user:
-            if bcrypt.check_password_hash(user.password_hash, form.password.data):
-                # Login user and redirect to user route after successful login
+            # if the account isnt active
+            if user.account_active != True:
+                flash("Account is deactivated, please contact support.", category="error")
+                return redirect(url_for("login"))
+
+            # if the password is correct
+            elif bcrypt.check_password_hash(user.password_hash, form.password.data):
                 flash("Logged in!", category="success")
                 login_user(user, remember=True)
+                if user.manager == True:
+                    # if theyre a manager then redirect to manager page
+                    return redirect(url_for("manager"))
+                # if theyre just a normal user then redirect to user page
                 return redirect(url_for("user"))
+            
+            
             else:
                 # Redirect to back login if password is incorrect
                 flash("Password is wrong!", category="error")
                 return redirect(url_for("login"))
+            
         else:
             # Redirect to back login if account does not exist
             flash("Account does not exist!", category="error")
@@ -113,8 +138,7 @@ def register():
 
         # Hash password and add used to the database
         hashed_password = bcrypt.generate_password_hash(password)
-        user = User(email=email, first_name=first_name, last_name=last_name,
-                    password_hash=hashed_password, date_created=datetime.now())
+        user = User(email=email, first_name=first_name, last_name=last_name, password_hash=hashed_password, date_created=datetime.now(), account_active=True, manager=False)
         db.session.add(user)
         db.session.commit()
 
@@ -135,18 +159,32 @@ def logout():
 
 
 @app.route('/manager')
+@manger_required()
 def manager():
     return render_template("manager.html")
 
-
-@app.route('/manage_users')
-@login_required
+@app.route('/manage_users', methods=["GET", "POST"])
+@manger_required()
 def manage_users():
-    all_users = models.User.query.all()
-    return render_template("manage_users.html",all_users=all_users)
+    UserSearchForm = UserSearch()
+
+    if (UserSearchForm.submitSearch.data and
+        UserSearchForm.validate_on_submit()):
+
+        if UserSearchForm.userEmail.data == "":
+            users = User.query.all()
+        
+        else:
+            users = User.query.filter_by(email=UserSearchForm.userEmail.data).all()
+
+    else:
+        users = User.query.all()
+
+    return render_template("manage_users.html", users=users, UserSearch=UserSearchForm)
 
 
 @app.route('/view_revenue')
+@manger_required()
 def view_revenue():
     return render_template("view_revenue.html")
 
@@ -252,6 +290,18 @@ def user():
 
     return render_template("user.html", title='Map', FileUploadForm=file_upload_form, route=route, routes=routes, all_routes=all_routes, disabled=disabled)
  
+# for user search (manger view)
+@app.route('/emails')
+def tagsDic():
+    allEmails = User.query.all()
+    # turn all the emails into a dictionary
+    dicEmails = [i.email_as_dict() for i in allEmails]
+    # change dictionary into a json
+    return jsonify(dicEmails)
+
+
+
+# AJAX stuff 
 
 @app.route('/getRoute', methods=['GET'])
 def getRoute():
@@ -271,6 +321,28 @@ def getRoute():
 
     # return as a json
     return json.dumps(data)
+
+@app.route('/accountState', methods=['POST'])
+def accountState():
+    # get data posted
+    data = request.get_json()
+
+    # change the user account state in database
+    User.query.filter_by(id=data["id"]).first().account_active = data["state"]
+    db.session.commit()
+
+    return jsonify(data=data)
+
+@app.route('/accountManger', methods=['POST'])
+def accountManger():
+    # get data posted
+    data = request.get_json()
+
+    # change the user account state in database
+    User.query.filter_by(id=data["id"]).first().manager = data["state"]
+    db.session.commit()
+
+    return jsonify(data=data)
 
 
 def is_valid_gpx_structure(gpx_data):
