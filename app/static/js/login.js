@@ -16,8 +16,8 @@ $(document).ready(function()
         $("#cBodyOne").hide();
         $("#cBodyTwo").hide();
         $("#cBodyThree").hide();
-        $("#cBodyOne").text(" 1 Year = £70");
-        $("#cBodyTwo").text(" 1 Month = £35");
+        $("#cBodyOne").text(" 52 Weeks = £70");
+        $("#cBodyTwo").text(" 4 Week = £35");
         $("#cBodyThree").text(" 1 Week = £10");
         $("#cBodyOne").fadeIn(300);
         $("#cBodyTwo").fadeIn(300);

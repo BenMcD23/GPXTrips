@@ -1,0 +1,65 @@
+ <!-- Base Template for Post Login Pages (Manager)  -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Manager Home Page{% endblock %}</title>
+
+    <!-- GENERAL HEADERS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script> -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous"
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
+
+    <link href = "https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css" rel = "stylesheet">
+    <script src = "https://code.jquery.com/jquery-1.10.2.js"></script>
+    <script src = "https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+
+    <link rel="stylesheet" href="../static/css/manager_style.css">
+    <script src="../static/js/manager.js"></script>
+
+    <!-- DONT REMOVE, NEED THIS FOR AJAX POST -->
+    <div id="csrfToken" data-value="{{ csrf_token() }}" type="hidden"></div>
+
+</head>
+
+<!-- This inherits the new manager base template. Useful for keeping a style throughout all manager pages -->
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark custom-blue-bg">
+        <div class="container">
+            <a class="navbar-text text-dark" href="#">GPXTrips</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item">
+                        <a class="navbar-text text-dark mr-3" href="manager">Home </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="navbar-text text-dark mr-3" href="logout">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <section class="container mt-4">
+        {% block content %}{% endblock %}
+        <footer class="footer">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-12">
+                        <p class="text-center">
+                            This website was created by Team-17 COMP2913 Software Engineering Principles 2023/2024 academic year using Flask (Python). 
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </section>
+
+</body>
+</html>

@@ -1,14 +1,14 @@
-<!-- Base Template for Post Login Pages (User/Manager) -->
+<!-- Base Template for Post Login Pages (User) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}User/Manager Home Page{% endblock %}</title>
+    <title>{% block title %}User Home Page{% endblock %}</title>
 
     <!-- GENERAL HEADERS -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous"
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
 
@@ -24,15 +24,19 @@
 
     <!-- STRIPE HEADERS -->
     <script src="https://js.stripe.com/v3/"></script>
-    <script src="{{ url_for('static', filename='stripe.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/stripe.js') }}"></script>
 
 
 
 </head>
+{% if disabled %}
+<body class="disabledPage">
+{% else %}
 <body>
-    <header class="bg-dark text-white text-center py-4">
+{% endif %}
+    <!-- <header class="bg-dark text-white text-center py-4">
         <h1>Welcome to Your Dashboard</h1>
-    </header>
+    </header> -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="#">GPXTrips</a>
@@ -42,23 +46,37 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ml-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Home</a>
+                        <a class="nav-link" href="user">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Profile</a>
+                        <a class="nav-link" href="profile">Profile</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Settings</a>
+                        <a class="nav-link" href="friends">Friends</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Logout</a>
+                        <a class="nav-link" href="settings">Settings</a>
+                    </li>
+                    <li class="nav-item">
+                        <a id="logoutLink" class="nav-link" href="logout">Logout</a>
                     </li>
                 </ul>
             </div>
         </div>
     </nav>
-    <section class="container mt-4">
+    <section class="container-fluid mt-4">
         {% block content %}{% endblock %}
+        <footer class="footer">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-12">
+                        <p class="text-center">
+                            This website was created by Team-17 COMP2913 Software Engineering Principles 2023/2024 academic year using Flask (Python). 
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </footer>
     </section>
 
 </body>

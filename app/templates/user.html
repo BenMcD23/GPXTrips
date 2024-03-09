@@ -1,113 +1,132 @@
-<!-- Content for post-login view of a user -->
 {% extends 'base_post_login.html' %}
 
 {% block title %}User Home{% endblock %}
 
 {% block content %}
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            {% for message in messages %}
-                {{ message }}
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-    <h2>Main Content Area for User Home</h2>
-    <head>
-        <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-        <body onload="getRoutes()">
 
-        <!-- leaflet -->
-        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-        <!-- GPX plugin for leaflet -->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/gpx.min.js"></script>
-    </head>
-
-    <div style="margin-bottom: 20px;">
-        <h3>Uploaded GPX Files</h3>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>File Name</th>
-                    <th>Upload Date</th>
-                    <th>Display on Map</th> <!-- Checkbox (View in Map) -->
-                    <th>Public</th> <!-- Checkbox (Visible to friends?) -->
-                </tr>
-            </thead>
-            <tbody>
-                {% for i in routes %}
-                <tr>
-                    <td>{{ i.name }}</td>
-                    <td>{{ i.upload_time }}</td>
-                    <td>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="" id="displayCheckbox{{ i.id }}" onchange="displayOnMap({{ i.id }})">
-                            <label class="form-check-label" for="displayCheckbox{{ i.id }}">
-                                Show on Map?
-                            </label>
+    <div id="popupContainer" class="popupContainer">
+        <div id="popupForm" class="popupForm">
+            <span class="closeBtn" id="closeBtn">&times;</span>
+            <h1>Uploaded GPX Files</h1>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>File Name</th>
+                            <th>Display</th>
+                            <th>Published by</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for i in routes %}
+                        <tr>
+                            <td>{{ i.name }}</td>
+                            <td>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="addToMap" id="{{ i.id }}">
+                                    <label class="form-check-label" for="{{ i.id }}"></label>
+                                </div>
+                            </td>
+                            <td>{{ i.user.first_name}} {{i.user.last_name}}</td>
+                            <td>  
+                                <button class="btn-primary viewInfoBtn" data-route-id="{{ i.id }}">View Info</button>
+                                <div>
+                                    <div class="popupDataContainer" id="popupDataContainer_{{ i.id }}">
+                                        <div class="infoForm">
+                                            <span class="closeBtn" data-route-id="{{ i.id }}">&times;</span>
+                                            <h1>Route Information</h1>
+                                            <p>Route Name: {{ i.name }}</p>
+                                            <p>Route Length: {{ i.length }}</p>
+                                            <p>Route Duration: {{ i.duration }}</p>
+                                            <p>Route Start: {{ i.start }}</p>
+                                            <p>Route End: {{ i.end }}</p>
+                                            <p>Upload Date: {{ i.upload_time }}</p>
+                                            <button>Delete</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+                <!-- File Upload Section -->
+            <div class="form">
+                <form method="POST" action="" name="fileUpload" enctype="multipart/form-data">
+                    {{ FileUploadForm.hidden_tag() }}
+                    <div class="form-group">
+                        <label for="fileUpload" class="form-label">Choose a GPX file to upload:</label>
+                        <div class="input-group">
+                            {{ FileUploadForm.file_upload(accept=".gpx", class="file-upload-input") }}
+                            {{ FileUploadForm.submit_file(class="submit-button") }}
                         </div>
-                    </td>
-                    <td>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="" id="publicCheckbox1">
-                            <label class="form-check-label" for="publicCheckbox1">
-                                Public
-                            </label>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    
-
-    <!-- Add Friends and View Their Trips Section (Acessibility To be considered)-->
-    <div style="margin-bottom: 20px;">
-        <h3>Friends and Their Trips</h3>
-        <!-- Form to add friends -->
-        <form action="/add_friend" method="post">
-            <div class="form-group">
-                <label for="friendEmail">Friend's Email:</label>
-                <input type="email" class="form-control" id="friendEmail" name="friend_email">
+                    </div>
+                </form>
             </div>
             
+        </div>
+    </div>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Left Column for Uploaded GPX Files -->
+            <div class="col-md-6">
+                {% if disabled %}
+                <button id="viewRoutesBtn" class=" blur btn btn-primary">View & Manage GPX Routes</button>
+                {% else %}
+                <button id="viewRoutesBtn" class="view_btn">View & Manage GPX Routes</button>
+                {% endif %}
+            </div>
 
-            <button type="submit" id="addFriendButton" class="btn btn-primary" name="addFriendButton">Add Friend</button>
-
-
-
-        </form>
-        <!-- Display list of friends and their trips -->
-        <ul class="list-group">
-            <li class="list-group-item">
-                Friend 1
-                <button type="button" class="btn btn-link float-right">View Trips</button> <!-- Upon clicking view trips show the trips on a pop-up map? -->
-            </li>
-            <li class="list-group-item">
-                Friend 2
-                <button type="button" class="btn btn-link float-right">View Trips</button>
-            </li>
-            <!-- For loop to display all friends OK-->
-        </ul>
+        </div>
     </div>
 
-    <body>
-        <!-- Plug In application function to upload GPX File.(DB Storagte As Well?) -->
-        <div id="test">
-            <div id="map"></div>
+    <!-- Leaflet Map Section -->
+    <div id="test">
+        {% if disabled %}
+        <div class="blur" id="map"></div>
+        {% else %}
+        <div id="map"></div>
+        {% endif %}
+        {% if disabled %}
+        <div class="overlapCard text-center p-5">
+            <h1>Please Choose A Subscription Plan To Continue</h1>
+            <hr>
+            <table class="table">
+                <thead>
+                  <tr>
+                    <th>Plan</th>
+                    <th>Cost</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th>52 Week</th>
+                    <td>£70.00</td>
+                    <td><input name="pp" id="radio1" type="radio" value="Year"></td>
+                  </tr>
+                  <tr>
+                    <th>4 Week</th>
+                    <td>£35.00</td>
+                    <td><input name="pp" id="radio2" type="radio" value="Month"></td>
+                  </tr>
+                  <tr>
+                    <th>1 Week</th>
+                    <td>£10.00</td>
+                    <td><input name="pp" id="radio3" type="radio" value="Week"></td>
+                  </tr>
+                </tbody>
+              </table>
+              <p>You will be redirected for payment. <b>Disclaimer:</b> Subscription is non-refundable.</p>
+              <button id="subButton" class="btn btn-outline-success">Subscribe</button>
         </div>
-        <script src="static/mapScript.js"></script>
-
-        
-        <div class="form">
-            <form method="POST" action="" name="fileUpload" enctype="multipart/form-data">
-                {{ FileUploadForm.hidden_tag() }}
-                <label for="fileUpload">File Upload</label>
-      
-                {{ FileUploadForm.file_upload(accept=".gpx") }}
-                {{ FileUploadForm.submit_file }}
-            </form>
-        </div>
-    </body>
+        {% endif %}
+    </div>
+    
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/gpx.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="static/js/mapScript.js"></script>
 {% endblock %}
-
