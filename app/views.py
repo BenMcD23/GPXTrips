@@ -75,7 +75,8 @@ def login():
             # if the password is correct
             elif bcrypt.check_password_hash(user.password_hash, form.password.data):
                 flash("Logged in!", category="success")
-                login_user(user, remember=True)
+                remember_me = form.rememberMe.data
+                login_user(user, remember=remember_me)
                 if user.manager == True:
                     # if theyre a manager then redirect to manager page
                     return redirect(url_for("manager"))
@@ -109,12 +110,14 @@ def register():
         last_name = request.form.get("last_name")
         password = request.form.get("password")
         confirm_password = request.form.get("confirm_password")
+        tandc_confirm = request.form.get("TandCConfirm")
 
         # Check provided email has an account that exists
         existing_email = User.query.filter_by(email=email).first()
         if existing_email:
             flash(
-                "Email already in use. Please choose a different email.", category="error"
+                "Email already in use. Please choose a different email.",
+                category="error"
             )
             return redirect(url_for("register"))
 
@@ -123,6 +126,13 @@ def register():
             flash(
                 "Passwords do not match. Please make sure your passwords match.",
                 category="error",
+            )
+            return redirect(url_for("register"))
+        
+        if not tandc_confirm:
+            flash(
+                "Please accept the Terms and Conditions to proceed.", 
+                category="error"
             )
             return redirect(url_for("register"))
 
@@ -241,11 +251,11 @@ def user():
 
     # If User doesnt have an active subscription then display the subscribe card, and disable the rest of the poge
     if current_user_current_subscription() == False:
-        disabled = False
+        disabled = True
 
     return render_template("user.html", title='Map', FileUploadForm=file_upload_form, route=route, routes=routes, all_routes=all_routes, disabled=disabled)
  
- 
+
 # for user search (manger view)
 @app.route('/emails')
 def tagsDic():
