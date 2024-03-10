@@ -11,8 +11,24 @@ class User(db.Model, UserMixin):
     subscription_id = db.Column(db.Integer)
     date_created = db.Column(db.DateTime, nullable=False)
 
-    subsciptions = db.relationship('Subscription', backref='user', lazy=True)
+    subscriptions = db.relationship('Subscription', backref='user', lazy=True)
+    account_active = db.Column(db.Boolean, nullable=False)
+
+    manager = db.Column(db.Boolean, nullable=False)
+
     routes = db.relationship('Route', backref='user', lazy=True)
+
+    # returns as dict so can be used for search bar
+    def email_as_dict(self):
+        return {'email': self.email}
+
+    # returns if current user is manager or not
+    def is_manager(self):
+        if self.manager == True:
+            return True
+
+        else:
+            return False
 
 
 class Route(db.Model):
@@ -27,11 +43,16 @@ class Plan(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128), unique=True, nullable=False)
     monthly_cost = db.Column(db.Float)
+    stripe_price_id = db.Column(db.String(255), nullable=False)
 
 
 class Subscription(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     plan_id = db.Column(db.Integer, db.ForeignKey('plan.id'))
+    subscription_id = db.Column(db.String(255))
     date_start = db.Column(db.DateTime, nullable=False)
     date_end = db.Column(db.DateTime)
+    active = db.Column(db.Boolean, default=True)
+
+    plan = db.relationship('Plan', backref='subscriptions')

@@ -59,28 +59,40 @@ function updateRoutesTable() {
         dataType: "json",
         success: function(routeInfoList) {
             // Update the table with the new routes data
-            // Assuming you have a table with ID 'routesTable' in user.html
-            $('#table').empty(); // Clear existing rows
+            var tableBody = $('#table');
+            tableBody.empty(); // Clear existing rows
 
             routeInfoList.forEach(function(routeInfo, index) {
                 var newRow = '<tr>' +
                     '<td>' + routeInfo.name + '</td>' +
-                    '<td>' + routeInfo.upload_time + '</td>' +
                     '<td>' +
                         '<div class="form-check">' +
-                            '<input class="form-check-input" type="checkbox" value="" id="displayCheckbox' + routeInfo.id + '" onchange="displayOnMap(' + routeInfo.id + ')">' +
-                            '<label class="form-check-label" for="displayCheckbox' + routeInfo.id + '">Show on Map?</label>' +
+                            '<input class="form-check-input" type="checkbox" name="addToMap" id="' + routeInfo.id + '">' +
+                            '<label class="form-check-label" for="' + routeInfo.id + '"></label>' +
                         '</div>' +
                     '</td>' +
+                    '<td>' + routeInfo.user.first_name + ' ' + routeInfo.user.last_name + '</td>' +
                     '<td>' +
-                        '<div class="form-check">' +
-                            '<input class="form-check-input" type="checkbox" value="" id="publicCheckbox' + routeInfo.id + '">' +
-                            '<label class="form-check-label" for="publicCheckbox' + routeInfo.id + '">Public</label>' +
+                        '<button class="btn-primary viewInfoBtn" data-route-id="' + routeInfo.id + '">View Info</button>' +
+                        '<div>' +
+                            '<div class="popupDataContainer" id="popupDataContainer_' + routeInfo.id + '">' +
+                                '<div class="infoForm">' +
+                                    '<span class="closeBtn" data-route-id="' + routeInfo.id + '">&times;</span>' +
+                                    '<h1>Route Information</h1>' +
+                                    '<p>Route Name: ' + routeInfo.name + '</p>' +
+                                    '<p>Route Length: ' + routeInfo.length + '</p>' +
+                                    '<p>Route Duration: ' + routeInfo.duration + '</p>' +
+                                    '<p>Route Start: ' + routeInfo.start + '</p>' +
+                                    '<p>Route End: ' + routeInfo.end + '</p>' +
+                                    '<p>Upload Date: ' + routeInfo.upload_time + '</p>' +
+                                    '<button>Delete</button>' +
+                                '</div>' +
+                            '</div>' +
                         '</div>' +
                     '</td>' +
                 '</tr>';
             
-                $('#table').append(newRow);
+                tableBody.append(newRow);
             });
         },
         error: function(request, error) {
@@ -88,3 +100,18 @@ function updateRoutesTable() {
         }
     });
 }
+
+// Event delegation for 'View Info' button
+$(document).on('click', '.viewInfoBtn', function() {
+    var routeId = $(this).data('route-id');
+    // Your code to handle the 'View Info' button click, e.g., show the popup for the corresponding routeId
+    var popupContainer = $('#popupDataContainer_' + routeId);
+    popupContainer.show();
+});
+
+$(document).on('click', '.closeBtn', function() {
+    var routeId = $(this).data('route-id');
+    // Your code to handle the close button click, e.g., hide the corresponding popup
+    var popupContainer = $('#popupDataContainer_' + routeId);
+    popupContainer.hide();
+});
