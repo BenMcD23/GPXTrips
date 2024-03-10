@@ -1,5 +1,5 @@
 from config import stripe_keys
-from app import app, db, models, admin, bcrypt
+from app import app, db, admin, bcrypt
 from flask_admin.contrib.sqla import ModelView
 from .models import User, Plan, Subscription, Route
 from flask import Flask, render_template, request, redirect, url_for, send_file, flash, jsonify, abort
@@ -10,6 +10,7 @@ from DAL import add_route, get_route
 from datetime import datetime, timedelta
 import stripe
 import json
+import gpxpy
 from functools import wraps
 
 
@@ -74,7 +75,8 @@ def login():
             # if the password is correct
             elif bcrypt.check_password_hash(user.password_hash, form.password.data):
                 flash("Logged in!", category="success")
-                login_user(user, remember=True)
+                remember_me = form.rememberMe.data
+                login_user(user, remember=remember_me)
                 if user.manager == True:
                     # if theyre a manager then redirect to manager page
                     return redirect(url_for("manager"))
@@ -108,12 +110,14 @@ def register():
         last_name = request.form.get("last_name")
         password = request.form.get("password")
         confirm_password = request.form.get("confirm_password")
+        tandc_confirm = request.form.get("TandCConfirm")
 
         # Check provided email has an account that exists
         existing_email = User.query.filter_by(email=email).first()
         if existing_email:
             flash(
-                "Email already in use. Please choose a different email.", category="error"
+                "Email already in use. Please choose a different email.",
+                category="error"
             )
             return redirect(url_for("register"))
 
@@ -124,17 +128,13 @@ def register():
                 category="error",
             )
             return redirect(url_for("register"))
-
-        # Stubs for plan selection
-        selected_plan = request.form.get("plan")
-        if selected_plan == 'option1':
-            answer = 'You selected Option 1'
-        elif selected_plan == 'option2':
-            answer = 'You selected Option 2'
-        elif selected_plan == 'option3':
-            answer = 'You selected Option 3'
-        else:
-            answer = 'Invalid option'
+        
+        if not tandc_confirm:
+            flash(
+                "Please accept the Terms and Conditions to proceed.", 
+                category="error"
+            )
+            return redirect(url_for("register"))
 
         # Hash password and add used to the database
         hashed_password = bcrypt.generate_password_hash(password)
@@ -162,6 +162,7 @@ def logout():
 @manger_required()
 def manager():
     return render_template("manager.html")
+
 
 @app.route('/manage_users', methods=["GET", "POST"])
 @manger_required()
@@ -215,8 +216,8 @@ def profile():
         autoRenewal = True
     
     # retrieve the users plan (year/month/week) and the expiry date of plan from db
-    userPlan = models.Subscription.query.filter_by(user_id = current_user.id).first().plan.name
-    expiryDate = (models.Subscription.query.filter_by(user_id = current_user.id).first().date_end).date()
+    userPlan = Subscription.query.filter_by(user_id = current_user.id).first().plan.name
+    expiryDate = (Subscription.query.filter_by(user_id = current_user.id).first().date_end).date()
 
     return render_template("profile.html",current_user=current_user, userPlan=userPlan, expiryDate=expiryDate, autoRenewal=autoRenewal)
 
@@ -240,8 +241,7 @@ def user():
         render_template: render template, with map.html
     """
     # File upload form
-    # file upload form
-    all_routes = models.Route.query.all()
+    all_routes = Route.query.all()
     file_upload_form = FileUploadForm()
     routes = current_user.routes
 
@@ -253,43 +253,9 @@ def user():
     if current_user_current_subscription() == False:
         disabled = True
 
-    # If the form is submitted and is valid
-    if request.method == 'POST' and file_upload_form.validate_on_submit():
-        # Get the uploaded file
-        uploaded_file = request.files['file_upload']
-        
-        # Read the data from the file
-        gpx_data = uploaded_file.read()
-
-        # Check GPX file structure validation
-        if is_valid_gpx_structure(gpx_data):
-            try:
-                # Generate BLOB from GPX data
-                gpx_blob = gpx_data
-
-                # Create a database entry
-                route = models.Route(
-                    name=uploaded_file.filename,
-                    upload_time=datetime.now(),
-                    gpx_data=gpx_blob
-                )
-
-                # Add to the current user's routes
-                current_user.routes.append(route)
-
-                # Commit changes to the database
-                db.session.commit()
-
-                flash("GPX file uploaded successfully!", "success")
-            except Exception as e:
-                db.session.rollback()  # Rollback changes if an exception occurs
-                print(f"Error: {e}")
-                flash("An error occurred while processing the GPX file.", "error")
-        else:
-            flash("Invalid GPX file structure. Please upload a valid GPX file.", "error")
-
     return render_template("user.html", title='Map', FileUploadForm=file_upload_form, route=route, routes=routes, all_routes=all_routes, disabled=disabled)
  
+
 # for user search (manger view)
 @app.route('/emails')
 def tagsDic():
@@ -299,9 +265,6 @@ def tagsDic():
     # change dictionary into a json
     return jsonify(dicEmails)
 
-
-
-# AJAX stuff 
 
 @app.route('/getRoute', methods=['GET'])
 def getRoute():
@@ -343,19 +306,6 @@ def accountManger():
     db.session.commit()
 
     return jsonify(data=data)
-
-
-def is_valid_gpx_structure(gpx_data):
-    try:
-        # Parse GPX data
-        gpx = gpxpy.parse(gpx_data)
-
-        # No exception means the GPX data is structurally valid
-        return True
-
-    except gpxpy.gpx.GPXException as e:
-        print(f"GPX parsing error: {e}")
-        return False
 
 
 @app.route("/stripe")
@@ -515,3 +465,89 @@ def current_user_current_subscription():
             return True
 
     return False
+
+
+def is_valid_gpx_structure(gpx_data):
+    try:
+        # Parse GPX data
+        gpx = gpxpy.parse(gpx_data)
+        # No exception means the GPX data is structurally valid
+        return True
+    except gpxpy.gpx.GPXException as e:
+        print(f"GPX parsing error: {e}")
+        return False
+
+
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    form = FileUploadForm(request.form)
+
+    if form.validate_on_submit():
+        file = request.files['file']
+
+        if file:
+            print('File received:', file.filename)
+
+            # Read the data from the file
+            gpx_data = file.read()
+
+            # Check GPX file structure validation
+            if is_valid_gpx_structure(gpx_data):
+                try:
+                    # Generate BLOB from GPX data
+                    gpx_blob = str(gpx_data).encode('ascii')
+
+                    # Create a database entry
+                    route = Route(
+                        name=file.filename,
+                        upload_time=datetime.now(),
+                        gpx_data=gpx_blob
+                    )
+
+                    current_user.routes.append(route)
+
+                    # Commit changes to the database
+                    db.session.commit()
+
+                    return jsonify({'message': 'File uploaded successfully'})
+                except Exception as e:
+                    db.session.rollback()  # Rollback changes if an exception occurs
+                    print(f"Error: {e}")
+                    return jsonify({'error': 'Internal server error'}), 500
+            else:
+                return jsonify({'error': 'Invalid GPX file structure'}), 400
+        else:
+            print('No file provided')
+            return jsonify({'error': 'No file provided'}), 400
+    else:
+        print('Form validation failed')
+        # Provide a more detailed error response for form validation failure
+        return jsonify({'error': 'Form validation failed', 'errors': form.errors}), 400
+    
+@app.route('/getRouteForTable', methods=['GET'])
+def getRouteForTable():
+    # get the current logged in users routes
+    routes = current_user.routes
+
+    # list to store route information
+    route_info_list = []
+
+    # loop for all the routes
+    for route in routes:
+        route_info = {
+            'id': route.id,
+            'name': route.name,
+            'user': {
+                'first_name': route.user.first_name,
+                'last_name': route.user.last_name
+            },
+            'length': 0,
+            'duration': 0,
+            'start': 0,
+            'end': 0,
+            'upload_time': route.upload_time.strftime("%Y-%m-%d %H:%M:%S")
+        }
+        route_info_list.append(route_info)
+
+    # return as JSON
+    return jsonify(route_info_list)

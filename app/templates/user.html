@@ -18,7 +18,7 @@
                             <th></th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="table">
                         {% for i in routes %}
                         <tr>
                             <td>{{ i.name }}</td>
@@ -54,14 +54,16 @@
             </div>
                 <!-- File Upload Section -->
             <div class="form">
-                <form method="POST" action="" name="fileUpload" enctype="multipart/form-data">
+                <form id="fileUploadForm" method="POST" action="" name="fileUpload" enctype="multipart/form-data">
                     {{ FileUploadForm.hidden_tag() }}
                     <div class="form-group">
                         <label for="fileUpload" class="form-label">Choose a GPX file to upload:</label>
                         <div class="input-group">
-                            {{ FileUploadForm.file_upload(accept=".gpx", class="file-upload-input") }}
+                            {{ FileUploadForm.file_upload(accept=".gpx", class="file-upload-input", id="fileInput") }}
                             {{ FileUploadForm.submit_file(class="submit-button") }}
                         </div>
+                        <div id="result"></div>
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                     </div>
                 </form>
             </div>
@@ -129,4 +131,5 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/gpx.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="static/js/mapScript.js"></script>
+    <script src="static/js/fileUpload.js"></script>
 {% endblock %}

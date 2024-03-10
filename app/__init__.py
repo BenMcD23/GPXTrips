@@ -4,7 +4,7 @@ from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_admin import Admin
-# from flask_wtf.csrf import CSRFProtect
+from flask_wtf.csrf import CSRFProtect
 from flask_migrate import Migrate
 from flask_talisman import Talisman
 from config import stripe_keys
@@ -33,7 +33,7 @@ bcrypt = Bcrypt(app)
 babel = Babel(app)
 
 # Termporarily commented out to allow for the Stripe-API to run.
-# csrf = CSRFProtect(app)
+csrf = CSRFProtect(app)
 
 login_manager = LoginManager()
 login_manager.login_view = "login"
