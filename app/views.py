@@ -62,7 +62,7 @@ def login():
     # Create an instance of the LoginForm
     form = LoginForm()
 
-    if request.method == 'POST':
+    if request.method == 'POST' and form.validate_on_submit():
         # Query the user by email
         user = User.query.filter_by(email=form.email.data).first()
 
@@ -83,7 +83,6 @@ def login():
                 # if theyre just a normal user then redirect to user page
                 return redirect(url_for("user"))
             
-            
             else:
                 # Redirect to back login if password is incorrect
                 flash("Password is wrong!", category="error")
@@ -103,7 +102,7 @@ def register():
     # Create an instance of the RegistrationForm
     form = RegistrationForm()
 
-    if request.method == 'POST':
+    if request.method == 'POST' and form.validate_on_submit():
         # Request data from form
         email = request.form.get("email")
         first_name = request.form.get("first_name")

@@ -1,109 +1,182 @@
 import pytest
 from flask import url_for
-from flask_testing import TestCase
-from app import app, db, bcrypt
-from app.models import User
 from datetime import datetime
+from dotenv import load_dotenv
+import os
 
-class TestLogin(TestCase):
-    def create_app(self):
-        app.config['TESTING'] = True
-        app.config['WTF_CSRF_ENABLED'] = False
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
-        app.config['SERVER_NAME'] = 'localhost'
-        app.config['APPLICATION_ROOT'] = '/'
-        app.config['PREFERRED_URL_SCHEME'] = 'https'
+load_dotenv()
 
-        app.app_context().push()
-        return app
+stripe_keys = {
+    "secret_key": os.environ["STRIPE_SECRET_KEY"],
+    "publishable_key": os.environ["STRIPE_PUBLISHABLE_KEY"],
+    "endpoint_secret": os.environ["STRIPE_ENDPOINT_SECRET"],
+    "price_id_1_week": os.environ["STRIPE_PRICE_ID_1_WEEK"],
+    "price_id_1_month": os.environ["STRIPE_PRICE_ID_1_MONTH"],
+    "price_id_1_year": os.environ["STRIPE_PRICE_ID_1_YEAR"],
+}
 
-    def setUp(self):
-        self.client = app.test_client()
-        db.create_all()
+from app import app, db, bcrypt, models
 
-        hashed_password = bcrypt.generate_password_hash('test_password').decode('utf-8')
-        user = User(email='test@example.com', password_hash=hashed_password, date_created=datetime.now())
-        db.session.add(user)
-        db.session.commit()
+# Pytest fixture to create a test client for Flask
+@pytest.fixture
+def client():
+    # Setting up Flask app configuration for testing
+    app.config['TESTING'] = True
+    app.config['WTF_CSRF_ENABLED'] = False
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    app.config['SERVER_NAME'] = 'localhost'
+    app.config['SESSION_COOKIE_DOMAIN'] = 'localhost.localdomain'
+    app.config['PREFERRED_URL_SCHEME'] = 'https'
+    
+    # Creating a test client with a context manager
+    with app.test_client() as client:
+        with app.app_context():
+            # Creating and dropping the database for each test
+            db.create_all()
+            yield client
+            db.drop_all()
 
-    def tearDown(self):
-        db.drop_all()
+# Test cases for user registration functionality
+def test_successful_registration(client):
+    # Send a POST request with valid registration data
+    response = client.post(
+        url_for('register'),
+        data={
+            'email': 'test@example.com',
+            'first_name': 'John',
+            'last_name': 'Doe',
+            'password': 'password',
+            'confirm_password': 'password',
+            'TandCConfirm': True
+        },
+    )
 
-    def follow_redirect(self, response, expected_final_path):
-        assert response.status_code == 302  # Check if it's a redirect
+    # Check if the user is redirected to the login page
+    assert response.status_code == 302
+    assert response.location == url_for('login', _external=True)
 
-        # Manually follow the redirect
-        response = self.client.get(response.location, follow_redirects=True)
 
-        # Check the final destination URL after following the redirect
-        assert response.status_code == 200  # Adjust this status code based on your expected final destination
-        assert response.request.path == expected_final_path
+def test_duplicate_email_registration(client):
+    test_user = models.User(email='test@example.com', password_hash=bcrypt.generate_password_hash('password'), date_created=datetime.now(), account_active=True, manager=False)
+    db.session.add(test_user)
+    db.session.commit()
 
-    def test_successful_login(self):
-        response = self.client.post(
-            url_for('login'),
-            data={'email': 'test@example.com', 'password': 'test_password'},
-            follow_redirects=False
-        )
-        self.follow_redirect(response, url_for('user'))
+    # Send a POST request with email that already has an account
+    response = client.post(
+        url_for('register'),
+        data={
+            'email': 'test@example.com',
+            'first_name': 'John',
+            'last_name': 'Doe',
+            'password': 'password',
+            'confirm_password': 'password',
+            'TandCConfirm': True
+        },
+    )
+    
+    # Check if the user is redirected to the registration page
+    assert response.status_code == 302
+    assert response.location == url_for('register', _external=True)
 
-    def test_invalid_password(self):
-        response = self.client.post(
-            url_for('login'),
-            data={'email': 'test@example.com', 'password': 'wrong_password'},
-            follow_redirects=False
-        )
-        self.follow_redirect(response, url_for('login'))
 
-    def test_nonexistent_account(self):
-        response = self.client.post(
-            url_for('login'),
-            data={'email': 'nonexistent@example.com', 'password': 'test_password'},
-            follow_redirects=False
-        )
-        self.follow_redirect(response, url_for('login'))
+def test_password_mismatch_registration(client):
+    # Send a POST request with mismatched passwords
+    response = client.post(
+        url_for('register'),
+        data={
+            'email': 'test@example.com',
+            'first_name': 'John',
+            'last_name': 'Doe',
+            'password': 'password',
+            'confirm_password': 'mismatched_password',
+            'TandCConfirm': True
+        },
+    )
 
-    def test_successful_registration(self):
-        response = self.client.post(
-            url_for('register'),
-            data={
-                'email': 'test2@example.com',
-                'first_name': 'John',
-                'last_name': 'Doe',
-                'password': 'test_password',
-                'confirm_password': 'test_password',
-                'plan': 'option1'
-            },
-            follow_redirects=False
-        )
-        self.follow_redirect(response, url_for('login'))
+    # Check if the user is redirected to the registration page
+    assert response.status_code == 302
+    assert response.location == url_for('register', _external=True)
 
-    def test_duplicate_email_registration(self):
-        response = self.client.post(
-            url_for('register'),
-            data={
-                'email': 'test@example.com',
-                'first_name': 'Another',
-                'last_name': 'User',
-                'password': 'another_password',
-                'confirm_password': 'another_password',
-                'plan': 'option2'
-            },
-            follow_redirects=False
-        )
-        self.follow_redirect(response, url_for('register'))
 
-    def test_password_mismatch_registration(self):
-        response = self.client.post(
-            url_for('register'),
-            data={
-                'email': 'test@example.com',
-                'first_name': 'John',
-                'last_name': 'Doe',
-                'password': 'test_password',
-                'confirm_password': 'mismatched_password',
-                'plan': 'option3'
-            },
-            follow_redirects=False
-        )
-        self.follow_redirect(response, url_for('register'))
+def test_registration_with_false_TandCConfirm(client):
+    # Send a POST request with TandCConfirm set to False
+    response = client.post(
+        url_for('register'),
+        data={
+            'email': 'test@example.com',
+            'first_name': 'John',
+            'last_name': 'Doe',
+            'password': 'password',
+            'confirm_password': 'password',
+            'TandCConfirm': None
+        },
+    )
+
+    # Check if the user is redirected to the registration page
+    assert response.status_code == 302
+    assert response.location == url_for('register', _external=True)
+
+
+def test_login_successful_user(client):
+    # Create a test user
+    test_user = models.User(email='test@example.com', password_hash=bcrypt.generate_password_hash('password'), date_created=datetime.now(), account_active=True, manager=False)
+    db.session.add(test_user)
+    db.session.commit()
+
+    # Send a POST request with valid credentials
+    response = client.post(url_for('login'), data={'email': 'test@example.com', 'password': 'password', 'rememberMe': False})
+
+    # Check if the user is redirected to the user page
+    assert response.status_code == 302
+    assert response.location == url_for('user', _external=True)
+
+
+def test_login_successful_manager(client):
+    # Create a test user
+    test_user = models.User(email='test@example.com', password_hash=bcrypt.generate_password_hash('password'), date_created=datetime.now(), account_active=True, manager=True)
+    db.session.add(test_user)
+    db.session.commit()
+
+    # Send a POST request with valid credentials
+    response = client.post(url_for('login'), data={'email': 'test@example.com', 'password': 'password', 'rememberMe': False})
+
+    # Check if the user is redirected to the manager page
+    assert response.status_code == 302
+    assert response.location == url_for('manager', _external=True)
+
+
+def test_invalid_password(client):
+    # Create a test user
+    test_user = models.User(email='test@example.com', password_hash=bcrypt.generate_password_hash('password'), date_created=datetime.now(), account_active=True, manager=False)
+    db.session.add(test_user)
+    db.session.commit()
+
+    # Send a POST request with invalid password
+    response = client.post(url_for('login'), data={'email': 'test@example.com', 'password': 'wrong_password', 'rememberMe': False})
+
+    # Check if the user is redirected to the login page
+    assert response.status_code == 302
+    assert response.location == url_for('login', _external=True)
+
+
+def test_deactivated_account(client):
+    # Create a test user
+    test_user = models.User(email='test@example.com', password_hash=bcrypt.generate_password_hash('password'), date_created=datetime.now(), account_active=False, manager=False)
+    db.session.add(test_user)
+    db.session.commit()
+
+    # Send a POST request with credentials to a deactivated account
+    response = client.post(url_for('login'), data={'email': 'test@example.com', 'password': 'password', 'rememberMe': False})
+
+    # Check if the user is redirected to the login page
+    assert response.status_code == 302
+    assert response.location == url_for('login', _external=True)
+
+
+def test_nonexistent_account(client):
+    # Send a POST request with invalid credentials
+    response = client.post(url_for('login'), data={'email': 'nonexistent@example.com', 'password': 'password', 'rememberMe': False})
+
+    # Check if the user is redirected to the login page
+    assert response.status_code == 302
+    assert response.location == url_for('login', _external=True)
