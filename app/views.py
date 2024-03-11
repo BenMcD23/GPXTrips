@@ -1,5 +1,5 @@
 from config import stripe_keys
-from app import app, db, admin, bcrypt
+from app import app, db, admin, bcrypt, csrf
 from flask_admin.contrib.sqla import ModelView
 from .models import User, Plan, Subscription, Route
 from flask import Flask, render_template, request, redirect, url_for, send_file, flash, jsonify, abort
@@ -50,7 +50,7 @@ def manger_required():
         def authorize(*args, **kwargs):
             # queries database to see if current user is manager
             if not current_user.is_manager():
-                abort(401) # not authorized
+                abort(401)  # not authorized
             return func(*args, **kwargs)
         return authorize
     return decorator
@@ -69,7 +69,8 @@ def login():
         if user:
             # if the account isnt active
             if user.account_active != True:
-                flash("Account is deactivated, please contact support.", category="error")
+                flash("Account is deactivated, please contact support.",
+                      category="error")
                 return redirect(url_for("login"))
 
             # if the password is correct
@@ -82,13 +83,12 @@ def login():
                     return redirect(url_for("manager"))
                 # if theyre just a normal user then redirect to user page
                 return redirect(url_for("user"))
-            
-            
+
             else:
                 # Redirect to back login if password is incorrect
                 flash("Password is wrong!", category="error")
                 return redirect(url_for("login"))
-            
+
         else:
             # Redirect to back login if account does not exist
             flash("Account does not exist!", category="error")
@@ -128,24 +128,25 @@ def register():
                 category="error",
             )
             return redirect(url_for("register"))
-        
+
         if not tandc_confirm:
             flash(
-                "Please accept the Terms and Conditions to proceed.", 
+                "Please accept the Terms and Conditions to proceed.",
                 category="error"
             )
             return redirect(url_for("register"))
 
         # Hash password and add used to the database
         hashed_password = bcrypt.generate_password_hash(password)
-        user = User(email=email, first_name=first_name, last_name=last_name, password_hash=hashed_password, date_created=datetime.now(), account_active=True, manager=False)
+        user = User(email=email, first_name=first_name, last_name=last_name,
+                    password_hash=hashed_password, date_created=datetime.now(), account_active=True, manager=False)
         db.session.add(user)
         db.session.commit()
 
         flash("User added successfully!", category="success")
 
         # Redirect to login after successful registration
-        return redirect(url_for("login")) 
+        return redirect(url_for("login"))
 
     return render_template("registration.html", title="Register", form=form)
 
@@ -170,13 +171,14 @@ def manage_users():
     UserSearchForm = UserSearch()
 
     if (UserSearchForm.submitSearch.data and
-        UserSearchForm.validate_on_submit()):
+            UserSearchForm.validate_on_submit()):
 
         if UserSearchForm.userEmail.data == "":
             users = User.query.all()
-        
+
         else:
-            users = User.query.filter_by(email=UserSearchForm.userEmail.data).all()
+            users = User.query.filter_by(
+                email=UserSearchForm.userEmail.data).all()
 
     else:
         users = User.query.all()
@@ -193,11 +195,11 @@ def view_revenue():
 @app.route('/friends')
 @login_required
 def friends():
-    #Query all friends of the current user + pending friends requests
+    # Query all friends of the current user + pending friends requests
     if current_user_current_subscription() == False:
         # If user doesn't have an active subscription, redirect to user page
         return redirect(url_for('user'))
-    return render_template("friends.html",current_user=current_user)
+    return render_template("friends.html", current_user=current_user)
 
 
 @app.route('/profile')
@@ -210,16 +212,18 @@ def profile():
     if current_user_current_subscription() == False:
         # If user doesn't have an active subscription, redirect to user page
         return redirect(url_for('user'))
-    
+
     if current_user_active_subscription() != False:
         # Auto-renewal is on
         autoRenewal = True
-    
-    # retrieve the users plan (year/month/week) and the expiry date of plan from db
-    userPlan = Subscription.query.filter_by(user_id = current_user.id).first().plan.name
-    expiryDate = (Subscription.query.filter_by(user_id = current_user.id).first().date_end).date()
 
-    return render_template("profile.html",current_user=current_user, userPlan=userPlan, expiryDate=expiryDate, autoRenewal=autoRenewal)
+    # retrieve the users plan (year/month/week) and the expiry date of plan from db
+    userPlan = Subscription.query.filter_by(
+        user_id=current_user.id).first().plan.name
+    expiryDate = (Subscription.query.filter_by(
+        user_id=current_user.id).first().date_end).date()
+
+    return render_template("profile.html", current_user=current_user, userPlan=userPlan, expiryDate=expiryDate, autoRenewal=autoRenewal)
 
 
 @app.route('/settings')
@@ -228,8 +232,8 @@ def settings():
     if current_user_current_subscription() == False:
         # If user doesn't have an active subscription, redirect to user page
         return redirect(url_for('user'))
-    #Pass data and receive user changes (i.e email/name/payment changes)
-    return render_template("settings.html",current_user=current_user)
+    # Pass data and receive user changes (i.e email/name/payment changes)
+    return render_template("settings.html", current_user=current_user)
 
 
 @app.route('/user',  methods=['GET', 'POST'])
@@ -254,7 +258,7 @@ def user():
         disabled = True
 
     return render_template("user.html", title='Map', FileUploadForm=file_upload_form, route=route, routes=routes, all_routes=all_routes, disabled=disabled)
- 
+
 
 # for user search (manger view)
 @app.route('/emails')
@@ -285,6 +289,7 @@ def getRoute():
     # return as a json
     return json.dumps(data)
 
+
 @app.route('/accountState', methods=['POST'])
 def accountState():
     # get data posted
@@ -295,6 +300,7 @@ def accountState():
     db.session.commit()
 
     return jsonify(data=data)
+
 
 @app.route('/accountManger', methods=['POST'])
 def accountManger():
@@ -372,7 +378,8 @@ def cancel_subscription():
             return jsonify(error=str(e)), 403
     else:
         return jsonify(error="No active subscription found."), 403
-      
+
+
 @app.route("/success")
 def success():
     return redirect(url_for('user'))
@@ -385,6 +392,7 @@ def cancelled():
 
 
 @app.route('/webhook', methods=['POST'])
+@csrf.exempt
 def stripe_webhook():
     print("webhook reached")
 
@@ -411,7 +419,7 @@ def stripe_webhook():
         # Query the plan based on the plan_id of the subscription.
         plan = Plan.query.filter_by(stripe_price_id=plan_id).first()
 
-        #Debugging test.
+        # Debugging test.
         print(user, plan, plan_id)
         print(subscription_id)
 
@@ -451,7 +459,7 @@ def create_subscription(user, plan, subscription_id):
 def current_user_active_subscription():
     # Active subscription - the user has a current subscription with auto renewals ON
     latest_subscription = Subscription.query.filter_by(
-            user_id=current_user.id).order_by(Subscription.date_start.desc()).first()
+        user_id=current_user.id).order_by(Subscription.date_start.desc()).first()
     if latest_subscription:
         return latest_subscription.active
     return False
@@ -523,7 +531,8 @@ def upload_file():
         print('Form validation failed')
         # Provide a more detailed error response for form validation failure
         return jsonify({'error': 'Form validation failed', 'errors': form.errors}), 400
-    
+
+
 @app.route('/getRouteForTable', methods=['GET'])
 def getRouteForTable():
     # get the current logged in users routes
