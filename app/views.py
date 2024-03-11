@@ -16,7 +16,8 @@ from functools import wraps
 
 class UserView(ModelView):
     # Custom view class for the User model
-    column_list = ['email', 'first_name', 'last_name', 'date_created']
+    column_list = ['email', 'first_name',
+                   'last_name', 'date_created', 'manager', 'account_active', 'subscriptions', 'routes']
 
 
 class RouteView(ModelView):
