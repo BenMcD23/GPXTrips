@@ -1,7 +1,6 @@
 from app import db
 from flask_login import UserMixin
 
-
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(128), unique=True, nullable=False)
@@ -30,7 +29,6 @@ class User(db.Model, UserMixin):
         else:
             return False
 
-
 class Route(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -56,3 +54,13 @@ class Subscription(db.Model):
     active = db.Column(db.Boolean, default=True)
 
     plan = db.relationship('Plan', backref='subscriptions')
+
+class Friendship(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user1_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user2_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+class FriendRequest(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    sender_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    receiver_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))

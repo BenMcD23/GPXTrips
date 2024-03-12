@@ -1,7 +1,7 @@
 from config import stripe_keys
 from app import app, db, admin, bcrypt, csrf
 from flask_admin.contrib.sqla import ModelView
-from .models import User, Plan, Subscription, Route
+from .models import User, Plan, Subscription, Route, Friendship, FriendRequest
 from flask import Flask, render_template, request, redirect, url_for, send_file, flash, jsonify, abort
 from flask_login import login_user, login_required, logout_user, current_user
 from .forms import FileUploadForm, RegistrationForm, LoginForm, UserSearch
@@ -561,3 +561,26 @@ def getRouteForTable():
 
     # return as JSON
     return jsonify(route_info_list)
+
+def friendUser(user):
+    friendship = Friendship(
+        user1_id=current_user.id,
+        user2_id=user.id
+    )
+
+    db.session.add(friendship)
+    db.session.commit()
+
+def getFriends():
+    outgoingfriendships = Friendship.filter_by(user1_id=current_user.id).query.all()
+    incomingfriendships = Friendship.filter_by(user2_id=current_user.id).query.all()
+
+    friends = []
+
+    for friendship in outgoingfriendships:
+        friends.append(User.query.get(friendship.user2_id))
+
+    for friendship in incomingfriendships:
+        friends.append(User.query.get(friendship.user1_id))
+
+    return friends
