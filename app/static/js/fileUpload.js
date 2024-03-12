@@ -34,7 +34,7 @@ document.getElementById('fileUploadForm').addEventListener('submit', function (e
                 console.log('Non-JSON response:', data);
                 // Handle non-JSON response (if needed)
             } else {
-                document.getElementById('result').innerHTML = 'File uploaded successfully: ' + data.message;
+                document.getElementById('result').innerHTML = data.message;
 
                 // Fetch updated routes and update the table in user.html
                 updateRoutesTable();

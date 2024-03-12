@@ -62,7 +62,7 @@ def login():
     # Create an instance of the LoginForm
     form = LoginForm()
 
-    if request.method == 'POST' and form.validate_on_submit():
+    if request.method == 'POST':
         # Query the user by email
         user = User.query.filter_by(email=form.email.data).first()
 
@@ -102,7 +102,7 @@ def register():
     # Create an instance of the RegistrationForm
     form = RegistrationForm()
 
-    if request.method == 'POST' and form.validate_on_submit():
+    if request.method == 'POST':
         # Request data from form
         email = request.form.get("email")
         first_name = request.form.get("first_name")
@@ -250,7 +250,7 @@ def user():
 
     # If User doesnt have an active subscription then display the subscribe card, and disable the rest of the poge
     if current_user_current_subscription() == False:
-        disabled = True
+        disabled =  False
 
     return render_template("user.html", title='Map', FileUploadForm=file_upload_form, route=route, routes=routes, all_routes=all_routes, disabled=disabled)
  
@@ -471,10 +471,10 @@ def is_valid_gpx_structure(gpx_data):
         # Parse GPX data
         gpx = gpxpy.parse(gpx_data)
         # No exception means the GPX data is structurally valid
-        return True
+        return True, None
     except gpxpy.gpx.GPXException as e:
-        print(f"GPX parsing error: {e}")
-        return False
+        error_message = f"GPX parsing error: {e}"
+        return False, error_message
 
 
 @app.route('/upload', methods=['POST'])
@@ -491,7 +491,10 @@ def upload_file():
             gpx_data = file.read()
 
             # Check GPX file structure validation
-            if is_valid_gpx_structure(gpx_data):
+            is_valid, error_message = is_valid_gpx_structure(gpx_data)
+
+            # Check GPX file structure validation
+            if is_valid:
                 try:
                     # Generate BLOB from GPX data
                     gpx_blob = str(gpx_data).encode('ascii')
@@ -508,20 +511,20 @@ def upload_file():
                     # Commit changes to the database
                     db.session.commit()
 
-                    return jsonify({'message': 'File uploaded successfully'})
+                    return jsonify({'status': 'success', 'message': 'File uploaded successfully'})
                 except Exception as e:
                     db.session.rollback()  # Rollback changes if an exception occurs
                     print(f"Error: {e}")
-                    return jsonify({'error': 'Internal server error'}), 500
+                    return jsonify({'status': 'error', 'message': 'Internal server error'}), 500
             else:
-                return jsonify({'error': 'Invalid GPX file structure'}), 400
+                return jsonify({'status': 'error', 'message': 'Invalid GPX file structure', 'details': error_message}), 400
         else:
             print('No file provided')
             return jsonify({'error': 'No file provided'}), 400
     else:
         print('Form validation failed')
         # Provide a more detailed error response for form validation failure
-        return jsonify({'error': 'Form validation failed', 'errors': form.errors}), 400
+        return jsonify({'status': 'error', 'message': 'Form validation failed', 'errors': form.errors}), 400
     
 @app.route('/getRouteForTable', methods=['GET'])
 def getRouteForTable():
