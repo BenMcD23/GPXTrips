@@ -4,7 +4,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 import os
 
-load_dotenv()
+load_dotenv(dotenv_path='tests/test.env')
 
 stripe_keys = {
     "secret_key": os.environ["STRIPE_SECRET_KEY"],
