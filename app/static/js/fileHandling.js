@@ -128,7 +128,7 @@ function updateRoutesTableWithState(routes) {
                             '<p>Route Start: ' + routeInfo.start + '</p>' +
                             '<p>Route End: ' + routeInfo.end + '</p>' +
                             '<p>Upload Date: ' + routeInfo.upload_time + '</p>' +
-                            '<button>Delete</button>' +
+                            '<button class="btn-primary deleteBtn" data-route-id="' + routeInfo.id + '">Delete</button>' +
                         '</div>' +
                     '</div>' +
                 '</div>' +
@@ -170,4 +170,16 @@ $(document).off('click', '.downloadBtn').on('click', '.downloadBtn', function(ev
     var routeId = $(this).data('route-id');
     // Trigger file download for the corresponding routeId
     window.location.href = '/download/' + routeId;
+});
+
+// Event delegation for 'Delete' button
+$(document).off('click', '.deleteBtn').on('click', '.deleteBtn', function(event) {
+    event.stopPropagation(); // Stop event propagation to prevent multiple click events
+    var routeId = $(this).data('route-id');
+    
+    // Confirm deletion
+    if (confirm('Are you sure you want to delete this route?')) {
+        // Send AJAX request to delete route
+        window.location.href = '/deleteRoute/' + routeId;
+    }
 });

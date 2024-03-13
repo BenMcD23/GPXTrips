@@ -584,3 +584,30 @@ def download_file(route_id):
     else:
         # Return an error response if the route with the given ID is not found
         return jsonify({'error': 'Route not found'}), 404
+
+
+@app.route('/deleteRoute/<int:route_id>', methods=['GET'])
+def delete_route(route_id):
+    if request.method == 'GET':
+        if not route_id:
+            return jsonify({'error': 'Route ID is missing'}), 400
+
+        # Find the route by ID
+        route = Route.query.get(route_id)
+
+        if not route:
+            return jsonify({'error': 'Route not found'}), 404
+
+        try:
+            # Remove the route from the database
+            db.session.delete(route)
+            db.session.commit()
+            return redirect(url_for('user'))
+            # return jsonify({'message': 'Route deleted successfully'}), 200
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'error': str(e)}), 500
+        finally:
+            db.session.close()
+    else:
+        return jsonify({'error': 'Method not allowed'}), 405
