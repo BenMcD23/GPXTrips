@@ -15,8 +15,6 @@ document.getElementById('fileUploadForm').addEventListener('submit', function (e
         var csrfToken = document.querySelector('input[name="_csrf_token"]').value;
         formData.append('_csrf_token', csrfToken);
 
-        console.log('Sending file to server...');
-
         // Send file data to the server via fetch API
         fetch('/upload', {
             method: 'POST',
@@ -41,7 +39,7 @@ document.getElementById('fileUploadForm').addEventListener('submit', function (e
             } else if (typeof data === 'object' && data.message) {
                 // Display success message if upload succeeds and update route table
                 document.getElementById('result').innerHTML = data.message;
-                updateRoutesTable();
+                updateRoutesTable(); // Update the routes table after successful upload
             } else if (typeof data === 'string') {
                 // Handle non-JSON response (if needed)
                 console.log('Non-JSON response:', data);
@@ -52,6 +50,10 @@ document.getElementById('fileUploadForm').addEventListener('submit', function (e
             // Handle errors during file upload process
             console.error('Error uploading file:', error.message);
             document.getElementById('result').innerHTML = 'Error uploading file: ' + error.message;
+        })
+        .finally(() => {
+            // Reload routes after uploading
+            reloadRoutes();
         });
     } else {
         // Display error message if no file is selected
@@ -60,60 +62,89 @@ document.getElementById('fileUploadForm').addEventListener('submit', function (e
     }
 });
 
+// Function to reload routes after uploading
+function reloadRoutes() {
+    $.ajax({ 
+        type: "GET",
+        url: "/getRoute", 
+        dataType: "json",  
+        success: function(response_data){
+            user_routes = response_data;
+        },
+        error : function(request,error) {
+            console.error("Error fetching routes:", error);
+        }
+    });
+}
+
 // Function to update the route table in user.html
 function updateRoutesTable() {
-    // Fetch updated routes from the server
     $.ajax({
         type: "GET",
         url: "/getRouteForTable",
         dataType: "json",
         success: function(routeInfoList) {
-            // Update the table with the new routes data
-            var tableBody = $('#table');
-            tableBody.empty(); // Clear existing rows
-
-            routeInfoList.forEach(function(routeInfo, index) {
-                // Generate HTML for each route row
-                var newRow = '<tr>' +
-                    '<td>' + routeInfo.name + '</td>' +
-                    '<td>' +
-                        '<div class="form-check">' +
-                            '<input class="form-check-input" type="checkbox" name="addToMap" id="' + routeInfo.id + '">' +
-                            '<label class="form-check-label" for="' + routeInfo.id + '"></label>' +
-                        '</div>' +
-                    '</td>' +
-                    '<td>' + routeInfo.user.first_name + ' ' + routeInfo.user.last_name + '</td>' +
-                    '<td>' +
-                        '<button class="btn-primary viewInfoBtn" data-route-id="' + routeInfo.id + '">View Info</button>' +
-                        '<div>' +
-                            '<div class="popupDataContainer" id="popupDataContainer_' + routeInfo.id + '">' +
-                                '<div class="infoForm">' +
-                                    '<span class="closeBtn" data-route-id="' + routeInfo.id + '">&times;</span>' +
-                                    '<h1>Route Information</h1>' +
-                                    '<p>Route Name: ' + routeInfo.name + '</p>' +
-                                    '<p>Route Length: ' + routeInfo.length + '</p>' +
-                                    '<p>Route Duration: ' + routeInfo.duration + '</p>' +
-                                    '<p>Route Start: ' + routeInfo.start + '</p>' +
-                                    '<p>Route End: ' + routeInfo.end + '</p>' +
-                                    '<p>Upload Date: ' + routeInfo.upload_time + '</p>' +
-                                    '<button>Delete</button>' +
-                                '</div>' +
-                            '</div>' +
-                        '</div>' +
-                    '</td>' +
-                    '<td>' +
-                        '<button class="btn-primary downloadBtn" data-route-id="' + routeInfo.id + '">Download</button>' +
-                    '</td>' +
-                '</tr>';
-            
-                // Append the new row to the table
-                tableBody.append(newRow);
-            });
+            updateRoutesTableWithState(routeInfoList);
         },
         error: function(request, error) {
-            // Handle errors during route fetching process
             console.error("Error fetching routes:", error);
         }
+    });
+}
+
+// Define a function to update the routes table without losing checkbox state
+function updateRoutesTableWithState(routes) {
+    var tableBody = $('#table');
+    var checkboxes = {};
+
+    // Store checkbox state before updating the table
+    $('input[type=checkbox][name=addToMap]').each(function() {
+        checkboxes[this.id] = this.checked;
+    });
+
+    tableBody.empty(); // Clear existing rows
+
+    routes.forEach(function(routeInfo) {
+        // Generate HTML for each route row
+        var newRow = '<tr>' +
+            '<td>' + routeInfo.name + '</td>' +
+            '<td>' +
+                '<div class="form-check">' +
+                    '<input class="form-check-input" type="checkbox" name="addToMap" id="' + routeInfo.id + '"' + (checkboxes[routeInfo.id] ? ' checked' : '') + '>' +
+                    '<label class="form-check-label" for="' + routeInfo.id + '"></label>' +
+                '</div>' +
+            '</td>' +
+            '<td>' + routeInfo.user.first_name + ' ' + routeInfo.user.last_name + '</td>' +
+            '<td>' +
+                '<button class="btn-primary viewInfoBtn" data-route-id="' + routeInfo.id + '">View Info</button>' +
+                '<div>' +
+                    '<div class="popupDataContainer" id="popupDataContainer_' + routeInfo.id + '">' +
+                        '<div class="infoForm">' +
+                            '<span class="closeBtn" data-route-id="' + routeInfo.id + '">&times;</span>' +
+                            '<h1>Route Information</h1>' +
+                            '<p>Route Name: ' + routeInfo.name + '</p>' +
+                            '<p>Route Length: ' + routeInfo.length + '</p>' +
+                            '<p>Route Duration: ' + routeInfo.duration + '</p>' +
+                            '<p>Route Start: ' + routeInfo.start + '</p>' +
+                            '<p>Route End: ' + routeInfo.end + '</p>' +
+                            '<p>Upload Date: ' + routeInfo.upload_time + '</p>' +
+                            '<button>Delete</button>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>' +
+            '</td>' +
+            '<td>' +
+                '<button class="btn-primary downloadBtn" data-route-id="' + routeInfo.id + '">Download</button>' +
+            '</td>' +
+        '</tr>';
+    
+        // Append the new row to the table
+        tableBody.append(newRow);
+    });
+
+    // Reattach event listeners for checkboxes
+    $('input[type=checkbox][name=addToMap]').change(function() {
+        displayOnMap(this.id);
     });
 }
 

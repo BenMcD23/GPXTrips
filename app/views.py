@@ -498,8 +498,6 @@ def upload_file():
         if file:
             # Check file extension
             if file.filename.endswith('.gpx'):
-                print('File received:', file.filename)
-
                 # Read the data from the file
                 gpx_data = file.read()
 
@@ -519,7 +517,7 @@ def upload_file():
                         current_user.routes.append(route)
                         # Commit changes to the database
                         db.session.commit()
-                        
+
                         return jsonify({'message': 'File uploaded successfully'})
                     except Exception as e:
                         db.session.rollback()  # Rollback changes if an exception occurs
