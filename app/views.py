@@ -330,6 +330,7 @@ def checkout():
             "success?session_id={CHECKOUT_SESSION_ID}",
             cancel_url=domain_url + "cancel",
             payment_method_types=["card"],
+            customer_email = current_user.email,
             mode="subscription",
             line_items=[
                 {
