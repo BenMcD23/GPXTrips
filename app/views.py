@@ -13,6 +13,8 @@ import json
 import gpxpy
 from functools import wraps
 from io import BytesIO
+from xml.etree import ElementTree as ET
+from geopy.distance import geodesic
 
 
 class UserView(ModelView):
@@ -251,7 +253,28 @@ def user():
     file_upload_form = FileUploadForm()
     routes = current_user.routes
 
-    route = None
+    route_info_list = []
+
+    for route in routes:
+        gpx_data_decoded = route.gpx_data.decode('ascii')
+        gpx_data = gpx_data_decoded.replace('\\r', '\r').replace('\\n', '\n')
+        gpx_data = "".join(gpx_data)[2:][:-1]  # Trim excess characters
+        # Calculate route information
+        length, duration, start_point, end_point = calculate_route_info(gpx_data)
+        route_info = {
+            'id': route.id,
+            'name': route.name,
+            'user': {
+                'first_name': route.user.first_name,
+                'last_name': route.user.last_name
+            },
+            'length': length,
+            'duration': duration,
+            'start': start_point,
+            'end': end_point,
+            'upload_time': route.upload_time.strftime("%Y-%m-%d %H:%M:%S")
+        }
+        route_info_list.append(route_info)
     # Disables the page unless set otherwise
     disabled = False
 
@@ -259,7 +282,7 @@ def user():
     if current_user_current_subscription() == False:
         disabled = True
 
-    return render_template("user.html", title='Map', FileUploadForm=file_upload_form, route=route, routes=routes, all_routes=all_routes, disabled=disabled)
+    return render_template("user.html", title='Map', FileUploadForm=file_upload_form, all_routes=all_routes, route_info_list=route_info_list, disabled=disabled)
 
 
 # for user search (manger view)
@@ -555,10 +578,21 @@ def getRouteForTable():
             },
             'length': 0,
             'duration': 0,
-            'start': 0,
-            'end': 0,
+            'start': (0, 0),
+            'end': (0, 0),
             'upload_time': route.upload_time.strftime("%Y-%m-%d %H:%M:%S")
         }
+
+        # Parse GPX data and calculate route information
+        gpx_data_decoded = route.gpx_data.decode('ascii')
+        gpx_data = gpx_data_decoded.replace('\\r', '\r').replace('\\n', '\n')
+        gpx_data = "".join(gpx_data)[2:][:-1]  # Trim excess characters
+        length, duration, start_point, end_point = calculate_route_info(gpx_data)
+        route_info['length'] = length
+        route_info['duration'] = duration
+        route_info['start'] = start_point
+        route_info['end'] = end_point
+
         route_info_list.append(route_info)
 
     # return as JSON
@@ -611,3 +645,46 @@ def delete_route(route_id):
             db.session.close()
     else:
         return jsonify({'error': 'Method not allowed'}), 405
+    
+
+def calculate_route_info(gpx_data, unit='km'):
+    # Parse GPX data
+    tree = ET.fromstring(gpx_data)
+
+    # Extract track points
+    track_points = [(float(trkpt.attrib['lat']), float(trkpt.attrib['lon']))
+                    for trkpt in tree.findall('.//{http://www.topografix.com/GPX/1/1}trkpt')]
+
+    # Calculate route length
+    length = sum(geodesic(track_points[i], track_points[i + 1]).meters
+                 for i in range(len(track_points) - 1))
+
+    # Convert length to kilometers or miles based on unit preference
+    if unit == 'km':
+        length = length / 1000  # Convert meters to kilometers
+        length = round(length, 2)  # Round to 2 decimal places
+        length = f"{length} km"  # Append unit
+    elif unit == 'miles':
+        length = length * 0.000621371  # Convert meters to miles
+        length = round(length, 2)  # Round to 2 decimal places
+        length = f"{length} miles"  # Append unit
+    else:
+        length = f"{length} meters"  # Default to meters if unit is not km or miles
+
+    # Extract timestamps if available
+    timestamps = [datetime.strptime(time.text, '%Y-%m-%dT%H:%M:%SZ')
+                  for time in tree.findall('.//{http://www.topografix.com/GPX/1/1}time')]
+
+    # Calculate route duration if timestamps are available
+    duration = 0
+    if timestamps:
+        duration = (max(timestamps) - min(timestamps)).total_seconds()
+
+    # Start and end points
+    start_point = (0, 0)
+    end_point = (0, 0)
+    if track_points:
+        start_point = track_points[0]
+        end_point = track_points[-1]
+
+    return length, duration, start_point, end_point
