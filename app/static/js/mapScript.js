@@ -63,8 +63,8 @@ function displayOnMap(id) {
     let newGPX = new L.GPX(user_routes[id], {
       async: true,
       marker_options: {
-        startIconUrl: 'static/pinstart.png',
-        endIconUrl:   'static/pinend.png',
+        startIconUrl: 'static/images/pinstart.png',
+        endIconUrl:   'static/images/pinend.png',
         shadowUrl: null,
       },
     });
