@@ -265,7 +265,7 @@ body {
 
 .overlapCard {
     /* Bring card to the front most point of the page */
-    z-index: 999;
+    z-index: 1005;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
