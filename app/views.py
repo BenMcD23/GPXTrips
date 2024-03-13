@@ -226,17 +226,6 @@ def profile():
 
     return render_template("profile.html", current_user=current_user, userPlan=userPlan, expiryDate=expiryDate, autoRenewal=autoRenewal)
 
-
-@app.route('/settings')
-@login_required
-def settings():
-    if current_user_current_subscription() == False:
-        # If user doesn't have an active subscription, redirect to user page
-        return redirect(url_for('user'))
-    # Pass data and receive user changes (i.e email/name/payment changes)
-    return render_template("settings.html", current_user=current_user)
-
-
 @app.route('/user',  methods=['GET', 'POST'])
 @login_required
 def user():
