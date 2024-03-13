@@ -29,7 +29,7 @@
                                 </div>
                             </td>
                             <td>{{ i.user.first_name}} {{i.user.last_name}}</td>
-                            <td>  
+                            <td>
                                 <button class="btn-primary viewInfoBtn" data-route-id="{{ i.id }}">View Info</button>
                                 <div>
                                     <div class="popupDataContainer" id="popupDataContainer_{{ i.id }}">
@@ -46,6 +46,9 @@
                                         </div>
                                     </div>
                                 </div>
+                            </td>
+                            <td>
+                                <button class="btn-primary downloadBtn" data-route-id="{{ i.id }}">Download</button>
                             </td>
                         </tr>
                         {% endfor %}
@@ -131,5 +134,5 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/gpx.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="static/js/mapScript.js"></script>
-    <script src="static/js/fileUpload.js"></script>
+    <script src="static/js/fileHandling.js"></script>
 {% endblock %}

@@ -2,7 +2,7 @@ from config import stripe_keys
 from app import app, db, admin, bcrypt, csrf
 from flask_admin.contrib.sqla import ModelView
 from .models import User, Plan, Subscription, Route
-from flask import Flask, render_template, request, redirect, url_for, send_file, flash, jsonify, abort
+from flask import Flask, render_template, request, redirect, url_for, send_file, flash, jsonify, abort, send_file
 from flask_login import login_user, login_required, logout_user, current_user
 from .forms import FileUploadForm, RegistrationForm, LoginForm, UserSearch
 from werkzeug.utils import secure_filename
@@ -12,6 +12,7 @@ import stripe
 import json
 import gpxpy
 from functools import wraps
+from io import BytesIO
 
 
 class UserView(ModelView):
@@ -495,36 +496,39 @@ def upload_file():
         file = request.files['file']
 
         if file:
-            print('File received:', file.filename)
+            # Check file extension
+            if file.filename.endswith('.gpx'):
+                print('File received:', file.filename)
 
-            # Read the data from the file
-            gpx_data = file.read()
+                # Read the data from the file
+                gpx_data = file.read()
 
-            # Check GPX file structure validation
-            if is_valid_gpx_structure(gpx_data):
-                try:
-                    # Generate BLOB from GPX data
-                    gpx_blob = str(gpx_data).encode('ascii')
+                # Check GPX file structure validation
+                if is_valid_gpx_structure(gpx_data):
+                    try:
+                        # Generate BLOB from GPX data
+                        gpx_blob = str(gpx_data).encode('ascii')
 
-                    # Create a database entry
-                    route = Route(
-                        name=file.filename,
-                        upload_time=datetime.now(),
-                        gpx_data=gpx_blob
-                    )
+                        # Create a database entry
+                        route = Route(
+                            name=file.filename,
+                            upload_time=datetime.now(),
+                            gpx_data=gpx_blob
+                        )
 
-                    current_user.routes.append(route)
-
-                    # Commit changes to the database
-                    db.session.commit()
-
-                    return jsonify({'message': 'File uploaded successfully'})
-                except Exception as e:
-                    db.session.rollback()  # Rollback changes if an exception occurs
-                    print(f"Error: {e}")
-                    return jsonify({'error': 'Internal server error'}), 500
+                        current_user.routes.append(route)
+                        # Commit changes to the database
+                        db.session.commit()
+                        
+                        return jsonify({'message': 'File uploaded successfully'})
+                    except Exception as e:
+                        db.session.rollback()  # Rollback changes if an exception occurs
+                        print(f"Error: {e}")
+                        return jsonify({'error': 'Internal server error'}), 500
+                else:
+                    return jsonify({'error': 'Invalid GPX file structure'}), 400
             else:
-                return jsonify({'error': 'Invalid GPX file structure'}), 400
+                return jsonify({'error': 'File extension is not GPX'}), 400
         else:
             print('No file provided')
             return jsonify({'error': 'No file provided'}), 400
@@ -561,3 +565,24 @@ def getRouteForTable():
 
     # return as JSON
     return jsonify(route_info_list)
+
+
+@app.route('/download/<int:route_id>', methods=['GET'])
+def download_file(route_id):
+    # Retrieve the route information from the database based on the provided route_id
+    route = Route.query.get(route_id)
+
+    if route:
+        # Decode the GPX data from ASCII encoding and replace escape characters
+        gpx_data_decoded = route.gpx_data.decode('ascii')
+        gpx_data = gpx_data_decoded.replace('\\r', '\r').replace('\\n', '\n')
+        gpx_data = "".join(gpx_data)[2:][:-1]  # Trim excess characters
+        
+        # Generate a filename for the GPX file by replacing spaces with underscores
+        filename = route.name.replace(' ', '_')
+        
+        # Return the GPX file as an attachment for download
+        return send_file(BytesIO(gpx_data.encode()), attachment_filename=filename, as_attachment=True)
+    else:
+        # Return an error response if the route with the given ID is not found
+        return jsonify({'error': 'Route not found'}), 404
