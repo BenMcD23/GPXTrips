@@ -76,7 +76,6 @@ def login():
 
             # if the password is correct
             elif bcrypt.check_password_hash(user.password_hash, form.password.data):
-                flash("Logged in!", category="success")
                 remember_me = form.rememberMe.data
                 login_user(user, remember=remember_me)
                 if user.manager == True:
@@ -144,7 +143,6 @@ def register():
         db.session.add(user)
         db.session.commit()
 
-        flash("User added successfully!", category="success")
 
         # Redirect to login after successful registration
         return redirect(url_for("login"))
