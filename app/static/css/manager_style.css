@@ -174,7 +174,11 @@ button.disabled {
   }
 
 
-  
+/* for revenue page */
+.chart-container {
+    height: 50vh; 
+    width: 100%;
+}
 
 @media screen and (max-width: 768px) {
     .quadrant-container {

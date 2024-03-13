@@ -6,16 +6,45 @@
 
 <div class="chart-container">
     <h1>Future Revenue Estimates</h1>
-    <!-- Bar char of future revenue estimates -->
+    <!-- chart of future revenue estimates -->
+    <canvas id="myChart"></canvas>
 
     <div id="revenueEstimates">
         <!-- Get actual total value from past data from DB -->
-        <h2>Past Revenue</h2>
-        <p>Total: £0</p> 
+        <h2>Revenue Estimates</h2>
+        <p>Current Compound Weekly Growth Rate: {{ CAGR }}</p> 
+        <p>This is what the future revenue is based on</p>
         <p>Last Month: £0</p>
         <p>Last Quarter: £0</p>
     </div>
 </div>
 
+
+
+<!-- chart script -->
+<script nonce="{{ csp_nonce() }}">
+    const labels = {{ labels | tojson}};
+
+    const data = {
+    labels: labels,
+    datasets: [{
+        label: 'Sales',
+        backgroundColor: 'rgb(255, 99, 132)',
+        borderColor: 'rgb(255, 99, 132)',
+        data: {{ data | tojson}},
+    }]
+    };
+
+    const config = {
+    type: 'line',
+    data: data,
+    options: { maintainAspectRatio: false }
+    };
+
+    const myChart = new Chart(
+    document.getElementById('myChart'),
+    config
+    );
+</script>
 
 {% endblock %}

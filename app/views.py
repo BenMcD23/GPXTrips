@@ -1,7 +1,7 @@
 from config import stripe_keys
 from app import app, db, admin, bcrypt, csrf
 from flask_admin.contrib.sqla import ModelView
-from .models import User, Plan, Subscription, Route
+from .models import User, Plan, Subscription, Route, SubscriptionStats
 from flask import Flask, render_template, request, redirect, url_for, send_file, flash, jsonify, abort
 from flask_login import login_user, login_required, logout_user, current_user
 from .forms import FileUploadForm, RegistrationForm, LoginForm, UserSearch
@@ -27,7 +27,7 @@ class RouteView(ModelView):
 
 class PlanView(ModelView):
     # Custom view class for the Plan model
-    column_list = ['name', 'monthly_cost', 'stripe_price_id']
+    column_list = ['name', 'cost', 'stripe_price_id']
 
 
 class SubscriptionView(ModelView):
@@ -35,12 +35,18 @@ class SubscriptionView(ModelView):
     column_list = ['user', 'plan',
                    'subscription_id', 'date_start', 'date_end', 'active']
 
+class SubscriptionStatsView(ModelView):
+    # Custom view class for the Subscription model
+    column_list = ['week_of_year', 'total_revenue']
+
+
 
 # Add views for each model using the custom view classes
 admin.add_view(UserView(User, db.session))
 admin.add_view(RouteView(Route, db.session))
 admin.add_view(PlanView(Plan, db.session))
 admin.add_view(SubscriptionView(Subscription, db.session))
+admin.add_view(SubscriptionStatsView(SubscriptionStats, db.session))
 
 
 # role for manager pages
@@ -190,7 +196,32 @@ def manage_users():
 @app.route('/view_revenue')
 @manger_required()
 def view_revenue():
-    return render_template("view_revenue.html")
+    # calculate revenue growth per week
+
+    # get the first and last entry in database
+    firstWeek = SubscriptionStats.query.first()
+    latestWeek = SubscriptionStats.query.order_by(SubscriptionStats.id.desc()).first()
+
+    if not firstWeek or not latestWeek:
+        return
+
+    revGrowthRate = (latestWeek.total_revenue - firstWeek.total_revenue) / firstWeek.total_revenue
+    
+    numberOfWeeks = latestWeek.week_of_year
+
+    # Compound Weekly Growth Rate, based on from start of calendar year
+    CAGR = ((latestWeek.total_revenue / firstWeek.total_revenue) ** (1 / numberOfWeeks))
+
+    labels = ["Week " + str(i) for i in range(1, 53)]
+    print(labels)
+    lastValue = latestWeek.total_revenue
+    data = []
+
+    for i in range(1, 53):
+        lastValue = lastValue * CAGR
+        data.append(lastValue)
+    
+    return render_template("view_revenue.html", labels=labels, data=data, CAGR=CAGR)
 
 
 @app.route('/friends')
@@ -357,6 +388,7 @@ def checkout():
 
 
 @app.route("/cancel_subscription", methods=['POST'])
+@csrf.exempt
 def cancel_subscription():
     stripe.api_key = stripe_keys["secret_key"]
 
@@ -427,6 +459,11 @@ def stripe_webhook():
         if user and plan:
             create_subscription(user, plan, subscription_id)
             print('Subscription created')
+
+            # add to stats
+            subCost = plan.cost
+            addToStats(subCost)
+
         else:
             print('User or plan not found')
 
@@ -455,6 +492,42 @@ def create_subscription(user, plan, subscription_id):
     db.session.commit()
 
     print(f"Subscription created for {user.email} with plan {plan.name}")
+
+def addToStats(subCost):
+    """adds the added amount of revenue a subscription gains us
+
+    only want to save the current weeks revenue, after the week is over, 
+    the week is removed 
+
+    Args:
+        subCost (int): a positive number for added revenue
+                            
+    """
+    currentWeekNumber = datetime.now().isocalendar()[1]
+    currentWeekdb = SubscriptionStats.query.filter_by(week_of_year=currentWeekNumber).first()
+    # if the week of the year already exists in the database, then just add on the revenue
+    if currentWeekdb:
+        newTotalRev = currentWeekdb.total_revenue + subCost
+        currentWeekdb.total_revenue = newTotalRev
+    # if the current week doesnt exist, write over the last week
+    else:
+        # get the lastest week that was entered
+        # (not necessarily the last callendar week as may not have had any revenue)
+        latestWeek = SubscriptionStats.query.order_by(SubscriptionStats.id.desc()).first()
+
+        # dont want to write over week 0, this is our starting rev
+        if latestWeek.week_of_year != 0:
+            # change the week
+            latestWeek.week_of_year = currentWeekNumber
+            # revenue is just the sub that was purchased
+            latestWeek.total_revenue = subCost
+
+        # if the only week is week 0, then create a new week, should only ever be done once, max
+        else:
+            newWeek = SubscriptionStats(week_of_year=currentWeekNumber, total_revenue=subCost)
+            db.session.add(newWeek)
+
+    db.session.commit()
 
 
 def current_user_active_subscription():

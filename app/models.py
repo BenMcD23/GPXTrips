@@ -42,7 +42,7 @@ class Route(db.Model):
 class Plan(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128), unique=True, nullable=False)
-    monthly_cost = db.Column(db.Float)
+    cost = db.Column(db.Float)
     stripe_price_id = db.Column(db.String(255), nullable=False)
 
 
@@ -56,3 +56,8 @@ class Subscription(db.Model):
     active = db.Column(db.Boolean, default=True)
 
     plan = db.relationship('Plan', backref='subscriptions')
+
+class SubscriptionStats(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    week_of_year = db.Column(db.Integer)
+    total_revenue = db.Column(db.Float)
