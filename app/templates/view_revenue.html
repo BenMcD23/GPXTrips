@@ -15,11 +15,20 @@
         <div id="revenueEstimates">
             <!-- Get actual total value from past data from DB -->
             <h2>Revenue Estimates</h2>
-            <p>Current Compound Weekly Growth Rate: {{ CwGR }}</p> 
+            <p>Current Compound Weekly Growth Rate: {{ CWGR }}</p> 
             <p>This is what the future revenue is based on</p>
-            <p>Last Month: £0</p>
-            <p>Last Quarter: £0</p>
         </div>
+
+        <div class="change_start_rev">
+            <h1>Change Revenue</h1>
+            <form action="" method="post" name="changeRev">
+            {{ ChangeStartRevForm.hidden_tag() }}
+              
+            {{ ChangeStartRevForm.newRev(placeholder="£") }}
+            {{ ChangeStartRevForm.submitRev }}
+
+        </div>
+
     </div>
 
 

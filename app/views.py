@@ -4,7 +4,7 @@ from flask_admin.contrib.sqla import ModelView
 from .models import User, Plan, Subscription, Route, SubscriptionStats
 from flask import Flask, render_template, request, redirect, url_for, send_file, flash, jsonify, abort
 from flask_login import login_user, login_required, logout_user, current_user
-from .forms import FileUploadForm, RegistrationForm, LoginForm, UserSearch
+from .forms import FileUploadForm, RegistrationForm, LoginForm, UserSearch, ChangeStartRev
 from werkzeug.utils import secure_filename
 from DAL import add_route, get_route
 from datetime import datetime, timedelta
@@ -196,7 +196,8 @@ def manage_users():
 @app.route('/view_revenue')
 @manger_required()
 def view_revenue():
-
+    ChangeStartRevForm = ChangeStartRev()
+    
     # get the first and last entry in database
     firstWeek = SubscriptionStats.query.first()
     latestWeek = SubscriptionStats.query.order_by(SubscriptionStats.id.desc()).first()
@@ -225,7 +226,7 @@ def view_revenue():
             revData.append(lastRevValue)
             customerData.append(lastCusValue)
         print(customerData)
-    return render_template("view_revenue.html", noData=noData, labels=labels, revData=revData, customerData=customerData, CWGR=CWGR)
+    return render_template("view_revenue.html", ChangeStartRevForm=ChangeStartRevForm, noData=noData, labels=labels, revData=revData, customerData=customerData, CWGR=CWGR)
 
 
 @app.route('/friends')

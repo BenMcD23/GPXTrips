@@ -54,24 +54,15 @@ csp = {
     # all the external links
     'default-src': [
         '\'self\'',
-        'https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js',
-        'https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js',
-        'https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js',
         'https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css',
         'https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css',
-        'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
-        'https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/gpx.min.js',
         'https://unpkg.com/leaflet/dist/leaflet.css',
         'https://a.tile.openstreetmap.org/',
         'https://b.tile.openstreetmap.org/',
         'https://c.tile.openstreetmap.org/',
-        'https://js.stripe.com/v3/',
-        "https://code.jquery.com/jquery-1.10.2.js",
-        "https://code.jquery.com/ui/1.10.4/jquery-ui.js",
         "https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css",
-        "https://unpkg.com/leaflet/dist/leaflet.js",
-        'https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js',
-        "https://code.jquery.com/jquery-3.6.0.min.js"
+        "https://js.stripe.com/"
+        
     ],
     # external image links
     'img-src': [
@@ -91,16 +82,13 @@ csp = {
         'https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js',
         'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
         'https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/gpx.min.js',
-        'https://a.tile.openstreetmap.org/',
-        'https://b.tile.openstreetmap.org/',
-        'https://c.tile.openstreetmap.org/',
-        'https://js.stripe.com/v3/',
         "https://code.jquery.com/jquery-1.10.2.js",
         "https://code.jquery.com/ui/1.10.4/jquery-ui.js",
         "https://unpkg.com/leaflet/dist/leaflet.js",
         'https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js',
         "https://code.jquery.com/jquery-3.6.0.min.js",
-        "https://cdn.jsdelivr.net/npm/chart.js"
+        "https://cdn.jsdelivr.net/npm/chart.js",
+        "https://js.stripe.com/v3/"
     ],
 
 }

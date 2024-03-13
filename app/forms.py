@@ -1,7 +1,7 @@
 from app import models
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, EmailField, SubmitField, BooleanField
+from wtforms import StringField, PasswordField, EmailField, SubmitField, BooleanField, FloatField
 from wtforms.validators import InputRequired, Length, Email, ValidationError
 from flask_wtf.file import FileField
 
@@ -34,3 +34,7 @@ class FileUploadForm(FlaskForm):
 class UserSearch(FlaskForm):
     userEmail = StringField('userEmail', validators=[emailSearch_Validator])
     submitSearch = SubmitField('Search')
+
+class ChangeStartRev(FlaskForm):
+    newRev = FloatField('newRev', validators=[InputRequired()])
+    submitRev = SubmitField('Submit')
