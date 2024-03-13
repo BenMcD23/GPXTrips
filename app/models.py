@@ -61,3 +61,4 @@ class SubscriptionStats(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     week_of_year = db.Column(db.Integer)
     total_revenue = db.Column(db.Float)
+    num_customers = db.Column(db.Integer)

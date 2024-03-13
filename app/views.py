@@ -37,7 +37,7 @@ class SubscriptionView(ModelView):
 
 class SubscriptionStatsView(ModelView):
     # Custom view class for the Subscription model
-    column_list = ['week_of_year', 'total_revenue']
+    column_list = ['week_of_year', 'total_revenue', 'num_customers']
 
 
 
@@ -196,32 +196,36 @@ def manage_users():
 @app.route('/view_revenue')
 @manger_required()
 def view_revenue():
-    # calculate revenue growth per week
 
     # get the first and last entry in database
     firstWeek = SubscriptionStats.query.first()
     latestWeek = SubscriptionStats.query.order_by(SubscriptionStats.id.desc()).first()
 
+    labels = []
+    revData = []
+    customerData = []
+    CWGR = 0
+    noData = False
     if not firstWeek or not latestWeek:
-        return
+        noData = True
 
-    revGrowthRate = (latestWeek.total_revenue - firstWeek.total_revenue) / firstWeek.total_revenue
-    
-    numberOfWeeks = latestWeek.week_of_year
+    else:
+        numberOfWeeks = latestWeek.week_of_year
 
-    # Compound Weekly Growth Rate, based on from start of calendar year
-    CAGR = ((latestWeek.total_revenue / firstWeek.total_revenue) ** (1 / numberOfWeeks))
+        # Compound Weekly Growth Rate, based on from start of calendar year
+        CWGR = ((latestWeek.total_revenue / firstWeek.total_revenue) ** (1 / numberOfWeeks))
+        
+        labels = ["Week " + str(i) for i in range(1, 53)]
+        lastRevValue = latestWeek.total_revenue
 
-    labels = ["Week " + str(i) for i in range(1, 53)]
-    print(labels)
-    lastValue = latestWeek.total_revenue
-    data = []
-
-    for i in range(1, 53):
-        lastValue = lastValue * CAGR
-        data.append(lastValue)
-    
-    return render_template("view_revenue.html", labels=labels, data=data, CAGR=CAGR)
+        lastCusValue = latestWeek.num_customers
+        for i in range(1, 53):
+            lastRevValue = lastRevValue * CWGR
+            lastCusValue = lastCusValue * CWGR
+            revData.append(lastRevValue)
+            customerData.append(lastCusValue)
+        print(customerData)
+    return render_template("view_revenue.html", noData=noData, labels=labels, revData=revData, customerData=customerData, CWGR=CWGR)
 
 
 @app.route('/friends')
@@ -507,8 +511,8 @@ def addToStats(subCost):
     currentWeekdb = SubscriptionStats.query.filter_by(week_of_year=currentWeekNumber).first()
     # if the week of the year already exists in the database, then just add on the revenue
     if currentWeekdb:
-        newTotalRev = currentWeekdb.total_revenue + subCost
-        currentWeekdb.total_revenue = newTotalRev
+        currentWeekdb.total_revenue = currentWeekdb.total_revenue + subCost
+        currentWeekdb.num_customers = currentWeekdb.num_customers + 1
     # if the current week doesnt exist, write over the last week
     else:
         # get the lastest week that was entered
@@ -521,10 +525,11 @@ def addToStats(subCost):
             latestWeek.week_of_year = currentWeekNumber
             # revenue is just the sub that was purchased
             latestWeek.total_revenue = subCost
+            latestWeek.num_customers = 1
 
         # if the only week is week 0, then create a new week, should only ever be done once, max
         else:
-            newWeek = SubscriptionStats(week_of_year=currentWeekNumber, total_revenue=subCost)
+            newWeek = SubscriptionStats(week_of_year=currentWeekNumber, total_revenue=subCost, num_customers=1)
             db.session.add(newWeek)
 
     db.session.commit()

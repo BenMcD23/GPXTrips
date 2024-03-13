@@ -3,48 +3,62 @@
 {% block title %}Revenue{% endblock %}
 
 {% block content %}
+{% if noData == True %}
+    <h1>No Revenue Data</h1>
 
-<div class="chart-container">
-    <h1>Future Revenue Estimates</h1>
-    <!-- chart of future revenue estimates -->
-    <canvas id="myChart"></canvas>
+{% else %}
+    <div class="chart-container">
+        <h1>Future Revenue Estimates</h1>
+        <!-- chart of future revenue estimates -->
+        <canvas id="myChart"></canvas>
 
-    <div id="revenueEstimates">
-        <!-- Get actual total value from past data from DB -->
-        <h2>Revenue Estimates</h2>
-        <p>Current Compound Weekly Growth Rate: {{ CAGR }}</p> 
-        <p>This is what the future revenue is based on</p>
-        <p>Last Month: £0</p>
-        <p>Last Quarter: £0</p>
+        <div id="revenueEstimates">
+            <!-- Get actual total value from past data from DB -->
+            <h2>Revenue Estimates</h2>
+            <p>Current Compound Weekly Growth Rate: {{ CwGR }}</p> 
+            <p>This is what the future revenue is based on</p>
+            <p>Last Month: £0</p>
+            <p>Last Quarter: £0</p>
+        </div>
     </div>
-</div>
 
 
 
-<!-- chart script -->
-<script nonce="{{ csp_nonce() }}">
-    const labels = {{ labels | tojson}};
+    <!-- chart script -->
+    <script nonce="{{ csp_nonce() }}">
+        const labels = {{ labels | tojson }};
 
-    const data = {
-    labels: labels,
-    datasets: [{
-        label: 'Sales',
-        backgroundColor: 'rgb(255, 99, 132)',
-        borderColor: 'rgb(255, 99, 132)',
-        data: {{ data | tojson}},
-    }]
-    };
+        const data = {
+        labels: labels,
+        datasets: [
+            {
+                label: 'Estimated Revenue',
+                // sets colour of the line, change both for colour change
+                backgroundColor: 'rgb(100, 99, 132)',
+                borderColor: 'rgb(100, 99, 132)',
+                data: {{ revData | tojson }},
+            },
+            {
+                label: 'Estimated Customers',
+                // sets colour of the line, change both for colour change
+                backgroundColor: 'rgb(200, 99, 132)',
+                borderColor: 'rgb(200, 99, 132)',
+                data: {{ customerData | tojson }},
+            }
+        ]
+        };
 
-    const config = {
-    type: 'line',
-    data: data,
-    options: { maintainAspectRatio: false }
-    };
+        const config = {
+        type: 'line',
+        data: data,
+        options: { maintainAspectRatio: false }
+        };
 
-    const myChart = new Chart(
-    document.getElementById('myChart'),
-    config
-    );
-</script>
+        const myChart = new Chart(
+        document.getElementById('myChart'),
+        config
+        );
+    </script>
 
+{% endif %}
 {% endblock %}
