@@ -138,7 +138,8 @@ def register():
             return redirect(url_for("register"))
 
         # Hash password and add used to the database
-        hashed_password = bcrypt.generate_password_hash(password)
+        hashed_password = bcrypt.generate_password_hash(
+            password).decode('utf-8')
         user = User(email=email, first_name=first_name, last_name=last_name,
                     password_hash=hashed_password, date_created=datetime.now(), account_active=True, manager=False)
         db.session.add(user)
