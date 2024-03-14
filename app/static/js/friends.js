@@ -41,6 +41,7 @@ $(document).ready(function()
     })
 
     updateFriendsList();
+    updateFriendRequestList()
 });
 
 // Function to update list of user's friends
@@ -82,6 +83,8 @@ $(document).on('click', '.removeFriendButton', function() {
     // refresh friends list
     success: function(response) {
         updateFriendsList()
+        updateFriendRequestList()
+        updateUserSearch()
     },
     error: function(error) { 
         console.log(error); 
@@ -146,6 +149,78 @@ $(document).on('click', '.addFriendButton', function() {
     
     // refresh search results
     success: function(response) {
+        updateFriendsList()
+        updateFriendRequestList()
+        updateUserSearch()
+    },
+    error: function(error) { 
+        console.log(error); 
+    } 
+    });
+});
+
+// Function to update list of incoming friend requests
+function updateFriendRequestList() {
+    $.ajax({
+        type: "GET",
+        url: "/getFriendRequestList",
+        dataType: "json",
+        success: function(frequest_infos) {
+            // Update the table with incoming requests
+            var tableBody = $('#friendrequestresults');
+            tableBody.empty(); // Clear existing rows
+
+            frequest_infos.forEach(function(frequest, index) { 
+                tableBody.append(`
+                <tr>
+                    <td>${frequest.first_name} ${frequest.last_name}</td>
+                    <td>${frequest.email}</td>
+                    <td><button data-frequest-id="${frequest.id}" class="acceptRequestButton addButton">&check;</button></td>
+                    <td><button data-frequest-id="${frequest.id}" class="declineRequestButton binButton">&cross;</button></td>
+                </tr> 
+                `);
+            });
+        },
+        error: function(request, error) {
+            console.error("Error fetching incoming friend requests: ", error);
+        }
+    });
+}
+
+$(document).on('click', '.acceptRequestButton', function() {
+    id = $(this).attr("data-frequest-id");
+
+    $.ajax({ 
+        url: '/acceptFriendRequest', 
+        type: 'POST', 
+        contentType: 'application/json', 
+        data: JSON.stringify({id}), 
+    
+    // refresh incoming requests list
+    success: function(response) {
+        updateFriendsList()
+        updateFriendRequestList()
+        updateUserSearch()
+    },
+    error: function(error) { 
+        console.log(error); 
+    } 
+    });
+});
+
+$(document).on('click', '.declineRequestButton', function() {
+    id = $(this).attr("data-frequest-id");
+
+    $.ajax({ 
+        url: '/declineFriendRequest', 
+        type: 'POST', 
+        contentType: 'application/json', 
+        data: JSON.stringify({id}), 
+    
+    // refresh incoming requests list
+    success: function(response) {
+        updateFriendsList()
+        updateFriendRequestList()
         updateUserSearch()
     },
     error: function(error) { 

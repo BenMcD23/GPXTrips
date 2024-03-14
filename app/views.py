@@ -660,6 +660,26 @@ def sendFriendRequest():
         'status':'OK'
     })
 
+@app.route('/getFriendRequestList', methods=['GET'])
+def getFriendRequestList():
+    frequests = FriendRequest.query.filter_by(receiver_user_id=current_user.id).all()
+    frequest_infos = []
+
+    for frequest in frequests:
+        user = User.query.get(frequest.sender_user_id)
+
+        frequest_info = {
+            'id': frequest.id,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'email': user.email
+        }
+
+        frequest_infos.append(frequest_info)
+
+    # return as JSON
+    return jsonify(frequest_infos)
+
 def friendUser(user):
     friendship = Friendship(
         user1_id=current_user.id,
@@ -682,3 +702,40 @@ def getFriends():
         friends.append(User.query.get(friendship.user1_id))
 
     return friends
+
+@app.route('/acceptFriendRequest', methods=['POST'])
+def acceptFriendRequest():
+    # get data posted
+    data = request.get_json()
+    id = data["id"]
+
+    # find the friend request
+    frequest = FriendRequest.query.get(id)
+
+    # friend the sending user
+    friendUser(User.query.get(frequest.sender_user_id))
+
+    # delete the friend request
+    db.session.delete(frequest)
+    db.session.commit()
+
+    return json.dumps({
+        'status':'OK'
+    })
+
+@app.route('/declineFriendRequest', methods=['POST'])
+def declineFriendRequest():
+    # get data posted
+    data = request.get_json()
+    id = data["id"]
+
+    # find the friend request
+    frequest = FriendRequest.query.get(id)
+
+    # delete the friend request without friending sending user
+    db.session.delete(frequest)
+    db.session.commit()
+
+    return json.dumps({
+        'status':'OK'
+    })
