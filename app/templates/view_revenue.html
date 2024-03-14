@@ -7,6 +7,11 @@
     <h1>No Revenue Data</h1>
 
 {% else %}
+    <select>
+        <option value="future">View Estimated Future Revenue</option>
+        <option value="past">View Past Revenue</option>
+    </select>
+
     <div class="chart-container">
         <h1>Future Revenue Estimates</h1>
         <!-- chart of future revenue estimates -->
@@ -15,18 +20,32 @@
         <div id="revenueEstimates">
             <!-- Get actual total value from past data from DB -->
             <h2>Revenue Estimates</h2>
-            <p>Current Compound Weekly Growth Rate: {{ CWGR }}</p> 
+            <p>Current Compound Weekly Growth Rate: {{ CWGR_rev }}</p> 
             <p>This is what the future revenue is based on</p>
         </div>
 
-        <div class="change_start_rev">
-            <h1>Change Revenue</h1>
-            <form action="" method="post" name="changeRev">
-            {{ ChangeStartRevForm.hidden_tag() }}
-              
-            {{ ChangeStartRevForm.newRev(placeholder="£") }}
-            {{ ChangeStartRevForm.submitRev }}
-
+        <div class="form">
+            <form method="post" action="" name="searchUsers">
+                {{ ChangeRevWeeksForm.hidden_tag() }}
+          
+                <label for="weeks">Display Revenue By Weeks</label>
+          
+                {% if ChangeRevWeeksForm.weeks.errors %}
+                {{ ChangeRevWeeksForm.weeks(class="form-control form-control-lg is-invalid") }}
+                <div class="invalid-feedback">
+                    {% for error in ChangeRevWeeksForm.weeks.errors %}
+                        <span>• {{ error }}</span>
+                        <br>
+                    {% endfor %}
+                </div>
+                {% else %}
+                {{ ChangeRevWeeksForm.weeks(class="form-control", placeholder="Number of Weeks") }}
+                {% endif %}
+          
+                <div class="formButton">
+                    {{ ChangeRevWeeksForm.submitWeeks }}
+                </div>
+            </form>
         </div>
 
     </div>
@@ -35,6 +54,7 @@
 
     <!-- chart script -->
     <script nonce="{{ csp_nonce() }}">
+        // estimated rev graph
         const labels = {{ labels | tojson }};
 
         const data = {
@@ -67,6 +87,8 @@
         document.getElementById('myChart'),
         config
         );
+
+
     </script>
 
 {% endif %}

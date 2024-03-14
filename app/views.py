@@ -4,7 +4,7 @@ from flask_admin.contrib.sqla import ModelView
 from .models import User, Plan, Subscription, Route, SubscriptionStats
 from flask import Flask, render_template, request, redirect, url_for, send_file, flash, jsonify, abort
 from flask_login import login_user, login_required, logout_user, current_user
-from .forms import FileUploadForm, RegistrationForm, LoginForm, UserSearch, ChangeStartRev
+from .forms import FileUploadForm, RegistrationForm, LoginForm, UserSearch, ChangeRevWeeks
 from werkzeug.utils import secure_filename
 from DAL import add_route, get_route
 from datetime import datetime, timedelta
@@ -12,7 +12,7 @@ import stripe
 import json
 import gpxpy
 from functools import wraps
-
+from .funcs import getNumBuisnessWeeks
 
 class UserView(ModelView):
     # Custom view class for the User model
@@ -37,7 +37,7 @@ class SubscriptionView(ModelView):
 
 class SubscriptionStatsView(ModelView):
     # Custom view class for the Subscription model
-    column_list = ['week_of_year', 'total_revenue', 'num_customers']
+    column_list = ['week_of_business', 'total_revenue', 'num_customers']
 
 
 
@@ -196,37 +196,73 @@ def manage_users():
 @app.route('/view_revenue')
 @manger_required()
 def view_revenue():
-    ChangeStartRevForm = ChangeStartRev()
+    # this is the diff between the start week and current week
+    # so number of weeks since first week
+    currentWeek = getNumBuisnessWeeks()
+
+    # gets all the stats saved, in descending order of week (high to low)
+    # apart from the current week, if its there, as we dont know if that current week is over yet
+    allWeekStats = SubscriptionStats.query.filter(SubscriptionStats.week_of_business != currentWeek).order_by(SubscriptionStats.week_of_business.desc()).all()
     
-    # get the first and last entry in database
-    firstWeek = SubscriptionStats.query.first()
-    latestWeek = SubscriptionStats.query.order_by(SubscriptionStats.id.desc()).first()
 
     labels = []
     revData = []
     customerData = []
-    CWGR = 0
+    CWGR_rev = 0
     noData = False
-    if not firstWeek or not latestWeek:
+    noEstimate = False
+    # if we dont get anything from the stats, then we cant do anything
+    if not allWeekStats:
         noData = True
+    
+    # if theres only 1 week, we cant figure out an esitmate
+    elif len(allWeekStats) == 1:
+        noEstimate = True
 
+    # if there is at least 2 weeks in stats (not including current week)
     else:
-        numberOfWeeks = latestWeek.week_of_year
+        # if theres less than 4 weeks of stats, just the lastest week and earliest week
+        if len(allWeekStats) < 4:
+            # Compound Weekly Growth Rate, based on earilest week in database
+            CWGR_rev = ((allWeekStats[0].total_revenue / allWeekStats[-1].total_revenue) ** (1 / len(allWeekStats)))
+            CWGR_cus = ((allWeekStats[0].num_customers / allWeekStats[-1].num_customers) ** (1 / len(allWeekStats)))
 
-        # Compound Weekly Growth Rate, based on from start of calendar year
-        CWGR = ((latestWeek.total_revenue / firstWeek.total_revenue) ** (1 / numberOfWeeks))
-        
+        # otherwise can use the lastest week and 4 entries before that
+        # not necessarily 4 weeks, as can have weeks with 0, this is taken into account in the formula
+        else :
+            CWGR_rev = ((allWeekStats[0].total_revenue / allWeekStats[3].total_revenue) ** (1 / (allWeekStats[0].week_of_business - allWeekStats[3].week_of_business)))
+            CWGR_cus = ((allWeekStats[0].num_customers / allWeekStats[3].num_customers) ** (1 / (allWeekStats[0].week_of_business - allWeekStats[3].week_of_business)))
+
         labels = ["Week " + str(i) for i in range(1, 53)]
-        lastRevValue = latestWeek.total_revenue
+        lastRevValue = allWeekStats[0].total_revenue
 
-        lastCusValue = latestWeek.num_customers
+        lastCusValue = allWeekStats[0].num_customers
         for i in range(1, 53):
-            lastRevValue = lastRevValue * CWGR
-            lastCusValue = lastCusValue * CWGR
+            lastRevValue = lastRevValue * CWGR_rev
+            lastCusValue = lastCusValue * CWGR_cus
             revData.append(lastRevValue)
             customerData.append(lastCusValue)
-        print(customerData)
-    return render_template("view_revenue.html", ChangeStartRevForm=ChangeStartRevForm, noData=noData, labels=labels, revData=revData, customerData=customerData, CWGR=CWGR)
+
+    print(CWGR_rev)
+    
+    ChangeRevWeeksForm = ChangeRevWeeks()
+    
+    # # get the first and last entry in database
+    # firstWeek = SubscriptionStats.query.first()
+    # latestWeek = SubscriptionStats.query.order_by(SubscriptionStats.id.desc()).first()
+
+
+    # if not firstWeek or not latestWeek:
+    #     noData = True
+
+    # else:
+    #     numberOfWeeks = latestWeek.week_of_year
+
+    #     # Compound Weekly Growth Rate, based on from start of calendar year
+    #     CWGR = ((latestWeek.total_revenue / firstWeek.total_revenue) ** (1 / numberOfWeeks))
+        
+
+    return render_template("view_revenue.html", ChangeRevWeeksForm=ChangeRevWeeksForm, noData=noData, labels=labels, revData=revData, customerData=customerData, CWGR_rev=CWGR_rev)
 
 
 @app.route('/friends')
@@ -498,42 +534,65 @@ def create_subscription(user, plan, subscription_id):
 
     print(f"Subscription created for {user.email} with plan {plan.name}")
 
-def addToStats(subCost):
-    """adds the added amount of revenue a subscription gains us
+# def addToStats(subCost):
+#     """adds the added amount of revenue a subscription gains us
 
-    only want to save the current weeks revenue, after the week is over, 
-    the week is removed 
+#     only want to save the current weeks revenue, after the week is over, 
+#     the week is removed 
 
-    Args:
-        subCost (int): a positive number for added revenue
+#     Args:
+#         subCost (int): a positive number for added revenue
                             
-    """
-    currentWeekNumber = datetime.now().isocalendar()[1]
-    currentWeekdb = SubscriptionStats.query.filter_by(week_of_year=currentWeekNumber).first()
+#     """
+#     currentWeekNumber = datetime.now().isocalendar()[1]
+#     currentWeekdb = SubscriptionStats.query.filter_by(week_of_year=currentWeekNumber).first()
+#     # if the week of the year already exists in the database, then just add on the revenue
+#     if currentWeekdb:
+#         currentWeekdb.total_revenue = currentWeekdb.total_revenue + subCost
+#         currentWeekdb.num_customers = currentWeekdb.num_customers + 1
+#     # if the current week doesnt exist, write over the last week
+#     else:
+#         # get the lastest week that was entered
+#         # (not necessarily the last callendar week as may not have had any revenue)
+#         latestWeek = SubscriptionStats.query.order_by(SubscriptionStats.id.desc()).first()
+
+#         # dont want to write over week 0, this is our starting rev
+#         if latestWeek.week_of_year != 0:
+#             # change the week
+#             latestWeek.week_of_year = currentWeekNumber
+#             # revenue is just the sub that was purchased
+#             latestWeek.total_revenue = subCost
+#             latestWeek.num_customers = 1
+
+#         # if the only week is week 0, then create a new week, should only ever be done once, max
+#         else:
+#             newWeek = SubscriptionStats(week_of_year=currentWeekNumber, total_revenue=subCost, num_customers=1)
+#             db.session.add(newWeek)
+
+#     db.session.commit()
+    
+def addToStats(subCost):
+    # this is the starting week of the buisness, weeks are then itterated from this date
+    # there is 0 revenue from before this date
+    firstWeek = datetime(2024, 2, 1)
+    # this is the diff between the start week and current week
+    # so number of weeks since first week
+    currentWeek = (((datetime.now() - firstWeek)).days) // 7
+    print(currentWeek)
+
+    currentWeekdb = SubscriptionStats.query.filter_by(week_of_business=currentWeek).first()
+
     # if the week of the year already exists in the database, then just add on the revenue
     if currentWeekdb:
         currentWeekdb.total_revenue = currentWeekdb.total_revenue + subCost
         currentWeekdb.num_customers = currentWeekdb.num_customers + 1
-    # if the current week doesnt exist, write over the last week
+
     else:
-        # get the lastest week that was entered
-        # (not necessarily the last callendar week as may not have had any revenue)
-        latestWeek = SubscriptionStats.query.order_by(SubscriptionStats.id.desc()).first()
-
-        # dont want to write over week 0, this is our starting rev
-        if latestWeek.week_of_year != 0:
-            # change the week
-            latestWeek.week_of_year = currentWeekNumber
-            # revenue is just the sub that was purchased
-            latestWeek.total_revenue = subCost
-            latestWeek.num_customers = 1
-
-        # if the only week is week 0, then create a new week, should only ever be done once, max
-        else:
-            newWeek = SubscriptionStats(week_of_year=currentWeekNumber, total_revenue=subCost, num_customers=1)
-            db.session.add(newWeek)
+        newWeek = SubscriptionStats(week_of_business=currentWeek, total_revenue=subCost, num_customers=1)
+        db.session.add(newWeek)
 
     db.session.commit()
+
 
 
 def current_user_active_subscription():
