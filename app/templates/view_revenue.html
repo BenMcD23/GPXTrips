@@ -3,32 +3,26 @@
 {% block title %}Revenue{% endblock %}
 
 {% block content %}
-{% if noData == True %}
-    <h1>No Revenue Data</h1>
 
-{% else %}
     <select>
-        <option value="future">View Estimated Future Revenue</option>
         <option value="past">View Past Revenue</option>
+        <option value="future">View Estimated Future Revenue</option>
     </select>
 
-    <div class="chart-container">
-        <h1>Future Revenue Estimates</h1>
+
+    <div class="past chart"> 
+        <h1>Past Revenue</h1>
+
         <!-- chart of future revenue estimates -->
-        <canvas id="myChart"></canvas>
-
-        <div id="revenueEstimates">
-            <!-- Get actual total value from past data from DB -->
-            <h2>Revenue Estimates</h2>
-            <p>Current Compound Weekly Growth Rate: {{ CWGR_rev }}</p> 
-            <p>This is what the future revenue is based on</p>
+        <div class="chart-container">
+            <canvas id="pastChart"></canvas>
         </div>
-
+        
         <div class="form">
             <form method="post" action="" name="searchUsers">
                 {{ ChangeRevWeeksForm.hidden_tag() }}
           
-                <label for="weeks">Display Revenue By Weeks</label>
+                <label for="weeks">Number of weeks in the past to display:</label>
           
                 {% if ChangeRevWeeksForm.weeks.errors %}
                 {{ ChangeRevWeeksForm.weeks(class="form-control form-control-lg is-invalid") }}
@@ -47,32 +41,50 @@
                 </div>
             </form>
         </div>
-
     </div>
+    
+    <div class="future chart">
+        
+            <div class="chart-container">
+                <h1>Future Revenue Estimate</h1>
+                <!-- chart of future revenue estimates -->
+                <canvas id="futureChart"></canvas>
+
+                <div id="revenueEstimates">
+                    {% if noEstimate == True %}
+                        <p>There isnt enought data to estimate the revenue</p>
+                    {% else %}
+                        <p>Current Compound Weekly Growth Rate: {{ CWGR_rev }}</p> 
+                        <p>This is what the future revenue is based on</p>
+                    {% endif %}
+                </div>
+            </div>
+    </div>
+
 
 
 
     <!-- chart script -->
     <script nonce="{{ csp_nonce() }}">
         // estimated rev graph
-        const labels = {{ labels | tojson }};
+        const labels_future = {{ weeks_future | tojson }};
 
         const data = {
-        labels: labels,
+        labels: labels_future,
         datasets: [
             {
                 label: 'Estimated Revenue',
                 // sets colour of the line, change both for colour change
                 backgroundColor: 'rgb(100, 99, 132)',
                 borderColor: 'rgb(100, 99, 132)',
-                data: {{ revData | tojson }},
+                data: {{ revData_future | tojson }},
             },
             {
                 label: 'Estimated Customers',
                 // sets colour of the line, change both for colour change
                 backgroundColor: 'rgb(200, 99, 132)',
                 borderColor: 'rgb(200, 99, 132)',
-                data: {{ customerData | tojson }},
+                data: {{ customerData_future | tojson }},
             }
         ]
         };
@@ -84,12 +96,38 @@
         };
 
         const myChart = new Chart(
-        document.getElementById('myChart'),
+        document.getElementById('futureChart'),
         config
         );
+        
+        // past rev chart
+        const labels_past = {{ weeks_past | tojson }};
 
+        const data_past = {
+        labels: labels_past,
+        datasets: [
+            {
+                label: 'Revenue',
+                // sets colour of the line, change both for colour change
+                backgroundColor: 'rgb(100, 99, 132)',
+                borderColor: 'rgb(100, 99, 132)',
+                data: {{ revData_past | tojson }},
+            }
+        ]
+        };
+
+        const config_past = {
+        type: 'bar',
+        data: data_past,
+        options: { maintainAspectRatio: false }
+        };
+
+        const chart_past = new Chart(
+        document.getElementById('pastChart'),
+        config_past
+        );
 
     </script>
 
-{% endif %}
+
 {% endblock %}

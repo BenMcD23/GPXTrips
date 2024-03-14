@@ -1,6 +1,6 @@
 from datetime import datetime
 
-def getNumBuisnessWeeks():
+def getCurrentBuisnessWeek():
     # this is the starting week of the buisness, weeks are then itterated from this date
     # there is 0 revenue from before this date
     firstWeek = datetime(2024, 2, 1)

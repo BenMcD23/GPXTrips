@@ -1,15 +1,23 @@
 from app import models
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, EmailField, SubmitField, BooleanField, FloatField
+from wtforms import StringField, PasswordField, EmailField, SubmitField, BooleanField, IntegerField
 from wtforms.validators import InputRequired, Length, Email, ValidationError
 from flask_wtf.file import FileField
+from .funcs import getCurrentBuisnessWeek
 
 def emailSearch_Validator(form, userEmail):
-    # if the tag isnt in the database and isnt an empty string
+    # if the email isnt in the database and isnt an empty string
     if not models.User.query.filter_by(email=userEmail.data).all() and userEmail.data!="":
         raise ValidationError('That user email does not exist')
 
+def revWeeks_Validator(form, weeks):
+    numberOfWeeks = getCurrentBuisnessWeek()
+    if weeks.data > numberOfWeeks:
+        raise ValidationError("There are only " + str(numberOfWeeks) + " weeks of data")
+
+    elif weeks.data <= 0:
+        raise ValidationError("Value must be larger than 0 (1+)")
 
 class RegistrationForm(FlaskForm):
     email = EmailField("Email", validators=[InputRequired(), Email()])
@@ -35,6 +43,6 @@ class UserSearch(FlaskForm):
     userEmail = StringField('userEmail', validators=[emailSearch_Validator])
     submitSearch = SubmitField('Search')
 
-class ChangeStartRev(FlaskForm):
-    newRev = FloatField('newRev', validators=[InputRequired()])
-    submitRev = SubmitField('Submit')
+class ChangeRevWeeks(FlaskForm):
+    weeks = IntegerField('newRev', validators=[InputRequired(), revWeeks_Validator])
+    submitWeeks = SubmitField('Submit')
