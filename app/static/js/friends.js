@@ -108,8 +108,15 @@ function updateUserSearch() {
             tableBody.empty(); // Clear existing rows
 
             user_infos.forEach(function(user, index) { 
-
-                if(user.pending) {
+                if (user.frequest_id != -1) {
+                    tableBody.append(`
+                    <tr>
+                        <td>${user.first_name} ${user.last_name}</td>
+                        <td>${user.email}</td>
+                        <td><button data-frequest-id="${user.frequest_id}" class="acceptRequestButton addButton">Add Friend</button></td>
+                        </tr>  
+                    `);
+                } else if (user.pending) {
                     tableBody.append(`
                     <tr>
                         <td>${user.first_name} ${user.last_name}</td>

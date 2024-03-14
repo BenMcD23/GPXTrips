@@ -612,11 +612,15 @@ def userSearch():
     users = User.query.filter(User.email.contains(searchTerm)).all()
 
     # Get all outgoing friend requests to mark them as pending
-    frequests = FriendRequest.query.filter_by(sender_user_id=current_user.id).all()
-    
+    out_frequests = FriendRequest.query.filter_by(sender_user_id=current_user.id).all()
     pending_ids = []
-    for frequest in frequests:
+    for frequest in out_frequests:
         pending_ids.append(frequest.receiver_user_id)
+
+    # Get all friends to exclude them from results
+    friend_ids = []
+    for friend in getFriends():
+        friend_ids.append(friend.id)
 
     # Build list of user infos and return
     user_infos = []
@@ -625,15 +629,27 @@ def userSearch():
         # Ignore self
         if user.id == current_user.id:
             continue
+
+        # Ignore friends
+        if user.id in friend_ids:
+            continue
         
+        # Mark pending requests as pending
         pending = user.id in pending_ids
+
+        # Mark incoming friend requests
+        frequest = FriendRequest.query.filter_by(sender_user_id=user.id).first()
+        frequest_id=-1
+        if frequest:
+            frequest_id=frequest.id
 
         user_info = {
             'id': user.id,
             'first_name': user.first_name,
             'last_name': user.last_name,
             'email': user.email,
-            'pending': pending
+            'pending': pending,
+            'frequest_id': frequest_id
         }
 
         user_infos.append(user_info)
