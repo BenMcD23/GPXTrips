@@ -1,5 +1,16 @@
 $(document).ready(function()
 {
+    // gets the csrfToken, this is so can use ajax post
+    var csrf_token = $('#csrfToken').data('value');
+    // need to setup ajax with csrfToken, otherwise wont work
+    $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", csrf_token);
+            }
+        }
+    });
+
     $('#searchFriends').hide()
     $('#incomingRequests').hide()
     $('#currentFriends').show()
@@ -28,4 +39,52 @@ $(document).ready(function()
         $('#currentFriends').hide()
         $('#searchFriends').fadeIn(450);
     })
-})
+
+    updateFriendsList();
+});
+
+// Function to update list of user's friends
+function updateFriendsList() {
+    $.ajax({
+        type: "GET",
+        url: "/getFriendsList",
+        dataType: "json",
+        success: function(friend_infos) {
+            // Update the table with current friends
+            var tableBody = $('#friendslist');
+            tableBody.empty(); // Clear existing rows
+
+            friend_infos.forEach(function(friend, index) { 
+                tableBody.append(`
+                <tr>
+                    <td>${friend.first_name} ${friend.last_name}</td>
+                    <td>${friend.email}</td>
+                    <td><button data-friend-id="${friend.id}" class="binButton removeFriendButton">Remove</button></td>
+                </tr>  
+                `);
+            });
+        },
+        error: function(request, error) {
+            console.error("Error fetching friends: ", error);
+        }
+    });
+}
+
+$(document).on('click', '.removeFriendButton', function() {
+    id = $(this).attr("data-friend-id");
+
+    $.ajax({ 
+        url: '/removeFriend', 
+        type: 'POST', 
+        contentType: 'application/json', 
+        data: JSON.stringify({id}), 
+    
+    // refresh friends list
+    success: function(response) {
+        updateFriendsList()
+    },
+    error: function(error) { 
+        console.log(error); 
+    } 
+    });
+});

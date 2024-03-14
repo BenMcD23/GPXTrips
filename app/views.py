@@ -35,12 +35,16 @@ class SubscriptionView(ModelView):
     column_list = ['user', 'plan',
                    'subscription_id', 'date_start', 'date_end', 'active']
 
+class FriendshipView(ModelView):
+    # Custom view class for the Friendship model
+    column_list = ['user1_id', 'user2_id']
 
 # Add views for each model using the custom view classes
 admin.add_view(UserView(User, db.session))
 admin.add_view(RouteView(Route, db.session))
 admin.add_view(PlanView(Plan, db.session))
 admin.add_view(SubscriptionView(Subscription, db.session))
+admin.add_view(FriendshipView(Friendship, db.session))
 
 
 # role for manager pages
@@ -198,7 +202,7 @@ def friends():
     if current_user_current_subscription() == False:
         # If user doesn't have an active subscription, redirect to user page
         return redirect(url_for('user'))
-    return render_template("friends.html", current_user=current_user)
+    return render_template("friends.html", current_user=current_user, friends=getFriends())
 
 
 @app.route('/profile')
@@ -550,6 +554,49 @@ def getRouteForTable():
     # return as JSON
     return jsonify(route_info_list)
 
+@app.route('/getFriendsList', methods=['GET'])
+def getFriendsList():
+    friends = getFriends()
+    friend_infos = []
+
+    for friend in friends:
+        friend_info = {
+            'id': friend.id,
+            'first_name': friend.first_name,
+            'last_name': friend.last_name,
+            'email': friend.email
+        }
+
+        friend_infos.append(friend_info)
+
+    # return as JSON
+    return jsonify(friend_infos)
+
+@app.route('/removeFriend', methods=['POST'])
+def removeFriend():
+    # get data posted
+    data = request.get_json()
+    friend_id = data["id"]
+
+    # Attempt to retrieve the friendship one way
+    friendship = Friendship.query.filter_by(user1_id=current_user.id, user2_id=friend_id).first()
+    # Otherwise get it the other way
+    if not friendship:
+        friendship = Friendship.query.filter_by(user1_id=friend_id, user2_id=current_user.id).first()
+
+    # Return error if friendship cannot be found in database
+    if not friendship:
+        return json.dumps({
+            'error': 'Could not find friendship'
+        })
+
+    db.session.delete(friendship)
+    db.session.commit()
+
+    return json.dumps({
+        'status':'OK'
+    })
+
 def friendUser(user):
     friendship = Friendship(
         user1_id=current_user.id,
@@ -560,8 +607,8 @@ def friendUser(user):
     db.session.commit()
 
 def getFriends():
-    outgoingfriendships = Friendship.filter_by(user1_id=current_user.id).query.all()
-    incomingfriendships = Friendship.filter_by(user2_id=current_user.id).query.all()
+    outgoingfriendships = Friendship.query.filter_by(user1_id=current_user.id).all()
+    incomingfriendships = Friendship.query.filter_by(user2_id=current_user.id).all()
 
     friends = []
 
