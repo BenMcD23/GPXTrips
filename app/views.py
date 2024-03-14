@@ -1,10 +1,11 @@
+from flask import request
 from config import stripe_keys
 from app import app, db, admin, bcrypt, csrf
 from flask_admin.contrib.sqla import ModelView
 from .models import User, Plan, Subscription, Route, Friendship, FriendRequest
 from flask import Flask, render_template, request, redirect, url_for, send_file, flash, jsonify, abort
 from flask_login import login_user, login_required, logout_user, current_user
-from .forms import FileUploadForm, RegistrationForm, LoginForm, UserSearch
+from .forms import *
 from werkzeug.utils import secure_filename
 from DAL import add_route, get_route
 from datetime import datetime, timedelta
@@ -33,7 +34,7 @@ class PlanView(ModelView):
 class SubscriptionView(ModelView):
     # Custom view class for the Subscription model
     column_list = ['user', 'plan',
-                   'subscription_id', 'date_start', 'date_end', 'active']
+                   'subscription_id', 'customer_id', 'date_start', 'date_end', 'active']
 
 class FriendshipView(ModelView):
     # Custom view class for the Friendship model
@@ -72,36 +73,32 @@ def login():
     # Create an instance of the LoginForm
     form = LoginForm()
 
-    if request.method == 'POST':
+    if request.method == 'POST' and form.validate_on_submit():
         # Query the user by email
         user = User.query.filter_by(email=form.email.data).first()
 
         if user:
-            # if the account isnt active
-            if user.account_active != True:
+            if user.account_active:
+                if user.check_password(form.password.data):
+                    remember_me = form.rememberMe.data
+                    login_user(user, remember=remember_me)
+                    if user.manager:
+                        # if theyre a manager then redirect to manager page
+                        return redirect(url_for("manager"))
+                    # if theyre just a normal user then redirect to user page
+                    return redirect(url_for("user"))
+                else:
+                    # Redirect to back login if password is incorrect
+                    flash("Password is wrong!", category="error")
+            else:
+                # if the account isnt active
                 flash("Account is deactivated, please contact support.",
                       category="error")
-                return redirect(url_for("login"))
-
-            # if the password is correct
-            elif bcrypt.check_password_hash(user.password_hash, form.password.data):
-                remember_me = form.rememberMe.data
-                login_user(user, remember=remember_me)
-                if user.manager == True:
-                    # if theyre a manager then redirect to manager page
-                    return redirect(url_for("manager"))
-                # if theyre just a normal user then redirect to user page
-                return redirect(url_for("user"))
-
-            else:
-                # Redirect to back login if password is incorrect
-                flash("Password is wrong!", category="error")
-                return redirect(url_for("login"))
-
         else:
             # Redirect to back login if account does not exist
             flash("Account does not exist!", category="error")
-            return redirect(url_for("login"))
+
+        return redirect(url_for("login"))
 
     return render_template("login.html", title="Login", form=form)
 
@@ -112,46 +109,41 @@ def register():
     # Create an instance of the RegistrationForm
     form = RegistrationForm()
 
-    if request.method == 'POST':
+    if request.method == 'POST' and form.validate_on_submit():
         # Request data from form
-        email = request.form.get("email")
-        first_name = request.form.get("first_name")
-        last_name = request.form.get("last_name")
-        password = request.form.get("password")
-        confirm_password = request.form.get("confirm_password")
-        tandc_confirm = request.form.get("TandCConfirm")
+        email = form.email.data
+        first_name = form.first_name.data
+        last_name = form.last_name.data
+        password = form.password.data
+        confirm_password = form.confirm_password.data
+        tandc_confirm = form.TandCConfirm.data
 
-        # Check provided email has an account that exists
         existing_email = User.query.filter_by(email=email).first()
         if existing_email:
-            flash(
-                "Email already in use. Please choose a different email.",
-                category="error"
-            )
+            # Check provided email has an account that exists
+            flash("Email already in use. Please choose a different email.",
+                  category="error")
             return redirect(url_for("register"))
 
-        # Password validation
         if password != confirm_password:
+            # Password validation
             flash(
-                "Passwords do not match. Please make sure your passwords match.",
-                category="error",
-            )
+                "Passwords do not match. Please make sure your passwords match.", category="error")
             return redirect(url_for("register"))
 
         if not tandc_confirm:
-            flash(
-                "Please accept the Terms and Conditions to proceed.",
-                category="error"
-            )
+            flash("Please accept the Terms and Conditions to proceed.",
+                  category="error")
             return redirect(url_for("register"))
 
         # Hash password and add used to the database
-        hashed_password = bcrypt.generate_password_hash(password)
+        hashed_password = bcrypt.generate_password_hash(
+            password).decode('utf-8')
+
         user = User(email=email, first_name=first_name, last_name=last_name,
                     password_hash=hashed_password, date_created=datetime.now(), account_active=True, manager=False)
         db.session.add(user)
         db.session.commit()
-
 
         # Redirect to login after successful registration
         return redirect(url_for("login"))
@@ -231,7 +223,11 @@ def profile():
     expiryDate = (Subscription.query.filter_by(
         user_id=current_user.id).first().date_end).date()
 
-    return render_template("profile.html", current_user=current_user, userPlan=userPlan, expiryDate=expiryDate, autoRenewal=autoRenewal)
+    subscription_form = SubscriptionForm()
+    account_form = AccountForm()
+
+    return render_template("profile.html", current_user=current_user, userPlan=userPlan, expiryDate=expiryDate, autoRenewal=autoRenewal, subscription_form=subscription_form, account_form=account_form)
+
 
 @app.route('/user',  methods=['GET', 'POST'])
 @login_required
@@ -339,7 +335,7 @@ def checkout():
             "success?session_id={CHECKOUT_SESSION_ID}",
             cancel_url=domain_url + "cancel",
             payment_method_types=["card"],
-            customer_email = current_user.email,
+            customer_email=current_user.email,
             mode="subscription",
             line_items=[
                 {
@@ -405,12 +401,12 @@ def stripe_webhook():
         abort(400)
 
     if event['type'] == 'invoice.updated':
-
         # Grab data from invoice.
         invoice_data = event['data']['object']
+        customer_id = invoice_data['customer']
         customer_email = invoice_data['customer_email']
         plan_id = invoice_data['lines']['data'][0]['plan']['id']
-        subscription_id = invoice_data['subscription']
+        subscription_id = invoice_data['id']
 
         user = User.query.filter_by(email=customer_email).first()
 
@@ -422,7 +418,7 @@ def stripe_webhook():
         print(subscription_id)
 
         if user and plan:
-            create_subscription(user, plan, subscription_id)
+            create_subscription(user, plan, subscription_id, customer_id)
             print('Subscription created')
         else:
             print('User or plan not found')
@@ -430,14 +426,14 @@ def stripe_webhook():
     return jsonify({'success': True})
 
 
-def create_subscription(user, plan, subscription_id):
+def create_subscription(user, plan, subscription_id, customer_id):
     # Method to create a subscription in the database.
     if plan.name == "Weekly":
-        date_end = datetime.now()+timedelta(weeks=1)
+        date_end = datetime.now() + timedelta(weeks=1)
     elif plan.name == "Monthly":
-        date_end = datetime.now()+timedelta(weeks=4)
+        date_end = datetime.now() + timedelta(weeks=4)
     else:
-        date_end = datetime.now()+timedelta(weeks=52)
+        date_end = datetime.now() + timedelta(weeks=52)
 
     subscription = Subscription(
         user=user,
@@ -445,6 +441,7 @@ def create_subscription(user, plan, subscription_id):
         date_start=datetime.utcnow(),
         date_end=date_end,
         subscription_id=subscription_id,
+        customer_id=customer_id,
         active=True
     )
 
@@ -705,6 +702,7 @@ def friendUser(user):
     db.session.add(friendship)
     db.session.commit()
 
+
 def getFriends():
     outgoingfriendships = Friendship.query.filter_by(user1_id=current_user.id).all()
     incomingfriendships = Friendship.query.filter_by(user2_id=current_user.id).all()
@@ -718,6 +716,7 @@ def getFriends():
         friends.append(User.query.get(friendship.user1_id))
 
     return friends
+
 
 @app.route('/acceptFriendRequest', methods=['POST'])
 def acceptFriendRequest():
@@ -755,3 +754,82 @@ def declineFriendRequest():
     return json.dumps({
         'status':'OK'
     })
+
+
+# Routes for user profile.
+@app.route('/change_email', methods=['GET', 'POST'])
+@login_required
+def change_email():
+    change_email_form = ChangeEmailForm()
+
+    if change_email_form.validate_on_submit():
+
+        new_email = change_email_form.new_email.data
+
+        # Find the user's subscription
+        subscription = Subscription.query.filter_by(
+            user_id=current_user.id).first()
+
+        if subscription:
+            try:
+                stripe.api_key = stripe_keys["secret_key"]
+                # Retrieve the Stripe customer ID associated with the subscription
+                customer_id = subscription.customer_id
+
+                print(customer_id)
+                # Update user's email address on Stripe
+                stripe.Customer.modify(
+                    customer_id,
+                    email=new_email
+                )
+                flash('Email address has been updated successfully!', 'success')
+            except Exception as e:
+                flash(
+                    'Failed to update email address on Stripe. Please try again later.', 'error')
+                app.logger.error(f"Stripe error: {e}")
+        else:
+            flash('User subscription not found.', 'error')
+
+        # Update user's email address in your database
+        current_user.email = new_email
+        db.session.commit()
+
+        # Redirect to profile page after email change
+        return redirect(url_for('profile'))
+
+    return render_template("change_email.html", change_email_form=change_email_form)
+
+
+@app.route('/change_password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    form = ChangePasswordForm()
+
+    if form.validate_on_submit():
+        # Check if old password matches
+        if current_user.check_password(form.old_password.data):
+            # Update password
+            current_user.set_password(form.new_password.data)
+            db.session.commit()
+            flash('Your password has been updated successfully.', 'success')
+            return redirect(url_for('profile'))
+        else:
+            flash('Invalid old password. Please try again.', 'error')
+
+    return render_template('change_password.html', form=form)
+
+
+@app.route('/delete_account', methods=['POST'])
+@login_required
+def delete_account():
+    if request.method == 'POST':
+        # Perform any additional validation or checks if needed
+        # Delete the user's account from the database
+        db.session.delete(current_user)
+        db.session.commit()
+        flash('Your account has been deleted.', 'success')
+        # Redirect to logout or any other appropriate route
+        return redirect(url_for('logout'))
+    else:
+        # Handle GET request for the route if needed
+        pass

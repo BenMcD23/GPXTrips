@@ -1,5 +1,7 @@
 from app import db
 from flask_login import UserMixin
+import bcrypt
+
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -17,7 +19,15 @@ class User(db.Model, UserMixin):
 
     routes = db.relationship('Route', backref='user', lazy=True)
 
+    def set_password(self, password):
+        self.password_hash = bcrypt.hashpw(password.encode(
+            'utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+    def check_password(self, password):
+        return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
+
     # returns as dict so can be used for search bar
+
     def email_as_dict(self):
         return {'email': self.email}
 
@@ -28,6 +38,7 @@ class User(db.Model, UserMixin):
 
         else:
             return False
+
 
 class Route(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -49,16 +60,19 @@ class Subscription(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     plan_id = db.Column(db.Integer, db.ForeignKey('plan.id'))
     subscription_id = db.Column(db.String(255))
+    customer_id = db.Column(db.String(255))
     date_start = db.Column(db.DateTime, nullable=False)
     date_end = db.Column(db.DateTime)
     active = db.Column(db.Boolean, default=True)
 
     plan = db.relationship('Plan', backref='subscriptions')
 
+
 class Friendship(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user1_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     user2_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
 
 class FriendRequest(db.Model):
     id = db.Column(db.Integer, primary_key=True)

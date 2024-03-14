@@ -1,0 +1,27 @@
+{% extends 'base_post_login.html' %}
+
+{% block title %}Change Email{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-center align-items-center vh-100 profilePage">
+    <div class="row justify-content-center flex-sm-row">
+        <div class="col-auto">
+            <div id="profileCard" class="card text-center p-5">
+                <h1>{{ current_user.first_name }} {{ current_user.last_name }}</h1>
+                <p class="lead">{{ current_user.email }}</p>
+                <hr>
+                <h4>Change Email</h4>
+                <br>
+                <form method="post">
+                    {{ change_email_form.hidden_tag() }}
+                    <div class="form-group">
+                        {{ change_email_form.new_email.label(class="form-label") }}
+                        {{ change_email_form.new_email(class="form-control") }}
+                    </div>
+                    <button type="submit" class="btn btn-outline-dark">Change Email</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
