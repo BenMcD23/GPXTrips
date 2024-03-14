@@ -36,12 +36,21 @@ class SubscriptionView(ModelView):
     column_list = ['user', 'plan',
                    'subscription_id', 'customer_id', 'date_start', 'date_end', 'active']
 
+class FriendshipView(ModelView):
+    # Custom view class for the Friendship model
+    column_list = ['user1_id', 'user2_id']
+
+class FriendRequestView(ModelView):
+    # Custom view class for the Friend Request model
+    column_list=['sender_user_id','receiver_user_id']
 
 # Add views for each model using the custom view classes
 admin.add_view(UserView(User, db.session))
 admin.add_view(RouteView(Route, db.session))
 admin.add_view(PlanView(Plan, db.session))
 admin.add_view(SubscriptionView(Subscription, db.session))
+admin.add_view(FriendshipView(Friendship, db.session))
+admin.add_view(FriendRequestView(FriendRequest, db.session))
 
 
 # role for manager pages
@@ -190,7 +199,7 @@ def friends():
     if current_user_current_subscription() == False:
         # If user doesn't have an active subscription, redirect to user page
         return redirect(url_for('user'))
-    return render_template("friends.html", current_user=current_user)
+    return render_template("friends.html", current_user=current_user, friends=getFriends())
 
 
 @app.route('/profile')
@@ -547,6 +556,126 @@ def getRouteForTable():
     # return as JSON
     return jsonify(route_info_list)
 
+@app.route('/getFriendsList', methods=['GET'])
+def getFriendsList():
+    friends = getFriends()
+    friend_infos = []
+
+    for friend in friends:
+        friend_info = {
+            'id': friend.id,
+            'first_name': friend.first_name,
+            'last_name': friend.last_name,
+            'email': friend.email
+        }
+
+        friend_infos.append(friend_info)
+
+    # return as JSON
+    return jsonify(friend_infos)
+
+@app.route('/removeFriend', methods=['POST'])
+def removeFriend():
+    # get data posted
+    data = request.get_json()
+    friend_id = data["id"]
+
+    # Attempt to retrieve the friendship one way
+    friendship = Friendship.query.filter_by(user1_id=current_user.id, user2_id=friend_id).first()
+    # Otherwise get it the other way
+    if not friendship:
+        friendship = Friendship.query.filter_by(user1_id=friend_id, user2_id=current_user.id).first()
+
+    # Return error if friendship cannot be found in database
+    if not friendship:
+        return json.dumps({
+            'error': 'Could not find friendship'
+        })
+
+    db.session.delete(friendship)
+    db.session.commit()
+
+    return json.dumps({
+        'status':'OK'
+    })
+
+@app.route('/userSearch', methods=['POST'])
+def userSearch():
+    # get data posted
+    data = request.get_json()
+    searchTerm = data["searchTerm"]
+
+    # Query users against search term
+    users = User.query.filter(User.email.contains(searchTerm)).all()
+
+    # Get all outgoing friend requests to mark them as pending
+    frequests = FriendRequest.query.filter_by(sender_user_id=current_user.id).all()
+    
+    pending_ids = []
+    for frequest in frequests:
+        pending_ids.append(frequest.receiver_user_id)
+
+    # Build list of user infos and return
+    user_infos = []
+
+    for user in users:
+        # Ignore self
+        if user.id == current_user.id:
+            continue
+        
+        pending = user.id in pending_ids
+
+        user_info = {
+            'id': user.id,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'email': user.email,
+            'pending': pending
+        }
+
+        user_infos.append(user_info)
+
+    # return as JSON
+    return jsonify(user_infos)
+
+@app.route('/sendFriendRequest', methods=['POST'])
+def sendFriendRequest():
+    # get data posted
+    data = request.get_json()
+    user_id = data["id"]
+
+    # Create and save friend request
+    friendRequest = FriendRequest(
+        sender_user_id=current_user.id,
+        receiver_user_id=user_id
+    )
+
+    db.session.add(friendRequest)
+    db.session.commit()
+
+    return json.dumps({
+        'status':'OK'
+    })
+
+@app.route('/getFriendRequestList', methods=['GET'])
+def getFriendRequestList():
+    frequests = FriendRequest.query.filter_by(receiver_user_id=current_user.id).all()
+    frequest_infos = []
+
+    for frequest in frequests:
+        user = User.query.get(frequest.sender_user_id)
+
+        frequest_info = {
+            'id': frequest.id,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'email': user.email
+        }
+
+        frequest_infos.append(frequest_info)
+
+    # return as JSON
+    return jsonify(frequest_infos)
 
 def friendUser(user):
     friendship = Friendship(
@@ -559,10 +688,8 @@ def friendUser(user):
 
 
 def getFriends():
-    outgoingfriendships = Friendship.filter_by(
-        user1_id=current_user.id).query.all()
-    incomingfriendships = Friendship.filter_by(
-        user2_id=current_user.id).query.all()
+    outgoingfriendships = Friendship.query.filter_by(user1_id=current_user.id).all()
+    incomingfriendships = Friendship.query.filter_by(user2_id=current_user.id).all()
 
     friends = []
 
@@ -575,8 +702,45 @@ def getFriends():
     return friends
 
 
-# Routes for user profile.
+@app.route('/acceptFriendRequest', methods=['POST'])
+def acceptFriendRequest():
+    # get data posted
+    data = request.get_json()
+    id = data["id"]
 
+    # find the friend request
+    frequest = FriendRequest.query.get(id)
+
+    # friend the sending user
+    friendUser(User.query.get(frequest.sender_user_id))
+
+    # delete the friend request
+    db.session.delete(frequest)
+    db.session.commit()
+
+    return json.dumps({
+        'status':'OK'
+    })
+
+@app.route('/declineFriendRequest', methods=['POST'])
+def declineFriendRequest():
+    # get data posted
+    data = request.get_json()
+    id = data["id"]
+
+    # find the friend request
+    frequest = FriendRequest.query.get(id)
+
+    # delete the friend request without friending sending user
+    db.session.delete(frequest)
+    db.session.commit()
+
+    return json.dumps({
+        'status':'OK'
+    })
+
+
+# Routes for user profile.
 @app.route('/change_email', methods=['GET', 'POST'])
 @login_required
 def change_email():

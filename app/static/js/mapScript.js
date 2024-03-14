@@ -15,6 +15,23 @@ $(document).ready(function()
     }
   })
 
+  $('#friendRoutes').hide()
+
+
+  $('#linkOne').click(function(){
+        $('#linkTwo').removeClass('active');
+        $('#linkOne').addClass('active');
+        $('#friendRoutes').hide()
+        $('#myRoutes').fadeIn(450);
+  })
+
+  $('#linkTwo').click(function(){
+        $('#linkOne').removeClass('active');
+        $('#linkTwo').addClass('active');
+        $('#myRoutes').hide()
+        $('#friendRoutes').fadeIn(450);
+  })
+
   // Enables buttons on pop-up for unsubscribed users
   let button = document.getElementById("subButton")
   let radioButton1 = document.getElementById("radio1")
@@ -27,6 +44,7 @@ $(document).ready(function()
   // Also enable the logout button so user can logout if they don't wish to subscribe
   let logoutButton = document.getElementById("logoutLink")
   logoutButton.style.pointerEvents = 'auto';
+  
 
 })
 
