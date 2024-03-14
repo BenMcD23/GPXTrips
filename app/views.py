@@ -6,7 +6,6 @@ from flask import Flask, render_template, request, redirect, url_for, send_file,
 from flask_login import login_user, login_required, logout_user, current_user
 from .forms import FileUploadForm, RegistrationForm, LoginForm, UserSearch
 from werkzeug.utils import secure_filename
-from DAL import add_route, get_route
 from datetime import datetime, timedelta
 import stripe
 import json
@@ -15,6 +14,7 @@ from functools import wraps
 from io import BytesIO
 from xml.etree import ElementTree as ET
 from geopy.distance import geodesic
+from dateutil import parser
 
 
 class UserView(ModelView):
@@ -671,9 +671,8 @@ def calculate_route_info(gpx_data, unit='km'):
     else:
         length = f"{length} meters"  # Default to meters if unit is not km or miles
 
-    # Extract timestamps if available
-    timestamps = [datetime.strptime(time.text, '%Y-%m-%dT%H:%M:%SZ')
-                  for time in tree.findall('.//{http://www.topografix.com/GPX/1/1}time')]
+    times = tree.findall(".//time")
+    timestamps = [parser.isoparse(time.text) for time in times]
 
     # Calculate route duration if timestamps are available
     duration = 0
@@ -684,7 +683,7 @@ def calculate_route_info(gpx_data, unit='km'):
     start_point = (0, 0)
     end_point = (0, 0)
     if track_points:
-        start_point = track_points[0]
-        end_point = track_points[-1]
+        start_point = round(track_points[0][0], 3), round(track_points[0][1], 3)
+        end_point = round(track_points[-1][0], 3), round(track_points[-1][1], 3)
 
     return length, duration, start_point, end_point
