@@ -1,4 +1,5 @@
 from config import stripe_keys
+from sqlalchemy import func
 from app import app, db, admin, bcrypt, csrf
 from flask_admin.contrib.sqla import ModelView
 from .models import User, Plan, Subscription, Route, SubscriptionStats
@@ -209,6 +210,7 @@ def view_revenue():
     revData_future = []
     customerData_future = []
     CWGR_rev = 0
+    CWGR_cus = 0
     noEstimate = False
 
     # if we dont get anything from the stats, then we cant do anything
@@ -274,8 +276,13 @@ def view_revenue():
 
         currentWeekNum -= 1
 
-
-    return render_template("view_revenue.html", ChangeRevWeeksForm=ChangeRevWeeksForm, noEstimate=noEstimate, weeks_future=weeks_future, revData_future=revData_future, customerData_future=customerData_future, CWGR_rev=CWGR_rev, revData_past=revData_past, weeks_past=weeks_past)
+    # get total revenue
+    total_rev = 0
+    # re done as last time the current week was removed
+    allWeekStats = SubscriptionStats.query.all()
+    for i in allWeekStats:
+        total_rev += i.total_revenue
+    return render_template("view_revenue.html", ChangeRevWeeksForm=ChangeRevWeeksForm, noEstimate=noEstimate, weeks_future=weeks_future, revData_future=revData_future, customerData_future=customerData_future, CWGR_cus=CWGR_cus, CWGR_rev=CWGR_rev, revData_past=revData_past, weeks_past=weeks_past, total_rev=total_rev)
 
 
 @app.route('/friends')
