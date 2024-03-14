@@ -51,7 +51,7 @@ function updateFriendsList() {
         dataType: "json",
         success: function(friend_infos) {
             // Update the table with current friends
-            var tableBody = $('#friendslist');
+            var tableBody = $('#friendslistresults');
             tableBody.empty(); // Clear existing rows
 
             friend_infos.forEach(function(friend, index) { 
@@ -82,6 +82,71 @@ $(document).on('click', '.removeFriendButton', function() {
     // refresh friends list
     success: function(response) {
         updateFriendsList()
+    },
+    error: function(error) { 
+        console.log(error); 
+    } 
+    });
+});
+
+// Function to update use search results
+function updateUserSearch() {
+    searchTerm = $("#userSearch").val();
+
+    $.ajax({
+        url: "/userSearch",
+        type: "POST",
+        contentType: 'application/json', 
+        data: JSON.stringify({searchTerm}),
+        
+        success: function(user_infos) {
+            // Update the table with current friends
+            var tableBody = $('#searchlistresults');
+            tableBody.empty(); // Clear existing rows
+
+            user_infos.forEach(function(user, index) { 
+
+                if(user.pending) {
+                    tableBody.append(`
+                    <tr>
+                        <td>${user.first_name} ${user.last_name}</td>
+                        <td>${user.email}</td>
+                        <td><button class="PendingButton">Pending</button></td>
+                        </tr>  
+                    `);
+                } else {
+                    tableBody.append(`
+                    <tr>
+                        <td>${user.first_name} ${user.last_name}</td>
+                        <td>${user.email}</td>
+                        <td><button data-user-id="${user.id}" class="addFriendButton addButton">Add Friend</button></td>
+                    </tr>  
+                    `);
+                }
+            });
+        },
+        error: function(error) { 
+            console.log(error); 
+        } 
+    });
+}
+
+$(document).on('click', '#userSearchButton', function() {
+    updateUserSearch();
+});
+
+$(document).on('click', '.addFriendButton', function() {
+    id = $(this).attr("data-user-id");
+
+    $.ajax({ 
+        url: '/sendFriendRequest', 
+        type: 'POST', 
+        contentType: 'application/json', 
+        data: JSON.stringify({id}), 
+    
+    // refresh search results
+    success: function(response) {
+        updateUserSearch()
     },
     error: function(error) { 
         console.log(error); 

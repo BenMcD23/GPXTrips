@@ -39,12 +39,17 @@ class FriendshipView(ModelView):
     # Custom view class for the Friendship model
     column_list = ['user1_id', 'user2_id']
 
+class FriendRequestView(ModelView):
+    # Custom view class for the Friend Request model
+    column_list=['sender_user_id','receiver_user_id']
+
 # Add views for each model using the custom view classes
 admin.add_view(UserView(User, db.session))
 admin.add_view(RouteView(Route, db.session))
 admin.add_view(PlanView(Plan, db.session))
 admin.add_view(SubscriptionView(Subscription, db.session))
 admin.add_view(FriendshipView(Friendship, db.session))
+admin.add_view(FriendRequestView(FriendRequest, db.session))
 
 
 # role for manager pages
@@ -591,6 +596,64 @@ def removeFriend():
         })
 
     db.session.delete(friendship)
+    db.session.commit()
+
+    return json.dumps({
+        'status':'OK'
+    })
+
+@app.route('/userSearch', methods=['POST'])
+def userSearch():
+    # get data posted
+    data = request.get_json()
+    searchTerm = data["searchTerm"]
+
+    # Query users against search term
+    users = User.query.filter(User.email.contains(searchTerm)).all()
+
+    # Get all outgoing friend requests to mark them as pending
+    frequests = FriendRequest.query.filter_by(sender_user_id=current_user.id).all()
+    
+    pending_ids = []
+    for frequest in frequests:
+        pending_ids.append(frequest.receiver_user_id)
+
+    # Build list of user infos and return
+    user_infos = []
+
+    for user in users:
+        # Ignore self
+        if user.id == current_user.id:
+            continue
+        
+        pending = user.id in pending_ids
+
+        user_info = {
+            'id': user.id,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'email': user.email,
+            'pending': pending
+        }
+
+        user_infos.append(user_info)
+
+    # return as JSON
+    return jsonify(user_infos)
+
+@app.route('/sendFriendRequest', methods=['POST'])
+def sendFriendRequest():
+    # get data posted
+    data = request.get_json()
+    user_id = data["id"]
+
+    # Create and save friend request
+    friendRequest = FriendRequest(
+        sender_user_id=current_user.id,
+        receiver_user_id=user_id
+    )
+
+    db.session.add(friendRequest)
     db.session.commit()
 
     return json.dumps({
