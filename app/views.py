@@ -383,16 +383,6 @@ def user():
     return render_template("user.html", title='Map', FileUploadForm=file_upload_form, route=route, routes=routes, all_routes=all_routes, disabled=disabled)
 
 
-# for user search (manger view)
-@app.route('/emails')
-def tagsDic():
-    allEmails = User.query.all()
-    # turn all the emails into a dictionary
-    dicEmails = [i.email_as_dict() for i in allEmails]
-    # change dictionary into a json
-    return jsonify(dicEmails)
-
-
 @app.route('/getRoute', methods=['GET'])
 def getRoute():
     # post all routes to JavaScript
