@@ -197,6 +197,10 @@ def manage_users():
 @app.route('/view_revenue', methods=["GET", "POST"])
 @manger_required()
 def view_revenue():
+    """generates the data needed to plot the graphs
+    theres a wiki on how the estimated stats work, but briefly explained here
+
+    """
     # this is the diff between the start week and current week
     # so number of weeks since first week
     currentWeek = getCurrentBuisnessWeek()
@@ -205,7 +209,7 @@ def view_revenue():
     # apart from the current week, if its there, as we dont know if theres going to be more sales
     allWeekStats = SubscriptionStats.query.filter(SubscriptionStats.week_of_business != currentWeek).order_by(SubscriptionStats.week_of_business.desc()).all()
     
-
+    # create needed variables and arrays, so dont get error if theres not enough stats
     weeks_future = []
     revData_future = []
     customerData_future = []
@@ -232,56 +236,73 @@ def view_revenue():
         # otherwise can use the lastest week and 4 entries before that
         # not necessarily 4 weeks, as can have weeks with 0, this is taken into account in the formula
         else :
+            # Compound Weekly Growth Rate, based on lastest datapoint 4 datapoints ago in database
             CWGR_rev = ((allWeekStats[0].total_revenue / allWeekStats[3].total_revenue) ** (1 / ((allWeekStats[0].week_of_business - allWeekStats[3].week_of_business) + 1)))
             CWGR_cus = ((allWeekStats[0].num_customers / allWeekStats[3].num_customers) ** (1 / ((allWeekStats[0].week_of_business - allWeekStats[3].week_of_business) + 1)))
 
+        # set to last completed weeks value
         lastRevValue = allWeekStats[0].total_revenue
-
         lastCusValue = allWeekStats[0].num_customers
+
+        # loop for a year (52 week) and calcualte each data point
+        # compounding, builds on the last weeks value
         for i in range(1, 53):
             lastRevValue = lastRevValue * CWGR_rev
             lastCusValue = lastCusValue * CWGR_cus
             revData_future.append(lastRevValue)
             customerData_future.append(lastCusValue)
+            weeks_future.append("Week " + str(i))
 
-    weeks_future = ["Week " + str(i) for i in range(1, 53)]
-
-    
+    # set so doesnt error if not enough data
     revData_past = []
     weeks_past = []
     numOfWeeks = 4
-    currentWeekNum = getCurrentBuisnessWeek()
 
     ChangeRevWeeksForm = ChangeRevWeeks()
+    # if the input is valid
     if (ChangeRevWeeksForm.submitWeeks.data and
         ChangeRevWeeksForm.validate_on_submit()):
 
+        # get how many weeks they want
         numOfWeeks = ChangeRevWeeksForm.weeks.data
 
+    # if there isnt any input then just display the past 4 weeks
     else:
         numOfWeeks = 4
 
+    # loop over all the weeks we want
     for i in range(0, numOfWeeks):
-        week = SubscriptionStats.query.filter_by(week_of_business=currentWeekNum).first()
+        # get the week with the corresponding week
+        week = SubscriptionStats.query.filter_by(week_of_business=currentWeek).first()
+
+        # always adding to start of list, index 0, want to go from low to high
+
+        # if there isnt that week in the database, then that week must have no rev
+        # just add 0
         if not week:
             revData_past.insert(0, 0)
+        
+        # otherwise, insert the rev in the datapoint
         else:
             revData_past.insert(0, week.total_revenue)
 
+        # create weeks array for x axis
         if len(weeks_past) == 0:
-            weeks_past.insert(0, "Week " + str(currentWeekNum) + " (Current Week)")
+            weeks_past.insert(0, "Week " + str(currentWeek) + " (Current Week)")
 
         else:
-            weeks_past.insert(0, "Week " + str(currentWeekNum))
+            weeks_past.insert(0, "Week " + str(currentWeek))
 
-        currentWeekNum -= 1
+        # index the current week down
+        currentWeek -= 1
 
-    # get total revenue
+    # get total revenue - all time
     total_rev = 0
     # re done as last time the current week was removed
     allWeekStats = SubscriptionStats.query.all()
     for i in allWeekStats:
         total_rev += i.total_revenue
+
     return render_template("view_revenue.html", ChangeRevWeeksForm=ChangeRevWeeksForm, noEstimate=noEstimate, weeks_future=weeks_future, revData_future=revData_future, customerData_future=customerData_future, CWGR_cus=CWGR_cus, CWGR_rev=CWGR_rev, revData_past=revData_past, weeks_past=weeks_past, total_rev=total_rev)
 
 
