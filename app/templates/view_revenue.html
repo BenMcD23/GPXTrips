@@ -95,12 +95,23 @@
         const config = {
         type: 'line',
         data: data,
-        options: { maintainAspectRatio: false }
+        options: { maintainAspectRatio: false, 
+            scales: {
+                y: {
+                    ticks: {
+                        // Include a dollar sign in the ticks
+                        callback: function(value, index, ticks) {
+                            return '£' + value;
+                        }
+                    }
+                }
+            } 
+        }
         };
 
-        const myChart = new Chart(
+        const chart_future = new Chart(
         document.getElementById('futureChart'),
-        config
+        config,
         );
         
         // past rev chart
@@ -122,7 +133,18 @@
         const config_past = {
         type: 'bar',
         data: data_past,
-        options: { maintainAspectRatio: false }
+        options: { maintainAspectRatio: false,
+            scales: {
+                y: {
+                    ticks: {
+                        // Include a dollar sign in the ticks
+                        callback: function(value, index, ticks) {
+                            return '£' + value;
+                        }
+                    }
+                }
+            } 
+        }
         };
 
         const chart_past = new Chart(
