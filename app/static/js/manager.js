@@ -101,26 +101,3 @@ function changeMangement(id){
     } 
     });
 }
-
-// email search
-$(document).ready(function(){
-    var emails=[];
-    
-    function getEmails(){
-        // get all the emails from database
-        $.getJSON('/emails', function(data, status, xhr){
-            // add them all to the array
-            for (var i = 0; i < data.length; i++ ) {
-                emails.push(data[i].email);
-            }
-    });
-    };
-    
-    // call get emails
-    getEmails();
-
-    // autocomplete the search box
-    $('#userEmail').autocomplete({
-        source: emails,
-        });
-    });

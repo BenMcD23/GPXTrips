@@ -176,22 +176,31 @@ def manager():
 @app.route('/manage_users', methods=["GET", "POST"])
 @manger_required()
 def manage_users():
+    allEmails = User.query.all()
+    # turn all the emails into an array
+    emailsArray = [i.email_return() for i in allEmails]
+
     UserSearchForm = UserSearch()
 
+    # if the user has inputted a search
     if (UserSearchForm.submitSearch.data and
             UserSearchForm.validate_on_submit()):
 
+        # if the input is nothing, then just display all users
         if UserSearchForm.userEmail.data == "":
             users = User.query.all()
 
+        # otherwise display every email that matches
+        # (should just be 1)
         else:
             users = User.query.filter_by(
                 email=UserSearchForm.userEmail.data).all()
 
+    # if nothing inputted, show all
     else:
         users = User.query.all()
 
-    return render_template("manage_users.html", users=users, UserSearch=UserSearchForm)
+    return render_template("manage_users.html", users=users, UserSearch=UserSearchForm, emails=emailsArray)
 
 
 @app.route('/view_revenue', methods=["GET", "POST"])

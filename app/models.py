@@ -19,8 +19,8 @@ class User(db.Model, UserMixin):
     routes = db.relationship('Route', backref='user', lazy=True)
 
     # returns as dict so can be used for search bar
-    def email_as_dict(self):
-        return {'email': self.email}
+    def email_return(self):
+        return self.email
 
     # returns if current user is manager or not
     def is_manager(self):

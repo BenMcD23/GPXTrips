@@ -32,6 +32,16 @@
   </form>
 </div>
 
+<script nonce="{{ csp_nonce() }}">
+  // on load
+  $(document).ready(function(){
+      // autocomplete the search box
+      $('#userEmail').autocomplete({
+          source: {{ emails | tojson }},
+          });
+      });
+
+</script>
 
 <table>
   <tr>
