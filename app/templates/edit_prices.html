@@ -1,0 +1,57 @@
+{% extends 'base_manager.html' %}
+
+{% block title %}Edit Prices{% endblock %}
+
+{% block content %}
+
+
+<!-- This page will allow you to view and manage registered users. You can enable or disable their accounts. -->
+<h1>Amend Pricing Information</h1>
+<div class="table-container">
+    <h2>Subscription Prices Editor</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Subscription</th>
+                <th>Current Price</th>
+                <th>Update Price</th>
+                <th>Confirm Update</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Weekly Subscription</td>
+                <td>£10</td> 
+                <!-- change to the ctual value from DB.as this would not be true after one update -->
+                <td>
+                    <label for="newPrice1">New Price:</label>
+                    <input type="number" id="newPrice1" min="0" step="0.01" placeholder="New Price">
+                </td>
+                <td><input type="submit" value="Update"></td>
+            </tr>
+            <tr>
+                <td>Monthly Subscription</td>
+                <td>£35</td>
+                <!-- change to the ctual value from DB. as this would not be true after one update -->
+                <td>
+                    <label for="newPrice2">New Price:</label>
+                    <input type="number" id="newPrice2" min="0" step="0.01" placeholder="New Price">
+                </td>
+                <td><input type="submit" value="Update"></td>
+            </tr>
+            <tr>
+                <td>Yearly Subscription</td>
+                <td>£70</td>
+                <!-- change to the ctual value from DB.as this would not be true after one update -->
+                <td>
+                    <label for="newPrice3">New Price:</label>
+                    <input type="number" id="newPrice3" min="0" step="0.01" placeholder="New Price">
+                </td>
+                <td><input type="submit" value="Update"></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+
+{% endblock %}

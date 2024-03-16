@@ -4,61 +4,40 @@
 {% block title %}Manager Home{% endblock %}
 
 {% block content %}
-<!-- <div class="container-fluid ">
-    <h2>Manager Dashboard</h2>
 
-
-    <div class="list-group">
-        <a href="/manage_users" class="list-group-item list-group-item-action">
-            <i class="fas fa-users mr-2"></i> View and Manage Registered Users
-        </a>
-        <a href="/view_revenue" class="list-group-item list-group-item-action">
-            <i class="fas fa-file-alt mr-2"></i> View Revenue & Estimates
-        </a>
-        <a href="/amend_pricing" class="list-group-item list-group-item-action">
-            <i class="fas fa-dollar-sign mr-2"></i> Amend Pricing Information
-        </a>
-        <a href="/faq_management" class="list-group-item list-group-item-action">
-            <i class="fas fa-question-circle mr-2"></i> FAQ Management
-        </a>
-    </div>
-</div> -->
 
 <div class="container-fluid ">
     <h1>Manager Dashboard</h1>
 
-    <div class="quadrant-container">
-        <div class="top-quadrants">
-            <div class="quadrant">
-                <a href="/manage_users" class="oval">
-                    <span>View and Manage Registered Users</span>
-                </a>
-            </div>
+    <div class="box-container">
         
-            <div class="quadrant">
-                <a href="/view_revenue" class="oval">
-                    <span>View Revenue & Estimates</span>
-                </a>
-            </div>
-        </div>
-
+        <a href="/manage_users" class="box">
+            <span>View and Manage Registered Users</span>
+        </a>
+    
+        <a href="/view_revenue" class="box">
+            <span>View Revenue & Estimates</span>
+        </a>
+            
+    
         <!-- Optional settings -->
-
-        <div class = "bottom-quadrants">
-            <div class="quadrant">
-                <a href="/manager" class="oval">
-                    <span>Amend Pricing Information</span>
-                </a>
-            </div>
-            <div class="quadrant">
-                <a href="/manager" class="oval">
-                    <span>FAQ Management</span>
-                </a>
-            </div>
-        </div>
+    
+        <a href="/edit_prices" class="box">
+            <span>Amend Pricing Information</span>
+        </a>
+    
+    
+        <a href="/faq" class="box">
+            <span>FAQ Management</span>
+        </a>
     </div>
+
 </div>
 
 
 
+
+
+
 {% endblock %}
+

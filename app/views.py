@@ -172,6 +172,15 @@ def logout():
 def manager():
     return render_template("manager.html")
 
+@app.route('/edit_prices')
+@manger_required()
+def edit_prices():
+    return render_template("edit_prices.html")
+
+@app.route('/faq')
+@manger_required()
+def faq():
+    return render_template("faq.html")
 
 @app.route('/manage_users', methods=["GET", "POST"])
 @manger_required()

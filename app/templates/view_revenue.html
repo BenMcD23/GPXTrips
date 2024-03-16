@@ -4,6 +4,8 @@
 
 {% block content %}
 
+
+
     <select>
         <option value="past">View Past Revenue</option>
         <option value="future">View Estimated Future Revenue</option>
@@ -19,28 +21,33 @@
         
             <div class="form">
                 <form method="post" action="" name="searchUsers">
+                    
                     {{ ChangeRevWeeksForm.hidden_tag() }}
-            
-                    <label for="weeks">Number of weeks in the past to display:</label>
-            
-                    {% if ChangeRevWeeksForm.weeks.errors %}
-                    {{ ChangeRevWeeksForm.weeks(class="form-control form-control-lg is-invalid") }}
-                    <div class="invalid-feedback">
-                        {% for error in ChangeRevWeeksForm.weeks.errors %}
-                            <span>• {{ error }}</span>
-                            <br>
-                        {% endfor %}
-                    </div>
-                    {% else %}
-                    {{ ChangeRevWeeksForm.weeks(class="form-control", placeholder="Number of Weeks") }}
-                    {% endif %}
-            
-                    <div class="formButton">
-                        {{ ChangeRevWeeksForm.submitWeeks }}
+                    <div class="form-grp">
+                        <label for="weeks" class="week-label">Number of weeks in the past to display:</label>
+                        
+                        <div class="bar-button">
+                            {% if ChangeRevWeeksForm.weeks.errors %}
+                            {{ ChangeRevWeeksForm.weeks(class="form-control form-control-lg is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in ChangeRevWeeksForm.weeks.errors %}
+                                    <span>• {{ error }}</span>
+                                    <br>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            {{ ChangeRevWeeksForm.weeks(class="form-control", placeholder="Number of Weeks") }}
+                            {% endif %}
+                    
+                            <div class="formButton">
+                                {{ ChangeRevWeeksForm.submitWeeks }}
+                            </div>
+                            
+                        </div>
                     </div>
                 </form>
             </div>
-            <p>Total Revenue: {{ total_rev }}</p>
+            <p class="currency-info">Total Revenue: £{{ total_rev }}</p>
         </div>
 
     </div>
@@ -48,20 +55,18 @@
     <!-- dont change class name, the jquery works using "future chart" -->
     <div class="future chart">
         
-            <div class="chart-container">
-                <h1>Future Revenue Estimate</h1>
-                <!-- chart of future revenue estimates -->
-                <canvas id="futureChart"></canvas>
+        <div class="chart-container">
+            <h1>Future Revenue Estimate</h1>
+            <!-- chart of future revenue estimates -->
+            <canvas id="futureChart"></canvas>
 
-                {% if noEstimate == True %}
-                    <p>There isnt enought data to estimate the revenue</p>
-                {% else %}
-                    <p>Current Revenue Compound Weekly Growth Rate: {{ CWGR_rev }}</p> 
-                    <p>Current Customer Compound Weekly Growth Rate: {{ CWGR_cus }}</p> 
-
-                    <p>This is what the future revenue is based on</p>
-                {% endif %}
-            </div>
+            {% if noEstimate == True %}
+                <p class="currency-info">There isnt enought data to estimate the revenue</p>
+            {% else %}
+                <p class="currency-info">Current Revenue Compound Weekly Growth Rate: £{{ CWGR_rev }}</p> 
+                <p class="currency-info">Current Customer Compound Weekly Growth Rate: £{{ CWGR_cus }} <br>This is what the future revenue is based on.</p> 
+            {% endif %}
+        </div>
     </div>
 
 
