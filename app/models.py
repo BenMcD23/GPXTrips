@@ -42,9 +42,11 @@ class Route(db.Model):
 class Plan(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128), unique=True, nullable=False)
-    cost = db.Column(db.Float)
+    price = db.Column(db.Float)
     stripe_price_id = db.Column(db.String(255), nullable=False)
 
+    def price_as_pound(self):
+        return '£{:.2f}'.format(round(self.price, 2))
 
 class Subscription(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -56,6 +58,7 @@ class Subscription(db.Model):
     active = db.Column(db.Boolean, default=True)
 
     plan = db.relationship('Plan', backref='subscriptions')
+
 
 class SubscriptionStats(db.Model):
     id = db.Column(db.Integer, primary_key=True)

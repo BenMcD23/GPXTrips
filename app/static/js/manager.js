@@ -1,3 +1,5 @@
+// for manange users page
+
 // on load
 $(document).ready(function()
 {
@@ -101,3 +103,16 @@ function changeMangement(id){
     } 
     });
 }
+
+
+// for change prices page
+let weeklyInput = $("input[type=text][name=weekly_new_price]")
+let MonthlyInput = $("input[type=text][name=monthly_new_price]")
+let yearlyInput = $("input[type=text][name=yearly_new_price]")
+
+$(document).ready(function() {
+    $("#weekly_submit_price").click(function(){
+        alert("button");
+        console.log("dwadwadwadwa");
+    }); 
+});

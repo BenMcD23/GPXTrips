@@ -20,7 +20,7 @@
             <canvas id="pastChart"></canvas>
         
             <div class="form">
-                <form method="post" action="" name="searchUsers">
+                <form method="post" action="" name="changeRev">
                     
                     {{ ChangeRevWeeksForm.hidden_tag() }}
                     <div class="form-grp">
@@ -47,24 +47,27 @@
                     </div>
                 </form>
             </div>
-            <p class="currency-info">Total Revenue: £{{ total_rev }}</p>
+            <p class="currency-info"><u>Total All Time Revenue: £{{ total_rev }}</u></p>
         </div>
 
     </div>
     
     <!-- dont change class name, the jquery works using "future chart" -->
     <div class="future chart">
-        
+        <h1>Future Revenue Estimate</h1>
+
         <div class="chart-container">
-            <h1>Future Revenue Estimate</h1>
             <!-- chart of future revenue estimates -->
             <canvas id="futureChart"></canvas>
 
             {% if noEstimate == True %}
-                <p class="currency-info">There isnt enought data to estimate the revenue</p>
+                <p class="currency-info"><u>There isnt enought data to estimate the revenue</u></p>
             {% else %}
-                <p class="currency-info">Current Revenue Compound Weekly Growth Rate: £{{ CWGR_rev }}</p> 
-                <p class="currency-info">Current Customer Compound Weekly Growth Rate: £{{ CWGR_cus }} <br>This is what the future revenue is based on.</p> 
+                <p class="currency-info"><u>Current Revenue Compound Weekly Growth Rate: £{{ CWGR_rev }}</u></p> 
+                <p class="currency-info"><u>Current Customer Compound Weekly Growth Rate: £{{ CWGR_cus }}</u></p> 
+                <p class="currency-info"><u>INFO</u><br>The Compound Weekly Growth Formula based on the past 4 weeks, if there is 4 weeks of data. If there isn't 4 weeks of data, it uses the latest completed week and the oldest week.
+                    <br><br>It is then compounded on the last completed weeks revenue.</p> 
+
             {% endif %}
         </div>
     </div>

@@ -61,8 +61,7 @@ csp = {
         'https://b.tile.openstreetmap.org/',
         'https://c.tile.openstreetmap.org/',
         "https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css",
-        "https://js.stripe.com/"
-        
+        "https://js.stripe.com/"        
     ],
     # external image links
     'img-src': [

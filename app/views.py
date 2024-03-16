@@ -5,7 +5,7 @@ from flask_admin.contrib.sqla import ModelView
 from .models import User, Plan, Subscription, Route, SubscriptionStats
 from flask import Flask, render_template, request, redirect, url_for, send_file, flash, jsonify, abort
 from flask_login import login_user, login_required, logout_user, current_user
-from .forms import FileUploadForm, RegistrationForm, LoginForm, UserSearch, ChangeRevWeeks
+from .forms import FileUploadForm, RegistrationForm, LoginForm, UserSearch, ChangeRevWeeks, ChangeWeeklyPrice, ChangeMonthlyPrice, ChangeYearlyPrice
 from werkzeug.utils import secure_filename
 from DAL import add_route, get_route
 from datetime import datetime, timedelta
@@ -14,6 +14,7 @@ import json
 import gpxpy
 from functools import wraps
 from .funcs import getCurrentBuisnessWeek
+import time
 
 class UserView(ModelView):
     # Custom view class for the User model
@@ -28,7 +29,7 @@ class RouteView(ModelView):
 
 class PlanView(ModelView):
     # Custom view class for the Plan model
-    column_list = ['name', 'cost', 'stripe_price_id']
+    column_list = ['name', 'price', 'stripe_price_id']
 
 
 class SubscriptionView(ModelView):
@@ -172,10 +173,40 @@ def logout():
 def manager():
     return render_template("manager.html")
 
-@app.route('/edit_prices')
+@app.route('/edit_prices', methods=["GET", "POST"])
 @manger_required()
 def edit_prices():
-    return render_template("edit_prices.html")
+    # get all prices and turn them into an array
+    allPlans = Plan.query.all()
+
+    priceArray = [i.price_as_pound() for i in allPlans]
+
+    # all forms
+    WeeklyPriceForm = ChangeWeeklyPrice()
+    MonthlyPriceForm = ChangeMonthlyPrice()
+    YearlyPriceForm = ChangeYearlyPrice()
+
+    # check if any of the forms have been submitted
+    if (WeeklyPriceForm.weekly_submit_price.data and
+        WeeklyPriceForm.validate_on_submit()):
+        allPlans[0].price = WeeklyPriceForm.weekly_new_price.data
+        db.session.commit()
+        priceArray[0] = '£{:.2f}'.format(round(WeeklyPriceForm.weekly_new_price.data, 2))
+        
+    if (MonthlyPriceForm.monthly_submit_price.data and
+        MonthlyPriceForm.validate_on_submit()):
+        allPlans[1].price = MonthlyPriceForm.monthly_new_price.data
+        db.session.commit()
+        priceArray[1] = '£{:.2f}'.format(round(MonthlyPriceForm.monthly_new_price.data, 2))
+
+    if (YearlyPriceForm.yearly_submit_price.data and
+        YearlyPriceForm.validate_on_submit()):
+        allPlans[2].price = YearlyPriceForm.yearly_new_price.data
+        db.session.commit()
+        priceArray[2] = '£{:.2f}'.format(round(YearlyPriceForm.yearly_new_price.data, 2))
+
+
+    return render_template("edit_prices.html", priceArray=priceArray, WeeklyPriceForm=WeeklyPriceForm, MonthlyPriceForm=MonthlyPriceForm, YearlyPriceForm=YearlyPriceForm)
 
 @app.route('/faq')
 @manger_required()
@@ -321,6 +352,10 @@ def view_revenue():
     for i in allWeekStats:
         total_rev += i.total_revenue
 
+    # round to 2dp with trailing 0's
+    CWGR_rev = '{:.2f}'.format(round(CWGR_rev, 2))
+    CWGR_cus = '{:.2f}'.format(round(CWGR_cus, 2))
+
     return render_template("view_revenue.html", ChangeRevWeeksForm=ChangeRevWeeksForm, noEstimate=noEstimate, weeks_future=weeks_future, revData_future=revData_future, customerData_future=customerData_future, CWGR_cus=CWGR_cus, CWGR_rev=CWGR_rev, revData_past=revData_past, weeks_past=weeks_past, total_rev=total_rev)
 
 
@@ -337,6 +372,10 @@ def friends():
 @app.route('/profile')
 @login_required
 def profile():
+    # get all prices and turn them into an array
+    allPlans = Plan.query.all()
+    priceArray = [i.price_as_pound() for i in allPlans]
+
     # Pass data to retrive user details
     # Variable to keep track of subscription auto renewal status for the user. By default, set to off
     autoRenewal = False
@@ -355,7 +394,7 @@ def profile():
     expiryDate = (Subscription.query.filter_by(
         user_id=current_user.id).first().date_end).date()
 
-    return render_template("profile.html", current_user=current_user, userPlan=userPlan, expiryDate=expiryDate, autoRenewal=autoRenewal)
+    return render_template("profile.html", priceArray=priceArray, current_user=current_user, userPlan=userPlan, expiryDate=expiryDate, autoRenewal=autoRenewal)
 
 
 @app.route('/settings')
@@ -371,11 +410,10 @@ def settings():
 @app.route('/user',  methods=['GET', 'POST'])
 @login_required
 def user():
-    """Render map page from templates.
+    # get all prices and turn them into an array
+    allPlans = Plan.query.all()
+    priceArray = [i.price_as_pound() for i in allPlans]
 
-    Returns:
-        render_template: render template, with map.html
-    """
     # File upload form
     all_routes = Route.query.all()
     file_upload_form = FileUploadForm()
@@ -389,7 +427,7 @@ def user():
     if current_user_current_subscription() == False:
         disabled = True
 
-    return render_template("user.html", title='Map', FileUploadForm=file_upload_form, route=route, routes=routes, all_routes=all_routes, disabled=disabled)
+    return render_template("user.html", title='Map', priceArray=priceArray, FileUploadForm=file_upload_form, route=route, routes=routes, all_routes=all_routes, disabled=disabled)
 
 
 @app.route('/getRoute', methods=['GET'])
