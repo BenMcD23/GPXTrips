@@ -69,14 +69,12 @@
       <td>{{ user.date_created }}</td>
       <td>{{ user.subscription_id }}</td>
       <td>
-          <p id="textUser_{{ user.id }}">{{ user.account_active }}</p>
           <label class="switch" for="user_{{ user.id }}">.
             <input id="user_{{ user.id }}" name="userState" type="checkbox" {% if user.account_active== True %} checked {% else %} {% endif %}>
             <span class="slider"></span>
           </label>
       </td>
       <td>
-        <p id="textManager_{{ user.id }}">{{ user.manager }}</p>
         <label class="switch" for="manager_{{ user.id }}">.
           <input id="manager_{{ user.id }}" name="userManger" type="checkbox" {% if user.manager== True %} checked {% else %} {% endif %}>
           <span class="slider"></span>
