@@ -67,6 +67,10 @@ def manger_required():
 
 @app.route("/", methods=["GET", "POST"])
 def login():
+    # get all prices and turn them into an array
+    allPlans = Plan.query.all()
+    priceArray = [i.price_as_pound() for i in allPlans]
+
     # Login route
     # Create an instance of the LoginForm
     form = LoginForm()
@@ -103,7 +107,7 @@ def login():
             flash("Account does not exist!", category="error")
             return redirect(url_for("login"))
 
-    return render_template("login.html", title="Login", form=form)
+    return render_template("login.html", title="Login", priceArray=priceArray, form=form)
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -146,7 +150,8 @@ def register():
             return redirect(url_for("register"))
 
         # Hash password and add used to the database
-        hashed_password = bcrypt.generate_password_hash(password)
+        hashed_password = bcrypt.generate_password_hash(
+            password).decode('utf-8')
         user = User(email=email, first_name=first_name, last_name=last_name,
                     password_hash=hashed_password, date_created=datetime.now(), account_active=True, manager=False)
         db.session.add(user)
