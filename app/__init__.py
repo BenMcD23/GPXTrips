@@ -70,7 +70,8 @@ csp = {
         "https://code.jquery.com/ui/1.10.4/jquery-ui.js",
         "https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css",
         "https://unpkg.com/leaflet/dist/leaflet.js",
-        'https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js'
+        'https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js',
+        "https://code.jquery.com/jquery-3.6.0.min.js"
     ],
     # external image links
     'img-src': [

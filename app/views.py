@@ -1,22 +1,26 @@
 from config import stripe_keys
-from app import app, db, admin, bcrypt
+from app import app, db, admin, bcrypt, csrf
 from flask_admin.contrib.sqla import ModelView
 from .models import User, Plan, Subscription, Route
-from flask import Flask, render_template, request, redirect, url_for, send_file, flash, jsonify, abort
+from flask import Flask, render_template, request, redirect, url_for, send_file, flash, jsonify, abort, send_file
 from flask_login import login_user, login_required, logout_user, current_user
 from .forms import FileUploadForm, RegistrationForm, LoginForm, UserSearch
 from werkzeug.utils import secure_filename
-from DAL import add_route, get_route
 from datetime import datetime, timedelta
 import stripe
 import json
 import gpxpy
 from functools import wraps
+from io import BytesIO
+from xml.etree import ElementTree as ET
+from geopy.distance import geodesic
+from dateutil import parser
 
 
 class UserView(ModelView):
     # Custom view class for the User model
-    column_list = ['email', 'first_name', 'last_name', 'date_created']
+    column_list = ['email', 'first_name',
+                   'last_name', 'date_created', 'manager', 'account_active', 'subscriptions', 'routes']
 
 
 class RouteView(ModelView):
@@ -50,7 +54,7 @@ def manger_required():
         def authorize(*args, **kwargs):
             # queries database to see if current user is manager
             if not current_user.is_manager():
-                abort(401) # not authorized
+                abort(401)  # not authorized
             return func(*args, **kwargs)
         return authorize
     return decorator
@@ -69,7 +73,8 @@ def login():
         if user:
             # if the account isnt active
             if user.account_active != True:
-                flash("Account is deactivated, please contact support.", category="error")
+                flash("Account is deactivated, please contact support.",
+                      category="error")
                 return redirect(url_for("login"))
 
             # if the password is correct
@@ -82,12 +87,12 @@ def login():
                     return redirect(url_for("manager"))
                 # if theyre just a normal user then redirect to user page
                 return redirect(url_for("user"))
-            
+
             else:
                 # Redirect to back login if password is incorrect
                 flash("Password is wrong!", category="error")
                 return redirect(url_for("login"))
-            
+
         else:
             # Redirect to back login if account does not exist
             flash("Account does not exist!", category="error")
@@ -127,24 +132,26 @@ def register():
                 category="error",
             )
             return redirect(url_for("register"))
-        
+
         if not tandc_confirm:
             flash(
-                "Please accept the Terms and Conditions to proceed.", 
+                "Please accept the Terms and Conditions to proceed.",
                 category="error"
             )
             return redirect(url_for("register"))
 
         # Hash password and add used to the database
-        hashed_password = bcrypt.generate_password_hash(password)
-        user = User(email=email, first_name=first_name, last_name=last_name, password_hash=hashed_password, date_created=datetime.now(), account_active=True, manager=False)
+        hashed_password = bcrypt.generate_password_hash(
+            password).decode('utf-8')
+        user = User(email=email, first_name=first_name, last_name=last_name,
+                    password_hash=hashed_password, date_created=datetime.now(), account_active=True, manager=False)
         db.session.add(user)
         db.session.commit()
 
         flash("User added successfully!", category="success")
 
         # Redirect to login after successful registration
-        return redirect(url_for("login")) 
+        return redirect(url_for("login"))
 
     return render_template("registration.html", title="Register", form=form)
 
@@ -169,13 +176,14 @@ def manage_users():
     UserSearchForm = UserSearch()
 
     if (UserSearchForm.submitSearch.data and
-        UserSearchForm.validate_on_submit()):
+            UserSearchForm.validate_on_submit()):
 
         if UserSearchForm.userEmail.data == "":
             users = User.query.all()
-        
+
         else:
-            users = User.query.filter_by(email=UserSearchForm.userEmail.data).all()
+            users = User.query.filter_by(
+                email=UserSearchForm.userEmail.data).all()
 
     else:
         users = User.query.all()
@@ -192,11 +200,11 @@ def view_revenue():
 @app.route('/friends')
 @login_required
 def friends():
-    #Query all friends of the current user + pending friends requests
+    # Query all friends of the current user + pending friends requests
     if current_user_current_subscription() == False:
         # If user doesn't have an active subscription, redirect to user page
         return redirect(url_for('user'))
-    return render_template("friends.html",current_user=current_user)
+    return render_template("friends.html", current_user=current_user)
 
 
 @app.route('/profile')
@@ -209,16 +217,18 @@ def profile():
     if current_user_current_subscription() == False:
         # If user doesn't have an active subscription, redirect to user page
         return redirect(url_for('user'))
-    
+
     if current_user_active_subscription() != False:
         # Auto-renewal is on
         autoRenewal = True
-    
-    # retrieve the users plan (year/month/week) and the expiry date of plan from db
-    userPlan = Subscription.query.filter_by(user_id = current_user.id).first().plan.name
-    expiryDate = (Subscription.query.filter_by(user_id = current_user.id).first().date_end).date()
 
-    return render_template("profile.html",current_user=current_user, userPlan=userPlan, expiryDate=expiryDate, autoRenewal=autoRenewal)
+    # retrieve the users plan (year/month/week) and the expiry date of plan from db
+    userPlan = Subscription.query.filter_by(
+        user_id=current_user.id).first().plan.name
+    expiryDate = (Subscription.query.filter_by(
+        user_id=current_user.id).first().date_end).date()
+
+    return render_template("profile.html", current_user=current_user, userPlan=userPlan, expiryDate=expiryDate, autoRenewal=autoRenewal)
 
 
 @app.route('/settings')
@@ -227,8 +237,8 @@ def settings():
     if current_user_current_subscription() == False:
         # If user doesn't have an active subscription, redirect to user page
         return redirect(url_for('user'))
-    #Pass data and receive user changes (i.e email/name/payment changes)
-    return render_template("settings.html",current_user=current_user)
+    # Pass data and receive user changes (i.e email/name/payment changes)
+    return render_template("settings.html", current_user=current_user)
 
 
 @app.route('/user',  methods=['GET', 'POST'])
@@ -244,7 +254,28 @@ def user():
     file_upload_form = FileUploadForm()
     routes = current_user.routes
 
-    route = None
+    route_info_list = []
+
+    for route in routes:
+        gpx_data_decoded = route.gpx_data.decode('ascii')
+        gpx_data = gpx_data_decoded.replace('\\r', '\r').replace('\\n', '\n')
+        gpx_data = "".join(gpx_data)[2:][:-1]  # Trim excess characters
+        # Calculate route information
+        length, duration, start_point, end_point = calculate_route_info(gpx_data)
+        route_info = {
+            'id': route.id,
+            'name': route.name,
+            'user': {
+                'first_name': route.user.first_name,
+                'last_name': route.user.last_name
+            },
+            'length': length,
+            'duration': duration,
+            'start': start_point,
+            'end': end_point,
+            'upload_time': route.upload_time.strftime("%Y-%m-%d %H:%M:%S")
+        }
+        route_info_list.append(route_info)
     # Disables the page unless set otherwise
     disabled = False
 
@@ -252,8 +283,8 @@ def user():
     if current_user_current_subscription() == False:
         disabled =  False
 
-    return render_template("user.html", title='Map', FileUploadForm=file_upload_form, route=route, routes=routes, all_routes=all_routes, disabled=disabled)
- 
+    return render_template("user.html", title='Map', FileUploadForm=file_upload_form, all_routes=all_routes, route_info_list=route_info_list, disabled=disabled)
+
 
 # for user search (manger view)
 @app.route('/emails')
@@ -284,6 +315,7 @@ def getRoute():
     # return as a json
     return json.dumps(data)
 
+
 @app.route('/accountState', methods=['POST'])
 def accountState():
     # get data posted
@@ -294,6 +326,7 @@ def accountState():
     db.session.commit()
 
     return jsonify(data=data)
+
 
 @app.route('/accountManger', methods=['POST'])
 def accountManger():
@@ -371,7 +404,8 @@ def cancel_subscription():
             return jsonify(error=str(e)), 403
     else:
         return jsonify(error="No active subscription found."), 403
-      
+
+
 @app.route("/success")
 def success():
     return redirect(url_for('user'))
@@ -384,6 +418,7 @@ def cancelled():
 
 
 @app.route('/webhook', methods=['POST'])
+@csrf.exempt
 def stripe_webhook():
     print("webhook reached")
 
@@ -410,7 +445,7 @@ def stripe_webhook():
         # Query the plan based on the plan_id of the subscription.
         plan = Plan.query.filter_by(stripe_price_id=plan_id).first()
 
-        #Debugging test.
+        # Debugging test.
         print(user, plan, plan_id)
         print(subscription_id)
 
@@ -450,7 +485,7 @@ def create_subscription(user, plan, subscription_id):
 def current_user_active_subscription():
     # Active subscription - the user has a current subscription with auto renewals ON
     latest_subscription = Subscription.query.filter_by(
-            user_id=current_user.id).order_by(Subscription.date_start.desc()).first()
+        user_id=current_user.id).order_by(Subscription.date_start.desc()).first()
     if latest_subscription:
         return latest_subscription.active
     return False
@@ -485,46 +520,44 @@ def upload_file():
         file = request.files['file']
 
         if file:
-            print('File received:', file.filename)
+            # Check file extension
+            if file.filename.endswith('.gpx'):
+                # Read the data from the file
+                gpx_data = file.read()
 
-            # Read the data from the file
-            gpx_data = file.read()
+                # Check GPX file structure validation
+                if is_valid_gpx_structure(gpx_data):
+                    try:
+                        # Generate BLOB from GPX data
+                        gpx_blob = str(gpx_data).encode('ascii')
 
-            # Check GPX file structure validation
-            is_valid, error_message = is_valid_gpx_structure(gpx_data)
+                        # Create a database entry
+                        route = Route(
+                            name=file.filename,
+                            upload_time=datetime.now(),
+                            gpx_data=gpx_blob
+                        )
 
-            # Check GPX file structure validation
-            if is_valid:
-                try:
-                    # Generate BLOB from GPX data
-                    gpx_blob = str(gpx_data).encode('ascii')
+                        current_user.routes.append(route)
+                        # Commit changes to the database
+                        db.session.commit()
 
-                    # Create a database entry
-                    route = Route(
-                        name=file.filename,
-                        upload_time=datetime.now(),
-                        gpx_data=gpx_blob
-                    )
-
-                    current_user.routes.append(route)
-
-                    # Commit changes to the database
-                    db.session.commit()
-
-                    return jsonify({'status': 'success', 'message': 'File uploaded successfully'})
-                except Exception as e:
-                    db.session.rollback()  # Rollback changes if an exception occurs
-                    print(f"Error: {e}")
-                    return jsonify({'status': 'error', 'message': 'Internal server error'}), 500
+                        return jsonify({'message': 'File uploaded successfully'}), 200
+                    except Exception as e:
+                        db.session.rollback()  # Rollback changes if an exception occurs
+                        print(f"Error: {e}")
+                        return jsonify({'error': 'Internal server error'}), 500
+                else:
+                    return jsonify({'error': 'Invalid GPX file structure'}), 400
             else:
-                return jsonify({'status': 'error', 'message': 'Invalid GPX file structure', 'details': error_message}), 400
+                return jsonify({'error': 'File extension is not GPX'}), 400
         else:
             print('No file provided')
             return jsonify({'error': 'No file provided'}), 400
     else:
         print('Form validation failed')
         # Provide a more detailed error response for form validation failure
-        return jsonify({'status': 'error', 'message': 'Form validation failed', 'errors': form.errors}), 400
+        return jsonify({'error': 'Form validation failed', 'errors': form.errors}), 400
     
 @app.route('/getRouteForTable', methods=['GET'])
 def getRouteForTable():
@@ -545,11 +578,112 @@ def getRouteForTable():
             },
             'length': 0,
             'duration': 0,
-            'start': 0,
-            'end': 0,
+            'start': (0, 0),
+            'end': (0, 0),
             'upload_time': route.upload_time.strftime("%Y-%m-%d %H:%M:%S")
         }
+
+        # Parse GPX data and calculate route information
+        gpx_data_decoded = route.gpx_data.decode('ascii')
+        gpx_data = gpx_data_decoded.replace('\\r', '\r').replace('\\n', '\n')
+        gpx_data = "".join(gpx_data)[2:][:-1]  # Trim excess characters
+        length, duration, start_point, end_point = calculate_route_info(gpx_data)
+        route_info['length'] = length
+        route_info['duration'] = duration
+        route_info['start'] = start_point
+        route_info['end'] = end_point
+
         route_info_list.append(route_info)
 
     # return as JSON
     return jsonify(route_info_list)
+
+
+@app.route('/download/<int:route_id>', methods=['GET'])
+def download_file(route_id):
+    # Retrieve the route information from the database based on the provided route_id
+    route = Route.query.get(route_id)
+
+    if route:
+        # Decode the GPX data from ASCII encoding and replace escape characters
+        gpx_data_decoded = route.gpx_data.decode('ascii')
+        gpx_data = gpx_data_decoded.replace('\\r', '\r').replace('\\n', '\n')
+        gpx_data = "".join(gpx_data)[2:][:-1]  # Trim excess characters
+        
+        # Generate a filename for the GPX file by replacing spaces with underscores
+        filename = route.name.replace(' ', '_')
+        
+        # Return the GPX file as an attachment for download
+        return send_file(BytesIO(gpx_data.encode()), attachment_filename=filename, as_attachment=True)
+    else:
+        # Return an error response if the route with the given ID is not found
+        return jsonify({'error': 'Route not found'}), 404
+
+
+@app.route('/deleteRoute/<int:route_id>', methods=['GET'])
+def delete_route(route_id):
+    if request.method == 'GET':
+        if not route_id:
+            return jsonify({'error': 'Route ID is missing'}), 400
+
+        # Find the route by ID
+        route = Route.query.get(route_id)
+
+        if not route:
+            return jsonify({'error': 'Route not found'}), 404
+
+        try:
+            # Remove the route from the database
+            db.session.delete(route)
+            db.session.commit()
+            return redirect(url_for('user'))
+            # return jsonify({'message': 'Route deleted successfully'}), 200
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'error': str(e)}), 500
+        finally:
+            db.session.close()
+    else:
+        return jsonify({'error': 'Method not allowed'}), 405
+    
+
+def calculate_route_info(gpx_data, unit='km'):
+    # Parse GPX data
+    tree = ET.fromstring(gpx_data)
+
+    # Extract track points
+    track_points = [(float(trkpt.attrib['lat']), float(trkpt.attrib['lon']))
+                    for trkpt in tree.findall('.//{http://www.topografix.com/GPX/1/1}trkpt')]
+
+    # Calculate route length
+    length = sum(geodesic(track_points[i], track_points[i + 1]).meters
+                 for i in range(len(track_points) - 1))
+
+    # Convert length to kilometers or miles based on unit preference
+    if unit == 'km':
+        length = length / 1000  # Convert meters to kilometers
+        length = round(length, 2)  # Round to 2 decimal places
+        length = f"{length} km"  # Append unit
+    elif unit == 'miles':
+        length = length * 0.000621371  # Convert meters to miles
+        length = round(length, 2)  # Round to 2 decimal places
+        length = f"{length} miles"  # Append unit
+    else:
+        length = f"{length} meters"  # Default to meters if unit is not km or miles
+
+    times = tree.findall(".//time")
+    timestamps = [parser.isoparse(time.text) for time in times]
+
+    # Calculate route duration if timestamps are available
+    duration = 0
+    if timestamps:
+        duration = (max(timestamps) - min(timestamps)).total_seconds()
+
+    # Start and end points
+    start_point = (0, 0)
+    end_point = (0, 0)
+    if track_points:
+        start_point = round(track_points[0][0], 3), round(track_points[0][1], 3)
+        end_point = round(track_points[-1][0], 3), round(track_points[-1][1], 3)
+
+    return length, duration, start_point, end_point
