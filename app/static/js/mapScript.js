@@ -37,10 +37,18 @@ $(document).ready(function()
   let radioButton1 = document.getElementById("radio1")
   let radioButton2 = document.getElementById("radio2")
   let radioButton3 = document.getElementById("radio3")
-  button.style.pointerEvents = 'auto';
-  radioButton1.style.pointerEvents = 'auto';
-  radioButton2.style.pointerEvents = 'auto';
-  radioButton3.style.pointerEvents = 'auto';
+  if (button) {
+    button.style.pointerEvents = 'auto';
+  }
+  if (radioButton1) {
+      radioButton1.style.pointerEvents = 'auto';
+  }
+  if (radioButton2) {
+      radioButton2.style.pointerEvents = 'auto';
+  }
+  if (radioButton3) {
+      radioButton3.style.pointerEvents = 'auto';
+  }
   // Also enable the logout button so user can logout if they don't wish to subscribe
   let logoutButton = document.getElementById("logoutLink")
   logoutButton.style.pointerEvents = 'auto';

@@ -3,16 +3,19 @@ from config import stripe_keys
 from app import app, db, admin, bcrypt, csrf
 from flask_admin.contrib.sqla import ModelView
 from .models import User, Plan, Subscription, Route, Friendship, FriendRequest
-from flask import Flask, render_template, request, redirect, url_for, send_file, flash, jsonify, abort
+from flask import Flask, render_template, request, redirect, url_for, send_file, flash, jsonify, abort, send_file
 from flask_login import login_user, login_required, logout_user, current_user
 from .forms import *
 from werkzeug.utils import secure_filename
-from DAL import add_route, get_route
 from datetime import datetime, timedelta
 import stripe
 import json
 import gpxpy
 from functools import wraps
+from io import BytesIO
+from xml.etree import ElementTree as ET
+from geopy.distance import geodesic
+from dateutil import parser
 
 
 class UserView(ModelView):
@@ -242,7 +245,28 @@ def user():
     file_upload_form = FileUploadForm()
     routes = current_user.routes
 
-    route = None
+    route_info_list = []
+
+    for route in routes:
+        gpx_data_decoded = route.gpx_data.decode('ascii')
+        gpx_data = gpx_data_decoded.replace('\\r', '\r').replace('\\n', '\n')
+        gpx_data = "".join(gpx_data)[2:][:-1]  # Trim excess characters
+        # Calculate route information
+        length, duration, start_point, end_point = calculate_route_info(gpx_data)
+        route_info = {
+            'id': route.id,
+            'name': route.name,
+            'user': {
+                'first_name': route.user.first_name,
+                'last_name': route.user.last_name
+            },
+            'length': length,
+            'duration': duration,
+            'start': start_point,
+            'end': end_point,
+            'upload_time': route.upload_time.strftime("%Y-%m-%d %H:%M:%S")
+        }
+        route_info_list.append(route_info)
     # Disables the page unless set otherwise
     disabled = False
 
@@ -250,7 +274,7 @@ def user():
     if current_user_current_subscription() == False:
         disabled = True
 
-    return render_template("user.html", title='Map', FileUploadForm=file_upload_form, route=route, routes=routes, all_routes=all_routes, disabled=disabled)
+    return render_template("user.html", title='Map', FileUploadForm=file_upload_form, all_routes=all_routes, route_info_list=route_info_list, disabled=disabled)
 
 
 # for user search (manger view)
@@ -489,36 +513,37 @@ def upload_file():
         file = request.files['file']
 
         if file:
-            print('File received:', file.filename)
+            # Check file extension
+            if file.filename.endswith('.gpx'):
+                # Read the data from the file
+                gpx_data = file.read()
 
-            # Read the data from the file
-            gpx_data = file.read()
+                # Check GPX file structure validation
+                if is_valid_gpx_structure(gpx_data):
+                    try:
+                        # Generate BLOB from GPX data
+                        gpx_blob = str(gpx_data).encode('ascii')
 
-            # Check GPX file structure validation
-            if is_valid_gpx_structure(gpx_data):
-                try:
-                    # Generate BLOB from GPX data
-                    gpx_blob = str(gpx_data).encode('ascii')
+                        # Create a database entry
+                        route = Route(
+                            name=file.filename,
+                            upload_time=datetime.now(),
+                            gpx_data=gpx_blob
+                        )
 
-                    # Create a database entry
-                    route = Route(
-                        name=file.filename,
-                        upload_time=datetime.now(),
-                        gpx_data=gpx_blob
-                    )
+                        current_user.routes.append(route)
+                        # Commit changes to the database
+                        db.session.commit()
 
-                    current_user.routes.append(route)
-
-                    # Commit changes to the database
-                    db.session.commit()
-
-                    return jsonify({'message': 'File uploaded successfully'})
-                except Exception as e:
-                    db.session.rollback()  # Rollback changes if an exception occurs
-                    print(f"Error: {e}")
-                    return jsonify({'error': 'Internal server error'}), 500
+                        return jsonify({'message': 'File uploaded successfully'})
+                    except Exception as e:
+                        db.session.rollback()  # Rollback changes if an exception occurs
+                        print(f"Error: {e}")
+                        return jsonify({'error': 'Internal server error'}), 500
+                else:
+                    return jsonify({'error': 'Invalid GPX file structure'}), 400
             else:
-                return jsonify({'error': 'Invalid GPX file structure'}), 400
+                return jsonify({'error': 'File extension is not GPX'}), 400
         else:
             print('No file provided')
             return jsonify({'error': 'No file provided'}), 400
@@ -547,10 +572,21 @@ def getRouteForTable():
             },
             'length': 0,
             'duration': 0,
-            'start': 0,
-            'end': 0,
+            'start': (0, 0),
+            'end': (0, 0),
             'upload_time': route.upload_time.strftime("%Y-%m-%d %H:%M:%S")
         }
+
+        # Parse GPX data and calculate route information
+        gpx_data_decoded = route.gpx_data.decode('ascii')
+        gpx_data = gpx_data_decoded.replace('\\r', '\r').replace('\\n', '\n')
+        gpx_data = "".join(gpx_data)[2:][:-1]  # Trim excess characters
+        length, duration, start_point, end_point = calculate_route_info(gpx_data)
+        route_info['length'] = length
+        route_info['duration'] = duration
+        route_info['start'] = start_point
+        route_info['end'] = end_point
+
         route_info_list.append(route_info)
 
     # return as JSON
@@ -833,3 +869,92 @@ def delete_account():
     else:
         # Handle GET request for the route if needed
         pass
+
+@app.route('/download/<int:route_id>', methods=['GET'])
+def download_file(route_id):
+    # Retrieve the route information from the database based on the provided route_id
+    route = Route.query.get(route_id)
+
+    if route:
+        # Decode the GPX data from ASCII encoding and replace escape characters
+        gpx_data_decoded = route.gpx_data.decode('ascii')
+        gpx_data = gpx_data_decoded.replace('\\r', '\r').replace('\\n', '\n')
+        gpx_data = "".join(gpx_data)[2:][:-1]  # Trim excess characters
+        
+        # Generate a filename for the GPX file by replacing spaces with underscores
+        filename = route.name.replace(' ', '_')
+        
+        # Return the GPX file as an attachment for download
+        return send_file(BytesIO(gpx_data.encode()), attachment_filename=filename, as_attachment=True)
+    else:
+        # Return an error response if the route with the given ID is not found
+        return jsonify({'error': 'Route not found'}), 404
+
+
+@app.route('/deleteRoute/<int:route_id>', methods=['GET'])
+def delete_route(route_id):
+    if request.method == 'GET':
+        if not route_id:
+            return jsonify({'error': 'Route ID is missing'}), 400
+
+        # Find the route by ID
+        route = Route.query.get(route_id)
+
+        if not route:
+            return jsonify({'error': 'Route not found'}), 404
+
+        try:
+            # Remove the route from the database
+            db.session.delete(route)
+            db.session.commit()
+            return redirect(url_for('user'))
+            # return jsonify({'message': 'Route deleted successfully'}), 200
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'error': str(e)}), 500
+        finally:
+            db.session.close()
+    else:
+        return jsonify({'error': 'Method not allowed'}), 405
+    
+
+def calculate_route_info(gpx_data, unit='km'):
+    # Parse GPX data
+    tree = ET.fromstring(gpx_data)
+
+    # Extract track points
+    track_points = [(float(trkpt.attrib['lat']), float(trkpt.attrib['lon']))
+                    for trkpt in tree.findall('.//{http://www.topografix.com/GPX/1/1}trkpt')]
+
+    # Calculate route length
+    length = sum(geodesic(track_points[i], track_points[i + 1]).meters
+                 for i in range(len(track_points) - 1))
+
+    # Convert length to kilometers or miles based on unit preference
+    if unit == 'km':
+        length = length / 1000  # Convert meters to kilometers
+        length = round(length, 2)  # Round to 2 decimal places
+        length = f"{length} km"  # Append unit
+    elif unit == 'miles':
+        length = length * 0.000621371  # Convert meters to miles
+        length = round(length, 2)  # Round to 2 decimal places
+        length = f"{length} miles"  # Append unit
+    else:
+        length = f"{length} meters"  # Default to meters if unit is not km or miles
+
+    times = tree.findall(".//time")
+    timestamps = [parser.isoparse(time.text) for time in times]
+
+    # Calculate route duration if timestamps are available
+    duration = 0
+    if timestamps:
+        duration = (max(timestamps) - min(timestamps)).total_seconds()
+
+    # Start and end points
+    start_point = (0, 0)
+    end_point = (0, 0)
+    if track_points:
+        start_point = round(track_points[0][0], 3), round(track_points[0][1], 3)
+        end_point = round(track_points[-1][0], 3), round(track_points[-1][1], 3)
+
+    return length, duration, start_point, end_point

@@ -9,64 +9,71 @@
 <!-- This page will allow you to view and manage registered users. You can enable or disable their accounts. -->
 
 <div class="form">
-  <form method="post" action="" name="searchUsers">
-      {{ UserSearch.hidden_tag() }}
+    <form method="post" action="" name="searchUsers">
+        {{ UserSearch.hidden_tag() }}
 
-      <label for="userEmail">Search Users by Email</label>
+        <label for="userEmail">Search Users by Email</label>
 
-      {% if UserSearch.userEmail.errors %}
-      {{ UserSearch.userEmail(class="form-control form-control-lg is-invalid") }}
-      <div class="invalid-feedback">
-          {% for error in UserSearch.userEmail.errors %}
-              <span>• {{ error }}</span>
-              <br>
-          {% endfor %}
-      </div>
-      {% else %}
-      {{ UserSearch.userEmail(class="form-control", placeholder="User email") }}
-      {% endif %}
+        {% if UserSearch.userEmail.errors %}
+        {{ UserSearch.userEmail(class="form-control form-control-lg is-invalid") }}
+        <div class="invalid-feedback">
+            {% for error in UserSearch.userEmail.errors %}
+            <span>• {{ error }}</span>
+            <br>
+            {% endfor %}
+        </div>
+        {% else %}
+        {{ UserSearch.userEmail(class="form-control", placeholder="User email") }}
+        {% endif %}
 
-      <div class="formButton">
-          {{ UserSearch.submitSearch }}
-      </div>
-  </form>
+        <div class="formButton">
+            {{ UserSearch.submitSearch }}
+        </div>
+    </form>
 </div>
 
 
 <table>
-  <tr>
-    <th>Name</th>
-    <th>Surname</th>
-    <th>Email Address</th>
-    <th>Account Created</th>
-    <th>Membership</th>
-    <th>Account Activated</th>
-    <th>Manager Account</th>
+    <tr>
+        <th>Name</th>
+        <th>Surname</th>
+        <th>Email Address</th>
+        <th>Account Created</th>
+        <th>Membership</th>
+        <th>Account Activated</th>
+        <th>Manager Account</th>
 
-  </tr>
-  {% for user in users %}
-  <tr>
-    <td>{{ user.first_name }}</td>
-    <td>{{ user.last_name }}</td>
-    <td>{{ user.email }}</td>
-    <td>{{ user.date_created }}</td>
-    <td>{{ user.subscription_id }}</td>
-    <td>
-        <p id="textUser_{{ user.id }}">{{ user.account_active }}</p>
-        <label class="switch">
-          <input id="user_{{ user.id }}" name="userState" type="checkbox" {% if user.account_active== True %} checked {% else %} {% endif %}>
-          <span class="slider"></span>
-        </label>
-    </td>
-    <td>
-      <p id="textManager_{{ user.id }}">{{ user.manager }}</p>
-      <label class="switch">
-        <input id="manager_{{ user.id }}" name="userManger" type="checkbox" {% if user.manager== True %} checked {% else %} {% endif %}>
-        <span class="slider"></span>
-      </label>
-  </td>
-  </tr>
-  {% endfor %}
+    </tr>
+    {% for user in users %}
+    <tr>
+        <td>{{ user.first_name }}</td>
+        <td>{{ user.last_name }}</td>
+        <td>{{ user.email }}</td>
+        <td>{{ user.date_created }}</td>
+        <td>{% if user.subscriptions and user.subscriptions[0].plan and user.subscriptions[0].plan.name %}
+            {{ user.subscriptions[0].plan.name }}
+            {% else %}
+            No active subscription
+            {% endif %}
+        </td>
+        <td>
+            <p id="textUser_{{ user.id }}">{{ user.account_active }}</p>
+            <label class="switch">
+                <input id="user_{{ user.id }}" name="userState" type="checkbox" {% if user.account_active==True %}
+                    checked {% else %} {% endif %}>
+                <span class="slider"></span>
+            </label>
+        </td>
+        <td>
+            <p id="textManager_{{ user.id }}">{{ user.manager }}</p>
+            <label class="switch">
+                <input id="manager_{{ user.id }}" name="userManger" type="checkbox" {% if user.manager==True %} checked
+                    {% else %} {% endif %}>
+                <span class="slider"></span>
+            </label>
+        </td>
+    </tr>
+    {% endfor %}
 </table>
 
 <!-- LEAVE HERE AS NEEDS TO LOAD AFTER FOR CHECKBOX -->
