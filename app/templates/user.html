@@ -26,11 +26,12 @@
                             <tr>
                                 <th>File Name</th>
                                 <th>Display</th>
+                                <th>Published by</th>
                                 <th></th>
                             </tr>
                         </thead>
                         <tbody id="table">
-                            {% for i in routes %}
+                            {% for i in route_info_list %}
                             <tr>
                                 <td>{{ i.name }}</td>
                                 <td>
@@ -39,23 +40,27 @@
                                         <label class="form-check-label" for="{{ i.id }}"></label>
                                     </div>
                                 </td>
-                                <td>  
+                                <td>{{ i.user.first_name}} {{i.user.last_name}}</td>
+                                <td>
                                     <button class="btn-primary viewInfoBtn" data-route-id="{{ i.id }}">View Info</button>
                                     <div>
                                         <div class="popupDataContainer" id="popupDataContainer_{{ i.id }}">
-                                            <div class="infoForm p-5 text-center">
+                                            <div class="infoForm">
                                                 <span class="closeBtn" data-route-id="{{ i.id }}">&times;</span>
                                                 <h1>Route Information</h1>
-                                                <hr>
                                                 <p>Route Name: {{ i.name }}</p>
                                                 <p>Route Length: {{ i.length }}</p>
                                                 <p>Route Duration: {{ i.duration }}</p>
                                                 <p>Route Start: {{ i.start }}</p>
                                                 <p>Route End: {{ i.end }}</p>
                                                 <p>Upload Date: {{ i.upload_time }}</p>
+                                                <button class="btn-primary deleteBtn" data-route-id="{{ i.id }}">Delete</button>
                                             </div>
                                         </div>
                                     </div>
+                                </td>
+                                <td>
+                                    <button class="btn-primary downloadBtn" data-route-id="{{ i.id }}">Download</button>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -78,8 +83,56 @@
                     </form>
                 </div>
             </div>
-            <div id="friendRoutes">
 
+            <div id="friendRoutes">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>File Name</th>
+                                <th>Display</th>
+                                <th>Uploaded by:</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="table">
+                            {% for i in friend_routes %}
+                                    <tr>
+                                        <td>{{ i.name }}</td>
+                                        <td>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="addToMap" id="{{ i.id }}">
+                                                <label class="form-check-label" for="{{ i.id }}"></label>
+                                            </div>
+                                        </td>
+                                            <td>
+                                                {{friend_names[loop.index0]}}
+                                                ({{friend_emails[loop.index0]}})
+                                            </td>
+                                        <td>
+                                        
+                                            <button class="btn-primary viewInfoBtn" data-route-id="{{ i.id }}">View Info</button>
+                                            <div>
+                                                <div class="popupDataContainer" id="popupDataContainer_{{ i.id }}">
+                                                    <div class="infoForm p-5 text-center">
+                                                        <span class="closeBtn" data-route-id="{{ i.id }}">&times;</span>
+                                                        <h1>Route Information</h1>
+                                                        <hr>
+                                                        <p>Route Name: {{ i.name }}</p>
+                                                        <p>Route Length: {{ i.length }}</p>
+                                                        <p>Route Duration: {{ i.duration }}</p>
+                                                        <p>Route Start: {{ i.start }}</p>
+                                                        <p>Route End: {{ i.end }}</p>
+                                                        <p>Upload Date: {{ i.upload_time }}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
             
         </div>

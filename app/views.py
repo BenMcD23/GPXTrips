@@ -241,13 +241,40 @@ def user():
         render_template: render template, with map.html
     """
     # File upload form
-    all_routes = Route.query.all()
+    all_routes = Route.query.filter_by(user_id=current_user.id).all()
+    friends = getFriends()
+    friend_routes = []
+    friend_names = []
+    friend_emails = []
+    
+    for f in friends:
+        for r in f.routes:
+            friend_routes.append(r)
+            friend_names.append(f.first_name + ' ' + f.last_name)
+            friend_emails.append(f.email)
+
     file_upload_form = FileUploadForm()
     routes = current_user.routes
 
+    # Build route info lists for both the user and their friends
     route_info_list = []
+    friend_route_info = []
+    getRouteInfoList(routes,route_info_list)
+    getRouteInfoList(friend_routes, friend_route_info)
+    
+    
+    # Disables the page unless set otherwise
+    disabled = False
 
-    for route in routes:
+    # If User doesnt have an active subscription then display the subscribe card, and disable the rest of the poge
+    if current_user_current_subscription() == False:
+        disabled = True
+
+    return render_template("user.html", title='Map', friend_names=friend_names, friend_emails=friend_emails, friend_routes=friend_route_info,  FileUploadForm=file_upload_form, routes=all_routes, route_info_list=route_info_list, disabled=disabled)
+
+
+def getRouteInfoList(inputList,outputList):
+    for route in inputList:
         gpx_data_decoded = route.gpx_data.decode('ascii')
         gpx_data = gpx_data_decoded.replace('\\r', '\r').replace('\\n', '\n')
         gpx_data = "".join(gpx_data)[2:][:-1]  # Trim excess characters
@@ -266,15 +293,8 @@ def user():
             'end': end_point,
             'upload_time': route.upload_time.strftime("%Y-%m-%d %H:%M:%S")
         }
-        route_info_list.append(route_info)
-    # Disables the page unless set otherwise
-    disabled = False
+        outputList.append(route_info)
 
-    # If User doesnt have an active subscription then display the subscribe card, and disable the rest of the poge
-    if current_user_current_subscription() == False:
-        disabled = True
-
-    return render_template("user.html", title='Map', FileUploadForm=file_upload_form, all_routes=all_routes, route_info_list=route_info_list, disabled=disabled)
 
 
 # for user search (manger view)
