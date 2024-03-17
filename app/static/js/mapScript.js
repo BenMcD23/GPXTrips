@@ -1,5 +1,8 @@
 // get all the routes
 var user_routes;
+// Get all friend routes
+var friend_routes;
+
 $(document).ready(function()
 {
   $.ajax({ 
@@ -13,6 +16,36 @@ $(document).ready(function()
     {
     alert("request failed");
     }
+  })
+
+  $.ajax({ 
+    type: "GET",
+    url: "/getFriendRoute", 
+    dataType: "json",  
+    success: function(response_data){
+        friend_routes = response_data;
+    },
+    error : function(request,error)
+    {
+    alert("request failed");
+    }
+  })
+
+  $('#friendRoutes').hide()
+
+
+  $('#linkOne').click(function(){
+        $('#linkTwo').removeClass('active');
+        $('#linkOne').addClass('active');
+        $('#friendRoutes').hide()
+        $('#myRoutes').fadeIn(450);
+  })
+
+  $('#linkTwo').click(function(){
+        $('#linkOne').removeClass('active');
+        $('#linkTwo').addClass('active');
+        $('#myRoutes').hide()
+        $('#friendRoutes').fadeIn(450);
   })
 
   // Enables buttons on pop-up for unsubscribed users
@@ -34,16 +67,22 @@ $(document).ready(function()
   }
   // Also enable the logout button so user can logout if they don't wish to subscribe
   let logoutButton = document.getElementById("logoutLink")
-  if (logoutButton) {
-    logoutButton.style.pointerEvents = 'auto';
-  }
+  logoutButton.style.pointerEvents = 'auto';
+  
+
 })
 
-// listents for when checkbox's are checked
+// listens for when checkbox's are checked
 let checkboxes = $("input[type=checkbox][name=addToMap]")
 
 checkboxes.change(function() {
-  displayOnMap(this.id);
+  displayOnMap(this.id, false);
+});
+
+// listens for when friend checkboxes are checked
+let friendcheckboxes = $("input[type=checkbox][name=friendAddToMap]")
+friendcheckboxes.change(function() {
+  displayOnMap(this.id, true);
 });
 
 // initialize Leaflet
@@ -62,15 +101,31 @@ L.control.scale({imperial: true, metric: true}).addTo(map);
 
 let GPX = {};
 // ran when a checkbox is checked
-function displayOnMap(id) {
+function displayOnMap(id, isFriendRoute) {
   // get if its been checked or unchecked
   const checkbox_state = document.getElementById(id);
 
   // if its checked
   if (checkbox_state.checked) {
+    // Determines whether the route to be shown is a friend route or not
+    // Can then use this to get the correct route to pass to the API
+    let route_array = [];
+    // Friend routes displayed as green, personal routes are displayed as red
+    let chosen_color = 'blue';
+    if (isFriendRoute){
+      route_array = friend_routes[id]
+      chosen_color = 'green';
+    }
+    else{
+      route_array = user_routes[id]
+    }
+
     // create route object
-    let newGPX = new L.GPX(user_routes[id], {
+    let newGPX = new L.GPX(route_array, {
       async: true,
+      polyline_options: {
+        color: chosen_color
+      },
       marker_options: {
         startIconUrl: 'static/images/pinstart.png',
         endIconUrl:   'static/images/pinend.png',
@@ -117,11 +172,22 @@ var viewInfoButtons = document.querySelectorAll('.viewInfoBtn');
 viewInfoButtons.forEach(function(button) {
     button.addEventListener('click', function() {
         var routeId = button.getAttribute('data-route-id');
-        
         var popupContainer = document.getElementById('popupDataContainer_' + routeId);
         popupContainer.style.display = 'block';
     });
 });
+
+// Loop through each friend button and add click event listener
+var friendViewInfoButtons = document.querySelectorAll('.friendViewInfoBtn');
+friendViewInfoButtons.forEach(function(button) {
+  button.addEventListener('click', function() {
+      var routeId = button.getAttribute('data-route-id');
+      var popupContainer = document.getElementById('friend_popupDataContainer_' + routeId);
+      popupContainer.style.display = 'block';
+
+  });
+});
+
 
 // Get all close buttons
 var closeButtons = document.querySelectorAll('.closeBtn');
@@ -130,8 +196,21 @@ var closeButtons = document.querySelectorAll('.closeBtn');
 closeButtons.forEach(function(closeBtn) {
     closeBtn.addEventListener('click', function() {
         var routeId = closeBtn.getAttribute('data-route-id');
-      
         var popupContainer = document.getElementById('popupDataContainer_' + routeId);
         popupContainer.style.display = 'none';
+
+    });
+});
+
+// Get all close buttons
+var friendCloseButtons = document.querySelectorAll('.friendCloseBtn');
+
+// Loop through each friend sclose button and add click event listener
+friendCloseButtons.forEach(function(closeBtn) {
+    closeBtn.addEventListener('click', function() {
+        var routeId = closeBtn.getAttribute('data-route-id');
+        var popupContainer = document.getElementById('friend_popupDataContainer_' + routeId);
+        popupContainer.style.display = 'none';
+
     });
 });

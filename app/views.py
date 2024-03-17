@@ -1,10 +1,11 @@
+from flask import request
 from config import stripe_keys
 from app import app, db, admin, bcrypt, csrf
 from flask_admin.contrib.sqla import ModelView
-from .models import User, Plan, Subscription, Route
+from .models import User, Plan, Subscription, Route, Friendship, FriendRequest
 from flask import Flask, render_template, request, redirect, url_for, send_file, flash, jsonify, abort, send_file
 from flask_login import login_user, login_required, logout_user, current_user
-from .forms import FileUploadForm, RegistrationForm, LoginForm, UserSearch
+from .forms import *
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
 import stripe
@@ -36,14 +37,23 @@ class PlanView(ModelView):
 class SubscriptionView(ModelView):
     # Custom view class for the Subscription model
     column_list = ['user', 'plan',
-                   'subscription_id', 'date_start', 'date_end', 'active']
+                   'subscription_id', 'customer_id', 'date_start', 'date_end', 'active']
 
+class FriendshipView(ModelView):
+    # Custom view class for the Friendship model
+    column_list = ['user1_id', 'user2_id']
+
+class FriendRequestView(ModelView):
+    # Custom view class for the Friend Request model
+    column_list=['sender_user_id','receiver_user_id']
 
 # Add views for each model using the custom view classes
 admin.add_view(UserView(User, db.session))
 admin.add_view(RouteView(Route, db.session))
 admin.add_view(PlanView(Plan, db.session))
 admin.add_view(SubscriptionView(Subscription, db.session))
+admin.add_view(FriendshipView(Friendship, db.session))
+admin.add_view(FriendRequestView(FriendRequest, db.session))
 
 
 # role for manager pages
@@ -66,37 +76,32 @@ def login():
     # Create an instance of the LoginForm
     form = LoginForm()
 
-    if request.method == 'POST':
+    if request.method == 'POST' and form.validate_on_submit():
         # Query the user by email
         user = User.query.filter_by(email=form.email.data).first()
 
         if user:
-            # if the account isnt active
-            if user.account_active != True:
+            if user.account_active:
+                if user.check_password(form.password.data):
+                    remember_me = form.rememberMe.data
+                    login_user(user, remember=remember_me)
+                    if user.manager:
+                        # if theyre a manager then redirect to manager page
+                        return redirect(url_for("manager"))
+                    # if theyre just a normal user then redirect to user page
+                    return redirect(url_for("user"))
+                else:
+                    # Redirect to back login if password is incorrect
+                    flash("Password is wrong!", category="error")
+            else:
+                # if the account isnt active
                 flash("Account is deactivated, please contact support.",
                       category="error")
-                return redirect(url_for("login"))
-
-            # if the password is correct
-            elif bcrypt.check_password_hash(user.password_hash, form.password.data):
-                flash("Logged in!", category="success")
-                remember_me = form.rememberMe.data
-                login_user(user, remember=remember_me)
-                if user.manager == True:
-                    # if theyre a manager then redirect to manager page
-                    return redirect(url_for("manager"))
-                # if theyre just a normal user then redirect to user page
-                return redirect(url_for("user"))
-
-            else:
-                # Redirect to back login if password is incorrect
-                flash("Password is wrong!", category="error")
-                return redirect(url_for("login"))
-
         else:
             # Redirect to back login if account does not exist
             flash("Account does not exist!", category="error")
-            return redirect(url_for("login"))
+
+        return redirect(url_for("login"))
 
     return render_template("login.html", title="Login", form=form)
 
@@ -107,48 +112,41 @@ def register():
     # Create an instance of the RegistrationForm
     form = RegistrationForm()
 
-    if request.method == 'POST':
+    if request.method == 'POST' and form.validate_on_submit():
         # Request data from form
-        email = request.form.get("email")
-        first_name = request.form.get("first_name")
-        last_name = request.form.get("last_name")
-        password = request.form.get("password")
-        confirm_password = request.form.get("confirm_password")
-        tandc_confirm = request.form.get("TandCConfirm")
+        email = form.email.data
+        first_name = form.first_name.data
+        last_name = form.last_name.data
+        password = form.password.data
+        confirm_password = form.confirm_password.data
+        tandc_confirm = form.TandCConfirm.data
 
-        # Check provided email has an account that exists
         existing_email = User.query.filter_by(email=email).first()
         if existing_email:
-            flash(
-                "Email already in use. Please choose a different email.",
-                category="error"
-            )
+            # Check provided email has an account that exists
+            flash("Email already in use. Please choose a different email.",
+                  category="error")
             return redirect(url_for("register"))
 
-        # Password validation
         if password != confirm_password:
+            # Password validation
             flash(
-                "Passwords do not match. Please make sure your passwords match.",
-                category="error",
-            )
+                "Passwords do not match. Please make sure your passwords match.", category="error")
             return redirect(url_for("register"))
 
         if not tandc_confirm:
-            flash(
-                "Please accept the Terms and Conditions to proceed.",
-                category="error"
-            )
+            flash("Please accept the Terms and Conditions to proceed.",
+                  category="error")
             return redirect(url_for("register"))
 
         # Hash password and add used to the database
         hashed_password = bcrypt.generate_password_hash(
             password).decode('utf-8')
+
         user = User(email=email, first_name=first_name, last_name=last_name,
                     password_hash=hashed_password, date_created=datetime.now(), account_active=True, manager=False)
         db.session.add(user)
         db.session.commit()
-
-        flash("User added successfully!", category="success")
 
         # Redirect to login after successful registration
         return redirect(url_for("login"))
@@ -204,7 +202,7 @@ def friends():
     if current_user_current_subscription() == False:
         # If user doesn't have an active subscription, redirect to user page
         return redirect(url_for('user'))
-    return render_template("friends.html", current_user=current_user)
+    return render_template("friends.html", current_user=current_user, friends=getFriends())
 
 
 @app.route('/profile')
@@ -228,17 +226,10 @@ def profile():
     expiryDate = (Subscription.query.filter_by(
         user_id=current_user.id).first().date_end).date()
 
-    return render_template("profile.html", current_user=current_user, userPlan=userPlan, expiryDate=expiryDate, autoRenewal=autoRenewal)
+    subscription_form = SubscriptionForm()
+    account_form = AccountForm()
 
-
-@app.route('/settings')
-@login_required
-def settings():
-    if current_user_current_subscription() == False:
-        # If user doesn't have an active subscription, redirect to user page
-        return redirect(url_for('user'))
-    # Pass data and receive user changes (i.e email/name/payment changes)
-    return render_template("settings.html", current_user=current_user)
+    return render_template("profile.html", current_user=current_user, userPlan=userPlan, expiryDate=expiryDate, autoRenewal=autoRenewal, subscription_form=subscription_form, account_form=account_form)
 
 
 @app.route('/user',  methods=['GET', 'POST'])
@@ -250,13 +241,40 @@ def user():
         render_template: render template, with map.html
     """
     # File upload form
-    all_routes = Route.query.all()
+    all_routes = Route.query.filter_by(user_id=current_user.id).all()
+    friends = getFriends()
+    friend_routes = []
+    friend_names = []
+    friend_emails = []
+    
+    for f in friends:
+        for r in f.routes:
+            friend_routes.append(r)
+            friend_names.append(f.first_name + ' ' + f.last_name)
+            friend_emails.append(f.email)
+
     file_upload_form = FileUploadForm()
     routes = current_user.routes
 
+    # Build route info lists for both the user and their friends
     route_info_list = []
+    friend_route_info = []
+    getRouteInfoList(routes,route_info_list)
+    getRouteInfoList(friend_routes, friend_route_info)
+    
+    
+    # Disables the page unless set otherwise
+    disabled = False
 
-    for route in routes:
+    # If User doesnt have an active subscription then display the subscribe card, and disable the rest of the poge
+    if current_user_current_subscription() == False:
+        disabled = True
+
+    return render_template("user.html", title='Map', friend_names=friend_names, friend_emails=friend_emails, friend_routes=friend_route_info,  FileUploadForm=file_upload_form, routes=all_routes, route_info_list=route_info_list, disabled=disabled)
+
+
+def getRouteInfoList(inputList,outputList):
+    for route in inputList:
         gpx_data_decoded = route.gpx_data.decode('ascii')
         gpx_data = gpx_data_decoded.replace('\\r', '\r').replace('\\n', '\n')
         gpx_data = "".join(gpx_data)[2:][:-1]  # Trim excess characters
@@ -275,15 +293,8 @@ def user():
             'end': end_point,
             'upload_time': route.upload_time.strftime("%Y-%m-%d %H:%M:%S")
         }
-        route_info_list.append(route_info)
-    # Disables the page unless set otherwise
-    disabled = False
+        outputList.append(route_info)
 
-    # If User doesnt have an active subscription then display the subscribe card, and disable the rest of the poge
-    if current_user_current_subscription() == False:
-        disabled =  False
-
-    return render_template("user.html", title='Map', FileUploadForm=file_upload_form, all_routes=all_routes, route_info_list=route_info_list, disabled=disabled)
 
 
 # for user search (manger view)
@@ -301,6 +312,32 @@ def getRoute():
     # post all routes to JavaScript
     # get the current logged in users routes
     routes = current_user.routes
+
+    # dic for all data go in, goes into json
+    data = {}
+    # loop for all the routes
+    for i in routes:
+        # decode each route and get rid of \n
+        route = i.gpx_data.decode('ascii')
+        splitData = route.split("\\n")
+        route = "".join(splitData)[2:][:-1]
+        data[i.id] = route
+
+    # return as a json
+    return json.dumps(data)
+
+
+@app.route('/getFriendRoute', methods=['GET'])
+def getFriendRoute():
+    # post all routes to JavaScript
+    # get the friends of the currently logged in users
+    friends = getFriends()
+    routes = []
+    
+    # get the routes of the users friends
+    for f in friends:
+        for r in f.routes:
+            routes.append(r)
 
     # dic for all data go in, goes into json
     data = {}
@@ -368,6 +405,7 @@ def checkout():
             "success?session_id={CHECKOUT_SESSION_ID}",
             cancel_url=domain_url + "cancel",
             payment_method_types=["card"],
+            customer_email=current_user.email,
             mode="subscription",
             line_items=[
                 {
@@ -433,12 +471,12 @@ def stripe_webhook():
         abort(400)
 
     if event['type'] == 'invoice.updated':
-
         # Grab data from invoice.
         invoice_data = event['data']['object']
+        customer_id = invoice_data['customer']
         customer_email = invoice_data['customer_email']
         plan_id = invoice_data['lines']['data'][0]['plan']['id']
-        subscription_id = invoice_data['subscription']
+        subscription_id = invoice_data['id']
 
         user = User.query.filter_by(email=customer_email).first()
 
@@ -450,7 +488,7 @@ def stripe_webhook():
         print(subscription_id)
 
         if user and plan:
-            create_subscription(user, plan, subscription_id)
+            create_subscription(user, plan, subscription_id, customer_id)
             print('Subscription created')
         else:
             print('User or plan not found')
@@ -458,14 +496,14 @@ def stripe_webhook():
     return jsonify({'success': True})
 
 
-def create_subscription(user, plan, subscription_id):
+def create_subscription(user, plan, subscription_id, customer_id):
     # Method to create a subscription in the database.
     if plan.name == "Weekly":
-        date_end = datetime.now()+timedelta(weeks=1)
+        date_end = datetime.now() + timedelta(weeks=1)
     elif plan.name == "Monthly":
-        date_end = datetime.now()+timedelta(weeks=4)
+        date_end = datetime.now() + timedelta(weeks=4)
     else:
-        date_end = datetime.now()+timedelta(weeks=52)
+        date_end = datetime.now() + timedelta(weeks=52)
 
     subscription = Subscription(
         user=user,
@@ -473,6 +511,7 @@ def create_subscription(user, plan, subscription_id):
         date_start=datetime.utcnow(),
         date_end=date_end,
         subscription_id=subscription_id,
+        customer_id=customer_id,
         active=True
     )
 
@@ -598,6 +637,283 @@ def getRouteForTable():
     # return as JSON
     return jsonify(route_info_list)
 
+@app.route('/getFriendsList', methods=['GET'])
+def getFriendsList():
+    friends = getFriends()
+    friend_infos = []
+
+    for friend in friends:
+        friend_info = {
+            'id': friend.id,
+            'first_name': friend.first_name,
+            'last_name': friend.last_name,
+            'email': friend.email
+        }
+
+        friend_infos.append(friend_info)
+
+    # return as JSON
+    return jsonify(friend_infos)
+
+@app.route('/removeFriend', methods=['POST'])
+def removeFriend():
+    # get data posted
+    data = request.get_json()
+    friend_id = data["id"]
+
+    # Attempt to retrieve the friendship one way
+    friendship = Friendship.query.filter_by(user1_id=current_user.id, user2_id=friend_id).first()
+    # Otherwise get it the other way
+    if not friendship:
+        friendship = Friendship.query.filter_by(user1_id=friend_id, user2_id=current_user.id).first()
+
+    # Return error if friendship cannot be found in database
+    if not friendship:
+        return json.dumps({
+            'error': 'Could not find friendship'
+        })
+
+    db.session.delete(friendship)
+    db.session.commit()
+
+    return json.dumps({
+        'status':'OK'
+    })
+
+@app.route('/userSearch', methods=['POST'])
+def userSearch():
+    # get data posted
+    data = request.get_json()
+    searchTerm = data["searchTerm"]
+
+    # Query users against search term
+    users = User.query.filter(User.email.contains(searchTerm)).all()
+
+    # Get all outgoing friend requests to mark them as pending
+    out_frequests = FriendRequest.query.filter_by(sender_user_id=current_user.id).all()
+    pending_ids = []
+    for frequest in out_frequests:
+        pending_ids.append(frequest.receiver_user_id)
+
+    # Get all friends to exclude them from results
+    friend_ids = []
+    for friend in getFriends():
+        friend_ids.append(friend.id)
+
+    # Build list of user infos and return
+    user_infos = []
+
+    for user in users:
+        # Ignore self
+        if user.id == current_user.id:
+            continue
+
+        # Ignore friends
+        if user.id in friend_ids:
+            continue
+        
+        # Mark pending requests as pending
+        pending = user.id in pending_ids
+
+        # Mark incoming friend requests
+        frequest = FriendRequest.query.filter_by(sender_user_id=user.id).first()
+        frequest_id=-1
+        if frequest:
+            frequest_id=frequest.id
+
+        user_info = {
+            'id': user.id,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'email': user.email,
+            'pending': pending,
+            'frequest_id': frequest_id
+        }
+
+        user_infos.append(user_info)
+
+    # return as JSON
+    return jsonify(user_infos)
+
+@app.route('/sendFriendRequest', methods=['POST'])
+def sendFriendRequest():
+    # get data posted
+    data = request.get_json()
+    user_id = data["id"]
+
+    # Create and save friend request
+    friendRequest = FriendRequest(
+        sender_user_id=current_user.id,
+        receiver_user_id=user_id
+    )
+
+    db.session.add(friendRequest)
+    db.session.commit()
+
+    return json.dumps({
+        'status':'OK'
+    })
+
+@app.route('/getFriendRequestList', methods=['GET'])
+def getFriendRequestList():
+    frequests = FriendRequest.query.filter_by(receiver_user_id=current_user.id).all()
+    frequest_infos = []
+
+    for frequest in frequests:
+        user = User.query.get(frequest.sender_user_id)
+
+        frequest_info = {
+            'id': frequest.id,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'email': user.email
+        }
+
+        frequest_infos.append(frequest_info)
+
+    # return as JSON
+    return jsonify(frequest_infos)
+
+def friendUser(user):
+    friendship = Friendship(
+        user1_id=current_user.id,
+        user2_id=user.id
+    )
+
+    db.session.add(friendship)
+    db.session.commit()
+
+
+def getFriends():
+    outgoingfriendships = Friendship.query.filter_by(user1_id=current_user.id).all()
+    incomingfriendships = Friendship.query.filter_by(user2_id=current_user.id).all()
+
+    friends = []
+
+    for friendship in outgoingfriendships:
+        friends.append(User.query.get(friendship.user2_id))
+
+    for friendship in incomingfriendships:
+        friends.append(User.query.get(friendship.user1_id))
+
+    return friends
+
+
+@app.route('/acceptFriendRequest', methods=['POST'])
+def acceptFriendRequest():
+    # get data posted
+    data = request.get_json()
+    id = data["id"]
+
+    # find the friend request
+    frequest = FriendRequest.query.get(id)
+
+    # friend the sending user
+    friendUser(User.query.get(frequest.sender_user_id))
+
+    # delete the friend request
+    db.session.delete(frequest)
+    db.session.commit()
+
+    return json.dumps({
+        'status':'OK'
+    })
+
+@app.route('/declineFriendRequest', methods=['POST'])
+def declineFriendRequest():
+    # get data posted
+    data = request.get_json()
+    id = data["id"]
+
+    # find the friend request
+    frequest = FriendRequest.query.get(id)
+
+    # delete the friend request without friending sending user
+    db.session.delete(frequest)
+    db.session.commit()
+
+    return json.dumps({
+        'status':'OK'
+    })
+
+
+# Routes for user profile.
+@app.route('/change_email', methods=['GET', 'POST'])
+@login_required
+def change_email():
+    change_email_form = ChangeEmailForm()
+
+    if change_email_form.validate_on_submit():
+
+        new_email = change_email_form.new_email.data
+
+        # Find the user's subscription
+        subscription = Subscription.query.filter_by(
+            user_id=current_user.id).first()
+
+        if subscription:
+            try:
+                stripe.api_key = stripe_keys["secret_key"]
+                # Retrieve the Stripe customer ID associated with the subscription
+                customer_id = subscription.customer_id
+
+                print(customer_id)
+                # Update user's email address on Stripe
+                stripe.Customer.modify(
+                    customer_id,
+                    email=new_email
+                )
+                flash('Email address has been updated successfully!', 'success')
+            except Exception as e:
+                flash(
+                    'Failed to update email address on Stripe. Please try again later.', 'error')
+                app.logger.error(f"Stripe error: {e}")
+        else:
+            flash('User subscription not found.', 'error')
+
+        # Update user's email address in your database
+        current_user.email = new_email
+        db.session.commit()
+
+        # Redirect to profile page after email change
+        return redirect(url_for('profile'))
+
+    return render_template("change_email.html", change_email_form=change_email_form)
+
+
+@app.route('/change_password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    form = ChangePasswordForm()
+
+    if form.validate_on_submit():
+        # Check if old password matches
+        if current_user.check_password(form.old_password.data):
+            # Update password
+            current_user.set_password(form.new_password.data)
+            db.session.commit()
+            flash('Your password has been updated successfully.', 'success')
+            return redirect(url_for('profile'))
+        else:
+            flash('Invalid old password. Please try again.', 'error')
+
+    return render_template('change_password.html', form=form)
+
+
+@app.route('/delete_account', methods=['POST'])
+@login_required
+def delete_account():
+    if request.method == 'POST':
+        # Perform any additional validation or checks if needed
+        # Delete the user's account from the database
+        db.session.delete(current_user)
+        db.session.commit()
+        flash('Your account has been deleted.', 'success')
+        # Redirect to logout or any other appropriate route
+        return redirect(url_for('logout'))
+    else:
+        # Handle GET request for the route if needed
+        pass
 
 @app.route('/download/<int:route_id>', methods=['GET'])
 def download_file(route_id):

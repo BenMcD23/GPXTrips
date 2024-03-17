@@ -1,5 +1,5 @@
 /* CSS for the navbar */
-.navbar {
+.navbarMain {
     position: fixed;
     top: 0;
     width: 100%;
@@ -87,7 +87,7 @@
 
 .smallGap {
     margin-bottom: 10px;
-    margin-top: 500px;
+    margin-top: 100px;
 }
 
 .profileCls {
@@ -126,6 +126,37 @@ body {
     height: 100%;
 }
 
+.binButton {
+    background-color: rgb(248, 40, 40);
+    border-radius: 9%;
+    color: white;
+}
+
+.binButton:hover {
+    background-color: lightcoral;
+}
+
+.addButton {
+    background-color: rgb(40, 248, 64);
+    border-radius: 9%;
+}
+
+.addButton:hover {
+    background-color: greenyellow;
+}
+
+.pendingButton {
+    background-color: white;
+    border-radius: 9%;
+}
+
+.searchBar {
+    border-radius: 5%;
+}
+
+.searchButton:hover {
+    box-shadow: 1px 1px 1px 1px #111111;
+}
 
 .table-responsive {
     max-height: 60vh;
@@ -254,6 +285,15 @@ body {
     color: #333;
 }
 
+.friendCloseBtn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+    font-size: 20px;
+    color: #333;
+}
+
 /* Style to Disable the page if a user is not subscribed */
 .disabledPage {
     pointer-events: none;
@@ -265,7 +305,7 @@ body {
 
 .overlapCard {
     /* Bring card to the front most point of the page */
-    z-index: 999;
+    z-index: 1005;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);

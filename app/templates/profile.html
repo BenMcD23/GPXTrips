@@ -4,33 +4,75 @@
 
 {% block content %}
 <div class="d-flex justify-content-center align-items-center vh-100 profilePage">
-    <div class = "row justify-content-center flex-sm-row">
+    <div class="row justify-content-center flex-sm-row">
         <div class="col-auto">
             <div id="profileCard" class="card text-center p-5">
-                <h1>{{current_user.first_name}} {{current_user.last_name}}</h1>
+                <h1>{{ current_user.first_name }} {{ current_user.last_name }}</h1>
                 <p class="lead">{{ current_user.email }}</p>
                 <hr>
                 <h4>Manage Subscription</h4>
                 <br>
                 <div>
-                    <p>Your Current Payment Plan is currently {{userPlan}}</p>
-                    <p>It is due to {% if autoRenewal %}<b>Renew</b>{% else %}<b>expire</b>{% endif %} on the <b>{{expiryDate}}</b></p>
+                    <p>Your Current Payment Plan is currently {{ userPlan }}</p>
+                    <p>It is due to {% if autoRenewal %}<b>Renew</b>{% else %}<b>expire</b>{% endif %} on the <b>{{
+                            expiryDate }}</b></p>
                 </div>
                 {% if autoRenewal %}
                 <form method="post" action="{{ url_for('cancel_subscription') }}" id="cancelSubForm">
-                    <button type="submit" class="btn btn-outline-danger">Cancel Subscription</button>
+                    {{ subscription_form.hidden_tag() }}
+                    {{ subscription_form.cancel_subscription(class="btn btn-outline-danger") }}
                 </form>
                 {% else %}
-                <button id="renewButton" class="btn btn-outline-success">Renew</button>
+                <form method="post" action="{{ url_for('profile') }}" id="renewSubForm">
+                    {{ subscription_form.hidden_tag() }}
+                    {{ subscription_form.renew_subscription(class="btn btn-outline-success") }}
+                </form>
                 {% endif %}
                 <hr>
                 <h4>Manage Account</h4>
                 <br>
-                <button class="btn btn-outline-dark mb-1">Change Email</button>
-                <button class="btn btn-outline-dark mb-1">Change Password</button>
-                <button class="btn btn-outline-danger">Delete Account</button>
+                <form method="get" action="{{ url_for('change_email') }}" id="changeEmailForm">
+                    <button type="submit" class="btn btn-outline-dark">Change Email</button>
+                </form>
+                <form method="post" action="{{ url_for('change_password') }}" id="changePasswordForm">
+                    {{ account_form.hidden_tag() }}
+                    {{ account_form.change_password(class="btn btn-outline-dark mb-1") }}
+                </form>
+                
+                
+
+                <button type="button" class="btn btn-outline-danger" data-toggle="modal" data-target="#deleteAccountModal">
+                    Delete Account
+                </button>
+                
+                <!-- Delete Account Modal -->
+                <div class="modal fade" id="deleteAccountModal" tabindex="-1" role="dialog" aria-labelledby="deleteAccountModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="deleteAccountModalLabel">Are you sure?</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                This action cannot be undone. Are you sure you want to delete your account?
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                <form method="post" action="{{ url_for('delete_account') }}">
+                                    {{ account_form.hidden_tag() }}
+                                    <button type="submit" class="btn btn-danger">Delete</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
             </div>
 
+            <!-- Renew Card -->
             <div id="renewCard" class="overlapCard p-5">
                 <p id="backLink" class="text-left mb-1 linkStyle"><u>Back</u></p>
                 <div class="text-center">
@@ -38,28 +80,28 @@
                     <hr>
                     <table class="table">
                         <thead>
-                        <tr>
-                            <th>Plan</th>
-                            <th>Cost</th>
-                            <th></th>
-                        </tr>
+                            <tr>
+                                <th>Plan</th>
+                                <th>Cost</th>
+                                <th></th>
+                            </tr>
                         </thead>
                         <tbody>
-                        <tr>
-                            <th>52 Week</th>
-                            <td>£70.00</td>
-                            <td><input name="pp" id="radio1" type="radio" value="Year"></td>
-                        </tr>
-                        <tr>
-                            <th>4 Week</th>
-                            <td>£35.00</td>
-                            <td><input name="pp" id="radio2" type="radio" value="Month"></td>
-                        </tr>
-                        <tr>
-                            <th>1 Week</th>
-                            <td>£10.00</td>
-                            <td><input name="pp" id="radio3" type="radio" value="Week"></td>
-                        </tr>
+                            <tr>
+                                <th>52 Week</th>
+                                <td>£70.00</td>
+                                <td><input name="pp" id="radio1" type="radio" value="Year"></td>
+                            </tr>
+                            <tr>
+                                <th>4 Week</th>
+                                <td>£35.00</td>
+                                <td><input name="pp" id="radio2" type="radio" value="Month"></td>
+                            </tr>
+                            <tr>
+                                <th>1 Week</th>
+                                <td>£10.00</td>
+                                <td><input name="pp" id="radio3" type="radio" value="Week"></td>
+                            </tr>
                         </tbody>
                     </table>
                     <p>You will be redirected for payment. <b>Disclaimer:</b> Subscription is non-refundable.</p>
