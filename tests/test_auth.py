@@ -57,7 +57,7 @@ def test_successful_registration(client):
 
 
 def test_duplicate_email_registration(client):
-    test_user = models.User(email='test@example.com', password_hash=bcrypt.generate_password_hash('password'), date_created=datetime.now(), account_active=True, manager=False)
+    test_user = models.User(email='test@example.com', password_hash=bcrypt.generate_password_hash('password').decode('utf-8'), date_created=datetime.now(), account_active=True, manager=False)
     db.session.add(test_user)
     db.session.commit()
 
@@ -119,7 +119,7 @@ def test_registration_with_false_TandCConfirm(client):
 
 def test_login_successful_user(client):
     # Create a test user
-    test_user = models.User(email='test@example.com', password_hash=bcrypt.generate_password_hash('password'), date_created=datetime.now(), account_active=True, manager=False)
+    test_user = models.User(email='test@example.com', password_hash=bcrypt.generate_password_hash('password').decode('utf-8'), date_created=datetime.now(), account_active=True, manager=False)
     db.session.add(test_user)
     db.session.commit()
 
@@ -133,7 +133,7 @@ def test_login_successful_user(client):
 
 def test_login_successful_manager(client):
     # Create a test user
-    test_user = models.User(email='test@example.com', password_hash=bcrypt.generate_password_hash('password'), date_created=datetime.now(), account_active=True, manager=True)
+    test_user = models.User(email='test@example.com', password_hash=bcrypt.generate_password_hash('password').decode('utf-8'), date_created=datetime.now(), account_active=True, manager=True)
     db.session.add(test_user)
     db.session.commit()
 
@@ -147,7 +147,7 @@ def test_login_successful_manager(client):
 
 def test_invalid_password(client):
     # Create a test user
-    test_user = models.User(email='test@example.com', password_hash=bcrypt.generate_password_hash('password'), date_created=datetime.now(), account_active=True, manager=False)
+    test_user = models.User(email='test@example.com', password_hash=bcrypt.generate_password_hash('password').decode('utf-8'), date_created=datetime.now(), account_active=True, manager=False)
     db.session.add(test_user)
     db.session.commit()
 
@@ -161,7 +161,7 @@ def test_invalid_password(client):
 
 def test_deactivated_account(client):
     # Create a test user
-    test_user = models.User(email='test@example.com', password_hash=bcrypt.generate_password_hash('password'), date_created=datetime.now(), account_active=False, manager=False)
+    test_user = models.User(email='test@example.com', password_hash=bcrypt.generate_password_hash('password').decode('utf-8'), date_created=datetime.now(), account_active=False, manager=False)
     db.session.add(test_user)
     db.session.commit()
 
