@@ -545,10 +545,10 @@ def is_valid_gpx_structure(gpx_data):
         # Parse GPX data
         gpx = gpxpy.parse(gpx_data)
         # No exception means the GPX data is structurally valid
-        return True
+        return True, None
     except gpxpy.gpx.GPXException as e:
-        print(f"GPX parsing error: {e}")
-        return False
+        error_message = f"GPX parsing error: {e}"
+        return False, error_message
 
 
 @app.route('/upload', methods=['POST'])
@@ -581,7 +581,7 @@ def upload_file():
                         # Commit changes to the database
                         db.session.commit()
 
-                        return jsonify({'message': 'File uploaded successfully'})
+                        return jsonify({'message': 'File uploaded successfully'}), 200
                     except Exception as e:
                         db.session.rollback()  # Rollback changes if an exception occurs
                         print(f"Error: {e}")
@@ -597,8 +597,7 @@ def upload_file():
         print('Form validation failed')
         # Provide a more detailed error response for form validation failure
         return jsonify({'error': 'Form validation failed', 'errors': form.errors}), 400
-
-
+    
 @app.route('/getRouteForTable', methods=['GET'])
 def getRouteForTable():
     # get the current logged in users routes
