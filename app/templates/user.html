@@ -101,7 +101,7 @@
                                         <td>{{ i.name }}</td>
                                         <td>
                                             <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" name="addToMap" id="{{ i.id }}">
+                                                <input class="form-check-input" type="checkbox" name="friendAddToMap" id="{{ i.id }}">
                                                 <label class="form-check-label" for="{{ i.id }}"></label>
                                             </div>
                                         </td>
@@ -111,11 +111,11 @@
                                             </td>
                                         <td>
                                         
-                                            <button class="btn-primary viewInfoBtn" data-route-id="{{ i.id }}">View Info</button>
+                                            <button class="btn-primary friendViewInfoBtn" data-route-id="{{ i.id }}">View Info</button>
                                             <div>
-                                                <div class="popupDataContainer" id="popupDataContainer_{{ i.id }}">
+                                                <div class="popupDataContainer" id="friend_popupDataContainer_{{ i.id }}">
                                                     <div class="infoForm p-5 text-center">
-                                                        <span class="closeBtn" data-route-id="{{ i.id }}">&times;</span>
+                                                        <span class="friendCloseBtn" data-route-id="{{ i.id }}">&times;</span>
                                                         <h1>Route Information</h1>
                                                         <hr>
                                                         <p>Route Name: {{ i.name }}</p>
@@ -124,6 +124,7 @@
                                                         <p>Route Start: {{ i.start }}</p>
                                                         <p>Route End: {{ i.end }}</p>
                                                         <p>Upload Date: {{ i.upload_time }}</p>
+                                                        <p>Uploaded By: {{friend_names[loop.index0]}}</p>
                                                     </div>
                                                 </div>
                                             </div>

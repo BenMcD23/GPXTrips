@@ -327,6 +327,32 @@ def getRoute():
     return json.dumps(data)
 
 
+@app.route('/getFriendRoute', methods=['GET'])
+def getFriendRoute():
+    # post all routes to JavaScript
+    # get the friends of the currently logged in users
+    friends = getFriends()
+    routes = []
+    
+    # get the routes of the users friends
+    for f in friends:
+        for r in f.routes:
+            routes.append(r)
+
+    # dic for all data go in, goes into json
+    data = {}
+    # loop for all the routes
+    for i in routes:
+        # decode each route and get rid of \n
+        route = i.gpx_data.decode('ascii')
+        splitData = route.split("\\n")
+        route = "".join(splitData)[2:][:-1]
+        data[i.id] = route
+
+    # return as a json
+    return json.dumps(data)
+
+
 @app.route('/accountState', methods=['POST'])
 def accountState():
     # get data posted
