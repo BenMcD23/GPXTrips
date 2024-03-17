@@ -76,7 +76,7 @@ def login():
     # Create an instance of the LoginForm
     form = LoginForm()
 
-    if request.method == 'POST' and form.validate_on_submit():
+    if request.method == 'POST':
         # Query the user by email
         user = User.query.filter_by(email=form.email.data).first()
 
@@ -112,7 +112,7 @@ def register():
     # Create an instance of the RegistrationForm
     form = RegistrationForm()
 
-    if request.method == 'POST' and form.validate_on_submit():
+    if request.method == 'POST':
         # Request data from form
         email = form.email.data
         first_name = form.first_name.data
