@@ -2,10 +2,11 @@ from app import models
 
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, EmailField, SubmitField, BooleanField, IntegerField, FloatField
-from wtforms.validators import InputRequired, Length, Email, ValidationError
+from wtforms.validators import InputRequired, Length, Email, ValidationError, DataRequired, EqualTo
 from flask_wtf.file import FileField
 from .funcs import getCurrentBuisnessWeek
 import re
+
 
 def emailSearch_Validator(form, userEmail):
     # if the email isnt in the database and isnt an empty string
@@ -32,16 +33,21 @@ def price_Validator(form, new_price):
 
 class RegistrationForm(FlaskForm):
     email = EmailField("Email", validators=[InputRequired(), Email()])
-    first_name = StringField("First Name", validators=[InputRequired(), Length(min=3, max=128)])
-    last_name = StringField("Last Name", validators=[InputRequired(), Length(min=3, max=128)])
-    password = PasswordField("Password", validators=[InputRequired(), Length(min=8, max=32)])
-    confirm_password = PasswordField("Confirm Password", validators=[InputRequired()])
+    first_name = StringField("First Name", validators=[
+                             InputRequired(), Length(min=3, max=128)])
+    last_name = StringField("Last Name", validators=[
+                            InputRequired(), Length(min=3, max=128)])
+    password = PasswordField("Password", validators=[
+                             InputRequired(), Length(min=8, max=32)])
+    confirm_password = PasswordField("Confirm Password", validators=[
+                                     InputRequired(), EqualTo('password')])
     TandCConfirm = BooleanField('Accept Terms and Conditions')
 
 
 class LoginForm(FlaskForm):
     email = EmailField("Email", validators=[InputRequired(), Email()])
-    password = PasswordField("Password", validators=[InputRequired(), Length(min=8, max=32)])
+    password = PasswordField("Password", validators=[
+                             InputRequired(), Length(min=8, max=32)])
     rememberMe = BooleanField('Remember Me')
 
 
@@ -71,3 +77,30 @@ class ChangeMonthlyPrice(FlaskForm):
 class ChangeYearlyPrice(FlaskForm):
     yearly_new_price = FloatField('new_price', validators=[InputRequired(), price_Validator])
     yearly_submit_price = SubmitField('Update')
+
+
+# User Management Forms
+class SubscriptionForm(FlaskForm):
+    cancel_subscription = SubmitField('Cancel Subscription')
+    renew_subscription = SubmitField('Renew Subscription')
+
+
+class AccountForm(FlaskForm):
+    change_email = SubmitField('Change Email')
+    change_password = SubmitField('Change Password')
+    delete_account = SubmitField('Delete Account')
+
+
+class ChangeEmailForm(FlaskForm):
+    new_email = StringField('New Email', validators=[DataRequired(), Email()])
+    submit = SubmitField('Change Email')
+
+
+class ChangePasswordForm(FlaskForm):
+    old_password = PasswordField('Old Password', validators=[
+                                 DataRequired(), Length(min=8, max=32)])
+    new_password = PasswordField('New Password', validators=[
+                                 DataRequired(), Length(min=8, max=32)])
+    confirm_password = PasswordField('Confirm New Password', validators=[
+                                     DataRequired(), EqualTo('new_password')])
+    submit = SubmitField('Change Password')

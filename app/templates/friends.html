@@ -1,66 +1,70 @@
 {% extends 'base_post_login.html' %}
-
-{% block title %}User Home{% endblock %}
-
+{% block title %}Friends{% endblock %}
 {% block content %}
-
-<div class="smallGap">
-    <h3>Friends and Their Trips</h3>
-    <!-- Form to add friends -->
-    <form action="/add_friend" method="post">
-        <div class="form-group" id="friend-rqst">
-            <label for="friendEmail">Friend's Email:</label>
-            <input type="email" class="form-control" id="friendEmail" name="friend_email">
+<div class="d-flex justify-content-center align-items-center vh-100 profilePage">
+    <div class = "row justify-content-center flex-sm-row">
+        <div class="col-auto">
+            <div id="card" class="card p-5 text-center mt-0">
+                <h1>Friends</h1>
+                <nav class="navbar navbar-expand-sm navbar-light">
+                    <button class=" justify-content-center text-center navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                      <span class=" navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                      <ul class="navbar-nav mr-auto ml-auto">
+                        <li class="nav-item"><a id="linkOne" class="nav-link active">My Friends<span class="sr-only">(current)</span></a></li>
+                        <li class="nav-item"><a id="linkTwo" class="nav-link">Incoming Requests</a></li>
+                        <li class="nav-item"><a id="linkThree" class="nav-link">Search</a></li>
+                      </ul>
+                    </div>
+                </nav>
+                <div id="currentFriends">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Remove</th>
+                            </tr>
+                        </thead>
+                        <tbody id="friendslistresults">
+                        </tbody>
+                    </table>
+                </div>
+                <div id="incomingRequests">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Accept</th>
+                                <th>Decline</th>
+                            </tr>
+                        </thead>
+                        <tbody id="friendrequestresults">
+                        </tbody>
+                    </table>
+                </div>
+                <div id="searchFriends">
+                    <input id="userSearch" class="searchBar mb-2 mt-2 br-5" type="text">
+                    <button id="userSearchButton" class="searchButton">&#x1F50D</button>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="searchlistresults" >
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-        <button type="submit" id="addFriendButton" class="btn btn-primary" name="addFriendButton">Add Friend</button>
-    </form>
-    <!-- Display list of friends and their trips -->
-    <table class="table table-striped">
-        <h1>Friends List</h1>
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Surname</th>
-                <th>Email</th>
-                <!-- <th>View Trips</th> -->
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Loop through each friend -->
-            <tr>
-                <td> John </td>
-                <td> Doe </td>
-                <td> johndoe@gmail.com </td>
-                <!-- <td>
-                    <button type="button" class="btn btn-link">View Trips</button>
-                </td> -->
-            </tr>
-        </tbody>
-    </table>
-    <table class="table table-striped">
-        <h1>Pending Friend Requests</h1>
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Surname</th>
-                <th>Email</th>
-                <th>Status</th>
-                <!-- <th>View Trips</th> -->
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Loop through each friend -->
-            <tr>
-                <td> John </td>
-                <td> Cena </td>
-                <td> johncena@gmail.com </td>
-                <td> Accept/Refuse </td>
-                <!-- <td>
-                    <button type="button" class="btn btn-link">View Trips</button>
-                </td> -->
-            </tr>
-        </tbody>
-    </table>
+    </div>
+    
 </div>
 
+<script src="static/js/friends.js"></script>
 {% endblock %}

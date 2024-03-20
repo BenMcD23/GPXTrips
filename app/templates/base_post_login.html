@@ -26,6 +26,8 @@
     <script src="https://js.stripe.com/v3/"></script>
     <script src="{{ url_for('static', filename='js/stripe.js') }}"></script>
 
+    <!-- FOR AJAX POST -->
+    <div id="csrfToken" data-value="{{ csrf_token() }}" type="hidden"></div>
 
 
 </head>
@@ -55,16 +57,13 @@
                         <a class="nav-link" href="friends">Friends</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="settings">Settings</a>
-                    </li>
-                    <li class="nav-item">
                         <a id="logoutLink" class="nav-link" href="logout">Logout</a>
                     </li>
                 </ul>
             </div>
         </div>
     </nav>
-    <section class="container-fluid mt-4">
+    <section class="container-fluid justify-content-center">
         {% block content %}{% endblock %}
         <footer class="footer">
             <div class="container">
