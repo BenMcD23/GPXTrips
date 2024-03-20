@@ -16,10 +16,6 @@
     font-size: 1.8vh;
 }
 
-::placeholder {
-    text-align: center;
-}
-
 .card:hover {
     opacity: 1;
 }
@@ -30,10 +26,6 @@ a {
 
 .active {
     font-weight: bold;
-}
-
-input {
-    text-align: center;
 }
 
 input[type="text"],
@@ -64,4 +56,9 @@ a:hover {
 .linkStyle {
     width: fit-content; 
     height: fit-content;
+}
+
+#customForm label
+{
+    margin-left: 10px;
 }
