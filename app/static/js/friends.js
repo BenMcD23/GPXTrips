@@ -40,6 +40,13 @@ $(document).ready(function()
         $('#searchFriends').fadeIn(450);
     })
 
+    $(document).keypress(function(keyPressed){
+        if(keyPressed.which === 13)
+        { // If the enter key is pressed, click the search user button
+            $('#userSearchButton').click();
+        }
+    })
+
     updateFriendsList();
     updateFriendRequestList()
 });
