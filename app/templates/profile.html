@@ -10,40 +10,45 @@
                 <h1>{{ current_user.first_name }} {{ current_user.last_name }}</h1>
                 <p class="lead">{{ current_user.email }}</p>
                 <hr>
-                <h4>Manage Subscription</h4>
-                <br>
-                <div>
-                    <p>Your Current Payment Plan is currently {{ userPlan }}</p>
-                    <p>It is due to {% if autoRenewal %}<b>Renew</b>{% else %}<b>expire</b>{% endif %} on the <b>{{
-                            expiryDate }}</b></p>
-                </div>
-                {% if autoRenewal %}
-                <form method="post" action="{{ url_for('cancel_subscription') }}" id="cancelSubForm">
-                    {{ subscription_form.hidden_tag() }}
-                    {{ subscription_form.cancel_subscription(class="btn btn-outline-danger") }}
-                </form>
-                {% else %}
-                <form method="post" action="{{ url_for('profile') }}" id="renewSubForm">
-                    {{ subscription_form.hidden_tag() }}
-                    {{ subscription_form.renew_subscription(class="btn btn-outline-success") }}
-                </form>
-                {% endif %}
+                <fieldset>
+                    <legend>Manage Subscription</legend>
+                    <br>
+                    <div>
+                        <p>Your Current Payment Plan is currently {{ userPlan }}</p>
+                        <p>It is due to {% if autoRenewal %}<b>Renew</b>{% else %}<b>expire</b>{% endif %} on the <b>{{
+                                expiryDate }}</b></p>
+                    </div>
+                    {% if autoRenewal %}
+                    <form method="post" action="{{ url_for('cancel_subscription') }}" id="cancelSubForm">
+                        {{ subscription_form.hidden_tag() }}
+                        {{ subscription_form.cancel_subscription(class="btn btn-outline-danger", aria_label="Click to cancel your subscription") }}
+                    </form>
+                    {% else %}
+                    <form method="post" action="{{ url_for('profile') }}" id="renewSubForm">
+                        {{ subscription_form.hidden_tag() }}
+                        {{ subscription_form.renew_subscription(class="btn btn-outline-success", aria_label="Click to Renew your subscription")  }}
+                    </form>
+                    {% endif %}
+                </fieldset>
                 <hr>
-                <h4>Manage Account</h4>
-                <br>
-                <form method="get" action="{{ url_for('change_email') }}" id="changeEmailForm">
-                    <button type="submit" class="btn btn-outline-dark">Change Email</button>
-                </form>
-                <form method="post" action="{{ url_for('change_password') }}" id="changePasswordForm">
-                    {{ account_form.hidden_tag() }}
-                    {{ account_form.change_password(class="btn btn-outline-dark mb-1") }}
-                </form>
-                
-                
+                <fieldset>
+                    <legend>Manage Account</legend>
+                    <br>
+                    <form method="get" action="{{ url_for('change_email') }}" id="changeEmailForm">
+                        <button aria-label="Click to change your email" type="submit" class="btn btn-outline-dark">Change Email</button>
+                    </form>
+                    <form method="post" action="{{ url_for('change_password') }}" id="changePasswordForm">
+                        {{ account_form.hidden_tag() }}
+                        {{ account_form.change_password(class="btn btn-outline-dark mb-1", aria_label="Click to change your password") }}
+                    </form>
+                    
+                    
 
-                <button type="button" class="btn btn-outline-danger" data-toggle="modal" data-target="#deleteAccountModal">
-                    Delete Account
-                </button>
+                    <button aria-label="Click to delete your account!" type="button" class="btn btn-outline-danger" data-toggle="modal" data-target="#deleteAccountModal">
+                        Delete Account
+                    </button>
+
+                </fieldset>
                 
                 <!-- Delete Account Modal -->
                 <div class="modal fade" id="deleteAccountModal" tabindex="-1" role="dialog" aria-labelledby="deleteAccountModalLabel"
@@ -51,7 +56,7 @@
                     <div class="modal-dialog" role="document">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h5 class="modal-title" id="deleteAccountModalLabel">Are you sure?</h5>
+                                <h2 class="modal-title" id="deleteAccountModalLabel">Are you sure?</h2>
                                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                     <span aria-hidden="true">&times;</span>
                                 </button>
@@ -74,38 +79,40 @@
 
             <!-- Renew Card -->
             <div id="renewCard" class="overlapCard p-5">
-                <p id="backLink" class="text-left mb-1 linkStyle"><u>Back</u></p>
+                <p href="#" id="backLink" class="text-left mb-1 linkStyle">Back</p>
                 <div class="text-center">
-                    <h1>Choose your Plan</h1>
-                    <hr>
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Plan</th>
-                                <th>Cost</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <th>52 Week</th>
-                                <td>£70.00</td>
-                                <td><input name="pp" id="radio1" type="radio" value="Year"></td>
-                            </tr>
-                            <tr>
-                                <th>4 Week</th>
-                                <td>£35.00</td>
-                                <td><input name="pp" id="radio2" type="radio" value="Month"></td>
-                            </tr>
-                            <tr>
-                                <th>1 Week</th>
-                                <td>£10.00</td>
-                                <td><input name="pp" id="radio3" type="radio" value="Week"></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <p>You will be redirected for payment. <b>Disclaimer:</b> Subscription is non-refundable.</p>
-                    <button id="subButton" class="btn btn-outline-success">Renew</button>
+                    <fieldset>
+                        <legend class="h1">Choose your Plan</legend>
+                        <hr>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Plan</th>
+                                    <th>Cost</th>
+                                    <th>Chosen Subscription</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th><label for="radio1">52 Week</label></th>
+                                    <td>£70.00</td>
+                                    <td><input name="pp" id="radio1" type="radio" value="Year"></td>
+                                </tr>
+                                <tr>
+                                    <th><label for="radio2">4 Week</label></th>
+                                    <td>£35.00</td>
+                                    <td><input name="pp" id="radio2" type="radio" value="Month"></td>
+                                </tr>
+                                <tr>
+                                    <th><label for="radio3">1 Week</label></th>
+                                    <td>£10.00</td>
+                                    <td><input name="pp" id="radio3" type="radio" value="Week"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p>You will be redirected for payment. <b>Disclaimer:</b> Subscription is non-refundable.</p>
+                        <button aria-label="Click to Proceed to subscription payment" id="subButton" class="btn btn-success">Renew</button>
+                    </fieldset>
                 </div>
             </div>
         </div>

@@ -1,4 +1,5 @@
 {% extends "base_login_reg.html" %}
+{% block title %}Register{% endblock %}
 {% block content %} 
 <div class="d-flex justify-content-center align-items-center vh-100">
     <div class = "row justify-content-center flex-sm-row">
@@ -7,13 +8,17 @@
                 <a class="mb-1 linkStyle" href="/"><b>Back</b></a>
                 <h2>Register</h2>
                 <hr>
-                <form action="" method="post" name="RegistrationForm">
+                <form action="" method="post" name="RegistrationForm" class="text-left">
                     {{ form.hidden_tag() }}
-                    <p aria-label="Enter Your First Name Here" class="mb-0">{{ form.first_name(placeholder="First Name")}}</p>
-                    <p aria-label="Enter Your Last Name Here" class="mt-1 mb-0">{{ form.last_name(placeholder="Last Name")}}</p>
-                    <p aria-label="Enter Your Email Address Here" class="mt-1 mb-0">{{ form.email(placeholder="Email Address")}}</p>
-                    <p aria-label="Enter Your Password Here" class="mt-1 mb-0">{{ form.password(placeholder="Password")}}</p>
-                    <p aria-label="Re-enter Your Password Here To Confirm" class="mt-1">{{ form.confirm_password(placeholder="Confirm Password")}}</p>
+                    <fieldset>
+                        <legend class="mb-2 text-center">Account Information</legend>
+                        <p aria-label="Enter Your First Name Here" class="mb-3">{{form.first_name.label}}:{{ form.first_name(placeholder = "Enter First Name")}}</p>
+                        <p aria-label="Enter Your Last Name Here" class="mt-1 mb-3">{{form.last_name.label}}:{{ form.last_name(placeholder = "Enter Last Name")}}</p>
+                        
+                        <p aria-label="Enter Your Email Address Here" class="mt-1 mb-3">{{form.email.label}}:{{ form.email(placeholder = "Enter Email")}}</p>
+                        <p aria-label="Enter Your Password Here" class="mt-1 mb-3">{{form.password.label}}:{{ form.password(placeholder = "Enter Password")}}</p>
+                        <p aria-label="Re-enter Your Password Here To Confirm" class="mt-1">{{form.confirm_password.label}}{{ form.confirm_password(placeholder = "Re-Enter Password")}}</p>
+                    </fieldset>
                     {% with messages = get_flashed_messages() %}
                         {% if messages %}
                             <ul class="list-unstyled">
@@ -24,10 +29,18 @@
                         {% endif %}
                     {% endwith %}
                     <hr>
-                    <div>
-                        {{ form.TandCConfirm }}
-                        <label class="ml-1" for="TandCConfirm">I Agree to the <a id="TandCLink"><u>Terms and Conditions</u></a></label>
-                    </div>
+                    <fieldset>
+                        <legend class="mb-2 text-center">Terms and Conditions</legend>
+                        <div id="customForm" class="text-center">
+                            <p aria-label="Read and Accept Terms and Condition" class="mb-1">
+                                {{ form.TandCConfirm }}   
+                                {{ form.TandCConfirm.label}}
+                                
+                            </p>
+                            
+                            <p aria-label="View Terms and Conditions" >Click on this link to view <a class="mb-1 linkStyle" href='#' id="TandCLink">Terms and Conditions</a></p>
+                        </div>
+                    </fieldset>
                     <br>
                     <input aria-label="Register" type="submit" value="Register" class="btn btn-outline-dark"></input>
                 </form>
@@ -35,7 +48,7 @@
         </div>
         <div class="col-auto text-center">
             <div id="cardNumberTwoREG" class="card p-5">
-                <h1>MyGPS</h1>
+                <h1>GPXTrips</h1>
                 <hr>
                 <h2>Terms and Conditions</h2>
                 <br>
@@ -43,8 +56,8 @@
                     <p>By Signing up to this app, you agree the to the following:</p>
                     <ul>
                         <li class="mb-1">You may not cancel your subscription once payment has been made.</li>
-                        <li class="mb-1">You give MyGPS the right to store your data on our server.</li>
-                        <li class="mb-1">That MyGPS will not accept legal responsibility regarding the loss of your personal data.</li>
+                        <li class="mb-1">You give GPXTrips the right to store your data on our server.</li>
+                        <li class="mb-1">That GPXTrips will not accept legal responsibility regarding the loss of your personal data.</li>
                         <li class="mb-1">That I can confirm that I am over 13 years of age.</li>
                         <li class="mb-1">That I realise my account may be suspended for improper usage of the application</li>
                         <li class="mb-1">That unless cancelled, your subscription will renew at the end of your current subscription period</li>

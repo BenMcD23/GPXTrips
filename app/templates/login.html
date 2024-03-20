@@ -1,31 +1,36 @@
 {% extends "base_login_reg.html" %}
+{% block title %}GPXTrips{% endblock %}
 {% block content %} 
 <div class="d-flex justify-content-center align-items-center vh-100">
     <div class = "row justify-content-center flex-sm-row">
         <div class="col-auto mr-5">
             <div id="cardNumberOne" class="card p-5 text-center cardOneStyle">
                 <h1>Log Into Your Account</h1>
-                <form action="" method="post" name="loginForm">
+                <form action="" method="post" name="loginForm" class="text-left">
                     {{ form.hidden_tag() }}
                     <hr>
-                    <p aria-label="Enter Your Email Here" id="emailField" class="mb-0">{{ form.email(placeholder="Email", id="email") }}</p>
-                    <br>
-                    <p aria-label="Enter Your Password Here" class="mt-0">{{ form.password(placeholder="Password", id="pass") }}</p>
-                    {% with messages = get_flashed_messages() %}
-                        {% if messages %}
-                            <ul class="list-unstyled">
-                                {% for message in messages %}
-                                    <li class="flashedMessage">{{ message }} </li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                   {% endwith %}
-                   <br>
-                    <div>
-                        {{ form.rememberMe }}
-                        <label for="rememberMe">Remember Me</label>
-                    </div>
-                    <br>
+                    <fieldset>
+                        <legend class="text-center">Login Details</legend>
+                        <p aria-label="Enter Your Email Here" id="emailField" class="mb-0">{{form.email.label}}:{{ form.email(placeholder="Enter your email") }}</p>
+                        <br>
+                        <p aria-label="Enter Your Password Here" class="mt-0">{{form.password.label}}:{{ form.password(placeholder="Enter your Password") }}</p>
+                        
+                        {% with messages = get_flashed_messages() %}
+                            {% if messages %}
+                                <ul class="list-unstyled text-center">
+                                    {% for message in messages %}
+                                        <li class="flashedMessage">{{ message }} </li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        {% endwith %}
+                        <br>
+                        <div class="text-center">
+                            {{ form.rememberMe }}
+                            <label for="rememberMe">Remember Me</label>
+                        </div>
+                        <br>
+                    </fieldset>
                     <input aria-label="Log In" id="logBtn" type="submit" value="Log In" class="btn btn-outline-dark"></input>
                 </form>
                 <hr>
@@ -42,8 +47,8 @@
                     </button>
                     <div class="collapse navbar-collapse" id="navbarSupportedContent">
                       <ul class="navbar-nav mr-auto ml-auto">
-                        <li class="nav-item"><a id="linkOne" class="nav-link active">About Us<span class="sr-only">(current)</span></a></li>
-                        <li class="nav-item"><a id="linkTwo" class="nav-link">Payment Plans</a></li>
+                        <li class="nav-item"><a href='#' id="linkOne" class="nav-link active">About Us<span class="sr-only">(current)</span></a></li>
+                        <li class="nav-item"><a href='#' id="linkTwo" class="nav-link">Payment Plans</a></li>
                       </ul>
                     </div>
                   </nav>

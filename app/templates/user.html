@@ -20,14 +20,15 @@
                 </div>
             </nav>
             <div id="myRoutes">
-                <div class="table-responsive">
-                    <table class="table">
+                <div class="table">
+                    <table class="table-responsive">
                         <thead>
                             <tr>
                                 <th>File Name</th>
                                 <th>Display</th>
                                 <th>Published by</th>
-                                <th></th>
+                                <th>View Route Info</th>
+                                <th>Download Route Data</th>
                             </tr>
                         </thead>
                         <tbody id="table">
@@ -35,9 +36,14 @@
                             <tr>
                                 <td>{{ i.name }}</td>
                                 <td>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="addToMap" id="{{ i.id }}">
-                                        <label class="form-check-label" for="{{ i.id }}"></label>
+                                    <fieldset>
+                                        <legend></legend>
+                                    <div>
+                                        <label class="switch" for="{{ i.id }}">.
+                                            <input type="checkbox" name="addToMap" id="{{ i.id }}">
+                                            <span class="slider"></span>
+                                        </label>
+                                    </fieldset>
                                     </div>
                                 </td>
                                 <td>{{ i.user.first_name}} {{i.user.last_name}}</td>
@@ -72,7 +78,7 @@
                     <form id="fileUploadForm" method="POST" action="" name="fileUpload" enctype="multipart/form-data">
                         {{ FileUploadForm.hidden_tag() }}
                         <div class="form-group">
-                            <label for="fileUpload" class="form-label">Choose a GPX file to upload:</label>
+                            <label for="fileInput" class="form-label">Choose a GPX file to upload:</label>
                             <div class="input-group">
                                 {{ FileUploadForm.file_upload(accept=".gpx", class="file-upload-input", id="fileInput") }}
                                 {{ FileUploadForm.submit_file(class="submit-button") }}
@@ -92,7 +98,7 @@
                                 <th>File Name</th>
                                 <th>Display</th>
                                 <th>Uploaded by:</th>
-                                <th></th>
+                                <th>View Route Info</th>
                             </tr>
                         </thead>
                         <tbody id="table">
@@ -100,10 +106,15 @@
                                     <tr>
                                         <td>{{ i.name }}</td>
                                         <td>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" name="friendAddToMap" id="{{ i.id }}">
-                                                <label class="form-check-label" for="{{ i.id }}"></label>
-                                            </div>
+                                            <fieldset>
+                                                <legend></legend>
+                                                <div>
+                                                    <label class="switch" for="{{ i.id }}">.
+                                                        <input type="checkbox" name="friendAddToMap" id="{{ i.id }}">
+                                                        <span class="slider"></span>
+                                                    </label>
+                                                </div>
+                                            </fieldset>
                                         </td>
                                             <td>
                                                 {{friend_names[loop.index0]}}
@@ -161,36 +172,38 @@
         {% endif %}
         {% if disabled %}
         <div class="overlapCard text-center p-5">
-            <h1>Please Choose A Subscription Plan To Continue</h1>
-            <hr>
-            <table class="table">
-                <thead>
-                  <tr>
-                    <th>Plan</th>
-                    <th>Cost</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <th>52 Week</th>
-                    <td>£70.00</td>
-                    <td><input name="pp" id="radio1" type="radio" value="Year"></td>
-                  </tr>
-                  <tr>
-                    <th>4 Week</th>
-                    <td>£35.00</td>
-                    <td><input name="pp" id="radio2" type="radio" value="Month"></td>
-                  </tr>
-                  <tr>
-                    <th>1 Week</th>
-                    <td>£10.00</td>
-                    <td><input name="pp" id="radio3" type="radio" value="Week"></td>
-                  </tr>
-                </tbody>
-              </table>
-              <p>You will be redirected for payment. <b>Disclaimer:</b> Subscription is non-refundable.</p>
-              <button id="subButton" class="btn btn-outline-success">Subscribe</button>
+            <fieldset>
+                <legend class="h1">Please Choose A Subscription Plan To Continue</legend>
+                <hr>
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Plan</th>
+                        <th>Cost</th>
+                        <th>Chosen Subscription</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <th><label for="radio1">52 Week</label></th>
+                        <td>£70.00</td>
+                        <td><input name="pp" id="radio1" type="radio" value="Year"></td>
+                    </tr>
+                    <tr>
+                        <th><label for="radio2">4 Week</label></th>
+                        <td>£35.00</td>
+                        <td><input name="pp" id="radio2" type="radio" value="Month"></td>
+                    </tr>
+                    <tr>
+                        <th><label for="radio3">1 Week</label></th>
+                        <td>£10.00</td>
+                        <td><input name="pp" id="radio3" type="radio" value="Week"></td>
+                    </tr>
+                    </tbody>
+                </table>
+                <p>You will be redirected for payment. <b>Disclaimer:</b> Subscription is non-refundable.</p>
+                <button aria-label="Click to Proceed to subscription payment" id="subButton" class="btn btn-success">Subscribe</button>
+              </fieldset>
         </div>
         {% endif %}
     </div>

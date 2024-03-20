@@ -12,9 +12,9 @@
                     </button>
                     <div class="collapse navbar-collapse" id="navbarSupportedContent">
                       <ul class="navbar-nav mr-auto ml-auto">
-                        <li class="nav-item"><a id="linkOne" class="nav-link active">My Friends<span class="sr-only">(current)</span></a></li>
-                        <li class="nav-item"><a id="linkTwo" class="nav-link">Incoming Requests</a></li>
-                        <li class="nav-item"><a id="linkThree" class="nav-link">Search</a></li>
+                        <li class="nav-item"><a id="linkOne" href="#" class="nav-link active">My Friends<span class="sr-only">(current)</span></a></li>
+                        <li class="nav-item"><a id="linkTwo" href="#" class="nav-link">Incoming Requests</a></li>
+                        <li class="nav-item"><a id="linkThree" href="#" class="nav-link">Search</a></li>
                       </ul>
                     </div>
                 </nav>
@@ -46,14 +46,15 @@
                     </table>
                 </div>
                 <div id="searchFriends">
-                    <input id="userSearch" class="searchBar mb-2 mt-2 br-5" type="text">
+                    <p class="mb-0"><label for="userSearch">Search For a User:</label></p>
+                    <input id="userSearch" class="searchBar mb-2 br-5" type="text" placeholder="Enter a user email here">
                     <button id="userSearchButton" class="searchButton">&#x1F50D</button>
                     <table class="table table-striped">
                         <thead>
                             <tr>
                                 <th>Name</th>
                                 <th>Email</th>
-                                <th></th>
+                                <th>Add?</th>
                             </tr>
                         </thead>
                         <tbody id="searchlistresults" >
