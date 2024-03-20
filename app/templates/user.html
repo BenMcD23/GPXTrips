@@ -36,9 +36,14 @@
                             <tr>
                                 <td>{{ i.name }}</td>
                                 <td>
+                                    <fieldset>
+                                        <legend></legend>
                                     <div>
-                                        <label class="form-check-label" for="{{ i.id }}">View?</label>
-                                        <input class="form-check-input" type="checkbox" name="addToMap" id="{{ i.id }}">
+                                        <label class="switch" for="{{ i.id }}">.
+                                            <input type="checkbox" name="addToMap" id="{{ i.id }}">
+                                            <span class="slider"></span>
+                                        </label>
+                                    </fieldset>
                                     </div>
                                 </td>
                                 <td>{{ i.user.first_name}} {{i.user.last_name}}</td>
@@ -101,10 +106,15 @@
                                     <tr>
                                         <td>{{ i.name }}</td>
                                         <td>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" name="friendAddToMap" id="{{ i.id }}">
-                                                <label class="form-check-label" for="{{ i.id }}"></label>
-                                            </div>
+                                            <fieldset>
+                                                <legend></legend>
+                                                <div>
+                                                    <label class="switch" for="{{ i.id }}">.
+                                                        <input type="checkbox" name="friendAddToMap" id="{{ i.id }}">
+                                                        <span class="slider"></span>
+                                                    </label>
+                                                </div>
+                                            </fieldset>
                                         </td>
                                             <td>
                                                 {{friend_names[loop.index0]}}
