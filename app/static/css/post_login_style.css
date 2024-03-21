@@ -6,6 +6,10 @@
     width: 60px;
     height: 34px;
   }
+
+  body{
+    font-family: 'K2D', sans-serif;
+  }
   
   /* Hide default HTML checkbox */
   .switch input {
