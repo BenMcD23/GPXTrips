@@ -652,7 +652,7 @@ def stripe_webhook():
         customer_id = invoice_data['customer']
         customer_email = invoice_data['customer_email']
         plan_id = invoice_data['lines']['data'][0]['plan']['id']
-        subscription_id = invoice_data['id']
+        subscription_id = invoice_data['subscription']
 
         user = User.query.filter_by(email=customer_email).first()
 
