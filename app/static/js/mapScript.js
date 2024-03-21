@@ -122,7 +122,6 @@ function displayOnMap(id, isFriendRoute) {
       fileName = user_routes[id+"_name"]
     }
     
-    console.log(user_routes);
 
     // create route object
     let newGPX = new L.GPX(route_array, {
