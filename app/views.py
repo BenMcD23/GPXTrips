@@ -495,6 +495,7 @@ def getRoute():
         splitData = route.split("\\n")
         route = "".join(splitData)[2:][:-1]
         data[i.id] = route
+        data[str(i.id)+"_name"] = i.name
 
     # return as a json
     return json.dumps(data)
@@ -521,7 +522,8 @@ def getFriendRoute():
         splitData = route.split("\\n")
         route = "".join(splitData)[2:][:-1]
         data[i.id] = route
-
+        data[str(i.id)+"_name"] = i.name
+        
     # return as a json
     return json.dumps(data)
 
