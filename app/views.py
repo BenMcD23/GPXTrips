@@ -668,7 +668,7 @@ def stripe_webhook():
             print('Subscription created')
 
             # add to stats
-            subCost = plan.cost
+            subCost = plan.price
             addToStats(subCost)
 
         else:
