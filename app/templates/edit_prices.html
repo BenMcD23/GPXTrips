@@ -6,117 +6,106 @@
 
 
 <!-- This page will allow you to view and manage registered users. You can enable or disable their accounts. -->
-<h1>Amend Pricing Information</h1>
-<div class="table-container">
-    <h2>Subscription Prices Editor</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Subscription</th>
-                <th>Current Price</th>
-                <th>Update Price</th>
-                <th>Confirm Update</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>Weekly Subscription</td>
-                <td>{{ priceArray[0] }}</td> 
-                <!-- change to the ctual value from DB.as this would not be true after one update -->
-                <td>
-                    <form method="post" action="" name="changeRev">
-                        
-                        {{ WeeklyPriceForm.hidden_tag() }}
+<fieldset>
+    <legend><h1>Amend Pricing Information</h1></legend>
+    <div class="table-container">
+        <h2>Subscription Prices Editor</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Subscription</th>
+                    <th>Current Price</th>
+                    <th>Update Price</th>
+                    <th>Confirm Update</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><h3>Weekly Subscription</h3></td>
+                    <td><h3>£{{ priceArray[0] }}</h3></td> 
+                    <!-- change to the ctual value from DB.as this would not be true after one update -->
+                    <td>
+                        <form method="post" action="" name="changeRev">
                             
-                                {% if WeeklyPriceForm.weekly_new_price.errors %}
-                                {{ WeeklyPriceForm.weekly_new_price(class="form-control form-control-lg is-invalid") }}
-                                <div class="invalid-feedback">
-                                    {% for error in WeeklyPriceForm.weekly_new_price.errors %}
-                                        <span>• {{ error }}</span>
-                                        <br>
-                                    {% endfor %}
-                                </div>
-                                {% else %}
-                                {{ WeeklyPriceForm.weekly_new_price(class="form-control", placeholder="£") }}
-                                {% endif %}
-                        
-
-                                
-                </td>
-                <td>   
-                    {{ WeeklyPriceForm.weekly_submit_price }}
-                </td>
-
-                    </form>
-
-            </tr>
-            <tr>
-                <td>Monthly Subscription</td>
-                <td>{{ priceArray[1] }}</td> 
-                <!-- change to the ctual value from DB.as this would not be true after one update -->
-                <td>
-                    <form method="post" action="" name="changeRev">
-                        
-                        {{ MonthlyPriceForm.hidden_tag() }}
+                            {{ WeeklyPriceForm.hidden_tag() }}
+                            <label for="weeklyPrice"><h3>New Weekly Price:</h3></label>
+                            {% if WeeklyPriceForm.weekly_new_price.errors %}
+                            {{ WeeklyPriceForm.weekly_new_price(class="form-control form-control-lg is-invalid", id="weeklyPrice") }}
+                            <div class="invalid-feedback">
+                                {% for error in WeeklyPriceForm.weekly_new_price.errors %}
+                                    <span>• {{ error }}</span>
+                                    <br>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            {{ WeeklyPriceForm.weekly_new_price(class="form-control", placeholder="£", id="weeklyPrice") }}
+                            {% endif %}
+                        </form>
+                    </td>
+                    <td>   
+                        {{ WeeklyPriceForm.weekly_submit_price(class="btn-primary") }}
+                    </td>
+                </tr>
+                <tr>
+                    <td><h3>Monthly Subscription</h3></td>
+                    <td><h3>£{{ priceArray[1] }}</h3></td> 
+                    <!-- change to the ctual value from DB.as this would not be true after one update -->
+                    <td>
+                        <form method="post" action="" name="changeRev">
                             
-                                {% if MonthlyPriceForm.monthly_new_price.errors %}
-                                {{ MonthlyPriceForm.monthly_new_price(class="form-control form-control-lg is-invalid") }}
-                                <div class="invalid-feedback">
-                                    {% for error in MonthlyPriceForm.monthly_new_price.errors %}
-                                        <span>• {{ error }}</span>
-                                        <br>
-                                    {% endfor %}
-                                </div>
-                                {% else %}
-                                {{ MonthlyPriceForm.monthly_new_price(class="form-control", placeholder="£") }}
-                                {% endif %}
-                        
+                            {{ MonthlyPriceForm.hidden_tag() }}
+                            <label for="monthlyPrice"><h3>New Monthly Price:</h3></label>
+                            {% if MonthlyPriceForm.monthly_new_price.errors %}
+                            {{ MonthlyPriceForm.monthly_new_price(class="form-control form-control-lg is-invalid", id="monthlyPrice") }}
+                            <div class="invalid-feedback">
+                                {% for error in MonthlyPriceForm.monthly_new_price.errors %}
+                                    <span>• {{ error }}</span>
+                                    <br>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            {{ MonthlyPriceForm.monthly_new_price(class="form-control", placeholder="£", id="monthlyPrice") }}
+                            {% endif %}
+            
+                        </form>
+                                    
+                    </td>
+                    <td>   
+                        {{ MonthlyPriceForm.monthly_submit_price(class="btn-primary")}}
+                    </td>
 
-                                
-                </td>
-                <td>   
-                    {{ MonthlyPriceForm.monthly_submit_price }}
-                </td>
-
-                    </form>
-
-            </tr>
-            <tr>
-                <td>Yearly Subscription</td>
-                <td>{{ priceArray[2] }}</td> 
-                <!-- change to the ctual value from DB.as this would not be true after one update -->
-                <td>
-                    <form method="post" action="" name="changeRev">
-                        
-                        {{ YearlyPriceForm.hidden_tag() }}
+                </tr>
+                <tr>
+                    <td><h3>Yearly Subscription</h3></td>
+                    <td><h3>£{{ priceArray[2] }}</h3></td> 
+                    <!-- change to the ctual value from DB.as this would not be true after one update -->
+                    <td>
+                        <form method="post" action="" name="changeRev">
                             
-                                {% if YearlyPriceForm.yearly_new_price.errors %}
-                                {{ YearlyPriceForm.yearly_new_price(class="form-control form-control-lg is-invalid") }}
-                                <div class="invalid-feedback">
-                                    {% for error in YearlyPriceForm.yearly_new_price.errors %}
-                                        <span>• {{ error }}</span>
-                                        <br>
-                                    {% endfor %}
-                                </div>
-                                {% else %}
-                                {{ YearlyPriceForm.yearly_new_price(class="form-control", placeholder="£") }}
-                                {% endif %}
-                        
-
-                                
-                </td>
-                <td>   
-                    {{ YearlyPriceForm.yearly_submit_price }}
-                </td>
-
-                    </form>
-
-            </tr>
-        </tbody>
-    </table>
-
-</div>
-<p class="currency-info"><u>IMPORTANT</u><br>Must also ammend prices on stripe.</p>
+                            {{ YearlyPriceForm.hidden_tag() }}
+                            <label for="yearlyPrice"><h3>New Yearly Price:</h3></label>
+                            {% if YearlyPriceForm.yearly_new_price.errors %}
+                            {{ YearlyPriceForm.yearly_new_price(class="form-control form-control-lg is-invalid", id="yearlyPrice") }}
+                            <div class="invalid-feedback">
+                                {% for error in YearlyPriceForm.yearly_new_price.errors %}
+                                    <span>• {{ error }}</span>
+                                    <br>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            {{ YearlyPriceForm.yearly_new_price(class="form-control", placeholder="£", id="yearlyPrice") }}
+                            {% endif %}
+                        </form>                
+                    </td>
+                    <td>   
+                        {{ YearlyPriceForm.yearly_submit_price(class="btn-primary") }}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <h1 class="currency-info">IMPORTANT<br>Must also ammend prices on stripe.</h1>
+</fieldset>
 
 
 {% endblock %}
