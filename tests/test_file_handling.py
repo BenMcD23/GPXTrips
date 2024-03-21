@@ -44,7 +44,7 @@ def client():
                 "password").decode('utf-8')
             user = models.User(email='test@example.com', first_name='first_name', last_name='last_name',
                         password_hash=hashed_password, date_created=datetime.now(), account_active=True, manager=False)
-            plan = models.Plan(name="Weekly", monthly_cost=10.00, stripe_price_id = stripe_keys['price_id_1_week'])
+            plan = models.Plan(name="Weekly", price=10.00, stripe_price_id = stripe_keys['price_id_1_week'])
             subscription = models.Subscription(user_id=user.id, plan_id=plan.id, date_start=datetime.now(), date_end=datetime(2025, 5, 17), active=True)
             db.session.add(user)
             db.session.add(plan)
