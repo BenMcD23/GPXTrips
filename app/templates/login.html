@@ -72,4 +72,22 @@
         </div>
     </div>
 </div>
+
+<!-- inline script so can use jinja -->
+<script nonce="{{ csp_nonce() }}">
+    $("#linkTwo").click(function()
+    { // Changes the content displayed in the right-hand card to the "payment plans" section
+        $("#cBodyOne").hide();
+        $("#cBodyTwo").hide();
+        $("#cBodyThree").hide();
+        $("#cBodyOne").text(" 52 Weeks = {{ priceArray[2] }}");
+        $("#cBodyTwo").text(" 4 Weeks = {{ priceArray[1] }}");
+        $("#cBodyThree").text(" 1 Week = {{ priceArray[0] }}");
+        $("#cBodyOne").fadeIn(300);
+        $("#cBodyTwo").fadeIn(300);
+        $("#cBodyThree").fadeIn(300);
+        $("#linkOne").removeClass("active");
+        $("#linkTwo").addClass("active");
+    })
+</script>
 {% endblock %}

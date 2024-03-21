@@ -1,0 +1,62 @@
+{% extends 'base_manager.html' %}
+
+{% block title %}FAQ Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1>Frequently Asked Questions</h1>
+    <div class="faq-box">
+        <div class="faq-item">
+            <div class="faq-question">Q: What is GPXTrips?</div>
+            <div class="faq-answer">
+                A: At GPXTrips, we specialize in providing a powerful SaaS platform tailored for outdoor enthusiasts, athletes, and travelers. Our platform allows users to upload GPX files – a popular file format for GPS data – and gain valuable insights into their journeys.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">Q: How can I contact GPXTrips?</div>
+            <div class="faq-answer">
+                A: You can contact any of the developers at the following email addresses:
+                sc22f2s@leeds.ac.uk [Fidele], sc22jo@leeds.ac.uk [Jakub], sc22jp@leeds.ac.uk [James], sc22bm@leeds.ac.uk [Benjamin], ed20jwt@leeds.ac.uk [Joseph], sc22hd@leeds.ac.uk [Hansel].
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">Q: My account has been disabled. What do I do?</div>
+            <div class="faq-answer">
+                A: Contact Support: If you're unable to determine the reason for the account disablement or if you believe it was done in error, please contact our developers team immediately.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">Q: Can I use my account on multiple devices?
+            </div>
+            <div class="faq-answer">
+                A: Yes, you can use your account on multiple devices. However, you can only be logged in on one device at a time.
+            </div>
+        </div>
+    </div>
+
+
+    
+    <button id="createFAQButton" class="btn-primary">Create New FAQ</button>
+
+</div>
+
+<!-- Pop-up form -->
+<div class="overlay" id="overlay"></div>
+<div class="popup-form" id="popupForm">
+    <h2>Create New FAQ</h2>
+    <form action="" method="post">
+        <label for="question">Question:</label><br>
+        <input type="text" id="question" name="question" required><br><br>
+        <label for="answer">Answer:</label><br>
+        <textarea id="answer" name="answer" rows="4" required></textarea><br><br>
+        <button id="submitButton" type="submit">Submit</button>
+        <button id="cancelButton" type="button">Cancel</button>
+    </form>
+</div>
+
+<script src="../static/js/faq.js"></script>
+
+{% endblock %}

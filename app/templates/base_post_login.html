@@ -7,27 +7,19 @@
     <title>{% block title %}User Home Page{% endblock %}</title>
 
     <!-- GENERAL HEADERS -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <!-- Bootstrap -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
+    <!-- Jquery and Ajax -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <!-- bootstrap js -->
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
-
+    
     <link rel="stylesheet" href="../static/css/post_login_style.css">
-
-    <!-- MAP HEADERS -->
-    <!-- leaflet -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    <!-- GPX plugin for leaflet -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/gpx.min.js"></script>
-    <!-- leaflet css -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 
     <!-- STRIPE HEADERS -->
     <script src="https://js.stripe.com/v3/"></script>
     <script src="{{ url_for('static', filename='js/stripe.js') }}"></script>
 
-    <!-- FOR AJAX POST -->
-    <div id="csrfToken" data-value="{{ csrf_token() }}" type="hidden"></div>
 
 
 </head>
@@ -57,13 +49,16 @@
                         <a class="nav-link" href="friends">Friends</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="settings">Settings</a>
+                    </li>
+                    <li class="nav-item">
                         <a id="logoutLink" class="nav-link" href="logout">Logout</a>
                     </li>
                 </ul>
             </div>
         </div>
     </nav>
-    <section class="container-fluid justify-content-center">
+    <section class="container-fluid mt-4">
         {% block content %}{% endblock %}
         <footer class="footer">
             <div class="container">

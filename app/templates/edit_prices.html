@@ -1,0 +1,122 @@
+{% extends 'base_manager.html' %}
+
+{% block title %}Edit Prices{% endblock %}
+
+{% block content %}
+
+
+<!-- This page will allow you to view and manage registered users. You can enable or disable their accounts. -->
+<h1>Amend Pricing Information</h1>
+<div class="table-container">
+    <h2>Subscription Prices Editor</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Subscription</th>
+                <th>Current Price</th>
+                <th>Update Price</th>
+                <th>Confirm Update</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Weekly Subscription</td>
+                <td>{{ priceArray[0] }}</td> 
+                <!-- change to the ctual value from DB.as this would not be true after one update -->
+                <td>
+                    <form method="post" action="" name="changeRev">
+                        
+                        {{ WeeklyPriceForm.hidden_tag() }}
+                            
+                                {% if WeeklyPriceForm.weekly_new_price.errors %}
+                                {{ WeeklyPriceForm.weekly_new_price(class="form-control form-control-lg is-invalid") }}
+                                <div class="invalid-feedback">
+                                    {% for error in WeeklyPriceForm.weekly_new_price.errors %}
+                                        <span>• {{ error }}</span>
+                                        <br>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                {{ WeeklyPriceForm.weekly_new_price(class="form-control", placeholder="£") }}
+                                {% endif %}
+                        
+
+                                
+                </td>
+                <td>   
+                    {{ WeeklyPriceForm.weekly_submit_price }}
+                </td>
+
+                    </form>
+
+            </tr>
+            <tr>
+                <td>Monthly Subscription</td>
+                <td>{{ priceArray[1] }}</td> 
+                <!-- change to the ctual value from DB.as this would not be true after one update -->
+                <td>
+                    <form method="post" action="" name="changeRev">
+                        
+                        {{ MonthlyPriceForm.hidden_tag() }}
+                            
+                                {% if MonthlyPriceForm.monthly_new_price.errors %}
+                                {{ MonthlyPriceForm.monthly_new_price(class="form-control form-control-lg is-invalid") }}
+                                <div class="invalid-feedback">
+                                    {% for error in MonthlyPriceForm.monthly_new_price.errors %}
+                                        <span>• {{ error }}</span>
+                                        <br>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                {{ MonthlyPriceForm.monthly_new_price(class="form-control", placeholder="£") }}
+                                {% endif %}
+                        
+
+                                
+                </td>
+                <td>   
+                    {{ MonthlyPriceForm.monthly_submit_price }}
+                </td>
+
+                    </form>
+
+            </tr>
+            <tr>
+                <td>Yearly Subscription</td>
+                <td>{{ priceArray[2] }}</td> 
+                <!-- change to the ctual value from DB.as this would not be true after one update -->
+                <td>
+                    <form method="post" action="" name="changeRev">
+                        
+                        {{ YearlyPriceForm.hidden_tag() }}
+                            
+                                {% if YearlyPriceForm.yearly_new_price.errors %}
+                                {{ YearlyPriceForm.yearly_new_price(class="form-control form-control-lg is-invalid") }}
+                                <div class="invalid-feedback">
+                                    {% for error in YearlyPriceForm.yearly_new_price.errors %}
+                                        <span>• {{ error }}</span>
+                                        <br>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                {{ YearlyPriceForm.yearly_new_price(class="form-control", placeholder="£") }}
+                                {% endif %}
+                        
+
+                                
+                </td>
+                <td>   
+                    {{ YearlyPriceForm.yearly_submit_price }}
+                </td>
+
+                    </form>
+
+            </tr>
+        </tbody>
+    </table>
+
+</div>
+<p class="currency-info"><u>IMPORTANT</u><br>Must also ammend prices on stripe.</p>
+
+
+{% endblock %}

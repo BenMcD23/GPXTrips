@@ -4,18 +4,163 @@
 
 {% block content %}
 
-<div class="chart-container">
-    <h1>Future Revenue Estimates</h1>
-    <!-- Bar char of future revenue estimates -->
 
-    <div id="revenueEstimates">
-        <!-- Get actual total value from past data from DB -->
-        <h2>Past Revenue</h2>
-        <p>Total: £0</p> 
-        <p>Last Month: £0</p>
-        <p>Last Quarter: £0</p>
+
+    <select>
+        <option value="past">View Past Revenue</option>
+        <option value="future">View Estimated Future Revenue</option>
+    </select>
+
+    <!-- dont change class name, the jquery works using "past chart" -->
+    <div class="past chart"> 
+        <h1>Past Revenue</h1>
+
+        <!-- chart of future revenue estimates -->
+        <div class="chart-container">
+            <canvas id="pastChart"></canvas>
+        
+            <div class="form">
+                <form method="post" action="" name="changeRev">
+                    
+                    {{ ChangeRevWeeksForm.hidden_tag() }}
+                    <div class="form-grp">
+                        <label for="weeks" class="week-label">Number of weeks in the past to display:</label>
+                        
+                        <div class="bar-button">
+                            {% if ChangeRevWeeksForm.weeks.errors %}
+                            {{ ChangeRevWeeksForm.weeks(class="form-control form-control-lg is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in ChangeRevWeeksForm.weeks.errors %}
+                                    <span>• {{ error }}</span>
+                                    <br>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            {{ ChangeRevWeeksForm.weeks(class="form-control", placeholder="Number of Weeks") }}
+                            {% endif %}
+                    
+                            <div class="formButton">
+                                {{ ChangeRevWeeksForm.submitWeeks }}
+                            </div>
+                            
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <p class="currency-info"><u>Total All Time Revenue: £{{ total_rev }}</u></p>
+        </div>
+
     </div>
-</div>
+    
+    <!-- dont change class name, the jquery works using "future chart" -->
+    <div class="future chart">
+        <h1>Future Revenue Estimate</h1>
+
+        <div class="chart-container">
+            <!-- chart of future revenue estimates -->
+            <canvas id="futureChart"></canvas>
+
+            {% if noEstimate == True %}
+                <p class="currency-info"><u>There isnt enought data to estimate the revenue</u></p>
+            {% else %}
+                <p class="currency-info"><u>Current Revenue Compound Weekly Growth Rate: £{{ CWGR_rev }}</u></p> 
+                <p class="currency-info"><u>Current Customer Compound Weekly Growth Rate: £{{ CWGR_cus }}</u></p> 
+                <p class="currency-info"><u>INFO</u><br>The Compound Weekly Growth Formula based on the past 4 weeks, if there is 4 weeks of data. If there isn't 4 weeks of data, it uses the latest completed week and the oldest week.
+                    <br><br>It is then compounded on the last completed weeks revenue.</p> 
+
+            {% endif %}
+        </div>
+    </div>
+
+
+
+
+    <!-- chart script -->
+    <script nonce="{{ csp_nonce() }}">
+        // estimated rev graph
+        const labels_future = {{ weeks_future | tojson }};
+
+        const data = {
+        labels: labels_future,
+        datasets: [
+            {
+                label: 'Estimated Revenue',
+                // sets colour of the line, change both for colour change
+                backgroundColor: 'rgb(100, 99, 132)',
+                borderColor: 'rgb(100, 99, 132)',
+                data: {{ revData_future | tojson }},
+            },
+            {
+                label: 'Estimated Customers',
+                // sets colour of the line, change both for colour change
+                backgroundColor: 'rgb(200, 99, 132)',
+                borderColor: 'rgb(200, 99, 132)',
+                data: {{ customerData_future | tojson }},
+            }
+        ]
+        };
+
+        const config = {
+        type: 'line',
+        data: data,
+        options: { maintainAspectRatio: false, 
+            scales: {
+                y: {
+                    ticks: {
+                        // Include a dollar sign in the ticks
+                        callback: function(value, index, ticks) {
+                            return '£' + value;
+                        }
+                    }
+                }
+            } 
+        }
+        };
+
+        const chart_future = new Chart(
+        document.getElementById('futureChart'),
+        config,
+        );
+        
+        // past rev chart
+        const labels_past = {{ weeks_past | tojson }};
+
+        const data_past = {
+        labels: labels_past,
+        datasets: [
+            {
+                label: 'Revenue',
+                // sets colour of the line, change both for colour change
+                backgroundColor: 'rgb(100, 99, 132)',
+                borderColor: 'rgb(100, 99, 132)',
+                data: {{ revData_past | tojson }},
+            }
+        ]
+        };
+
+        const config_past = {
+        type: 'bar',
+        data: data_past,
+        options: { maintainAspectRatio: false,
+            scales: {
+                y: {
+                    ticks: {
+                        // Include a dollar sign in the ticks
+                        callback: function(value, index, ticks) {
+                            return '£' + value;
+                        }
+                    }
+                }
+            } 
+        }
+        };
+
+        const chart_past = new Chart(
+        document.getElementById('pastChart'),
+        config_past
+        );
+
+    </script>
 
 
 {% endblock %}

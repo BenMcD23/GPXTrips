@@ -1,3 +1,5 @@
+// for manange users page
+
 // on load
 $(document).ready(function()
 {
@@ -37,13 +39,11 @@ function changeUserState(id){
     var state;
     // if gets checked
     if (checkbox_state.checked) {
-        $("#textUser_"+id).text("True");
         state = true;
     }
 
     // if it gets unchecked
     else {
-        $("#textUser_"+id).text("False");
         state = false
     }
 
@@ -74,13 +74,11 @@ function changeMangement(id){
     var state;
     // if gets checked
     if (checkbox_state.checked) {
-        $("#textManager_"+id).text("True");
         state = true;
     }
 
     // if it gets unchecked
     else {
-        $("#textManager_"+id).text("False");
         state = false
     }
 
@@ -101,26 +99,3 @@ function changeMangement(id){
     } 
     });
 }
-
-// email search
-$(document).ready(function(){
-    var emails=[];
-    
-    function getEmails(){
-        // get all the emails from database
-        $.getJSON('/emails', function(data, status, xhr){
-            // add them all to the array
-            for (var i = 0; i < data.length; i++ ) {
-                emails.push(data[i].email);
-            }
-    });
-    };
-    
-    // call get emails
-    getEmails();
-
-    // autocomplete the search box
-    $('#userEmail').autocomplete({
-        source: emails,
-        });
-    });

@@ -114,11 +114,14 @@ function displayOnMap(id, isFriendRoute) {
     let chosen_color = 'blue';
     if (isFriendRoute){
       route_array = friend_routes[id]
+      fileName = friend_routes[id+"_name"]
       chosen_color = 'green';
     }
     else{
       route_array = user_routes[id]
+      fileName = user_routes[id+"_name"]
     }
+    
 
     // create route object
     let newGPX = new L.GPX(route_array, {
@@ -131,7 +134,7 @@ function displayOnMap(id, isFriendRoute) {
         endIconUrl:   'static/images/pinend.png',
         shadowUrl: null,
       },
-    });
+    }).bindPopup("<h5>File Name:</h5>" + fileName);
 
     // add to dic
     GPX[id] = newGPX;
@@ -140,6 +143,8 @@ function displayOnMap(id, isFriendRoute) {
       var gpx = e.target;
       map.fitBounds(gpx.getBounds());
     }).addTo(map);
+
+
   } 
   // if box been unchecked
   else {
@@ -147,6 +152,7 @@ function displayOnMap(id, isFriendRoute) {
     GPX[id].remove(map);
  }
 }
+
 
 //JS Code to handle pop-up forms (Manage GPX Files)
 document.addEventListener('DOMContentLoaded', function () {

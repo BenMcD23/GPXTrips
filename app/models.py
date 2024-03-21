@@ -25,10 +25,9 @@ class User(db.Model, UserMixin):
     def check_password(self, password):
         return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
 
-    # returns as dict so can be used for search bar
-
-    def email_as_dict(self):
-        return {'email': self.email}
+    # returns so can easily create array of all emails
+    def email_return(self):
+        return self.email
 
     # returns if current user is manager or not
     def is_manager(self):
@@ -50,9 +49,11 @@ class Route(db.Model):
 class Plan(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128), unique=True, nullable=False)
-    monthly_cost = db.Column(db.Float)
+    price = db.Column(db.Float)
     stripe_price_id = db.Column(db.String(255), nullable=False)
 
+    def price_as_pound(self):
+        return '£{:.2f}'.format(round(self.price, 2))
 
 class Subscription(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -65,6 +66,13 @@ class Subscription(db.Model):
     active = db.Column(db.Boolean, default=True)
 
     plan = db.relationship('Plan', backref='subscriptions')
+
+
+class SubscriptionStats(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    week_of_business = db.Column(db.Integer)
+    total_revenue = db.Column(db.Float)
+    num_customers = db.Column(db.Integer)
 
 
 class Friendship(db.Model):

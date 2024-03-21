@@ -11,20 +11,6 @@ $(document).ready(function()
         $("#cardNumberTwo").fadeIn(900);
     })
 
-    $("#linkTwo").click(function()
-    { // Changes the content displayed in the right-hand card to the "payment plans" section
-        $("#cBodyOne").hide();
-        $("#cBodyTwo").hide();
-        $("#cBodyThree").hide();
-        $("#cBodyOne").text(" 52 Weeks = £70");
-        $("#cBodyTwo").text(" 4 Week = £35");
-        $("#cBodyThree").text(" 1 Week = £10");
-        $("#cBodyOne").fadeIn(300);
-        $("#cBodyTwo").fadeIn(300);
-        $("#cBodyThree").fadeIn(300);
-        $("#linkOne").removeClass("active");
-        $("#linkTwo").addClass("active");
-    })
 
     $("#linkOne").click(function()
     { // Changes the content displayed in the right hand card to the "about us" section

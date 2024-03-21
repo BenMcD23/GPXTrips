@@ -1,8 +1,9 @@
 from flask import request
 from config import stripe_keys
+from sqlalchemy import func
 from app import app, db, admin, bcrypt, csrf
 from flask_admin.contrib.sqla import ModelView
-from .models import User, Plan, Subscription, Route, Friendship, FriendRequest
+from .models import User, Plan, Subscription, Route, SubscriptionStats, Friendship, FriendRequest
 from flask import Flask, render_template, request, redirect, url_for, send_file, flash, jsonify, abort, send_file
 from flask_login import login_user, login_required, logout_user, current_user
 from .forms import *
@@ -12,6 +13,8 @@ import stripe
 import json
 import gpxpy
 from functools import wraps
+from .funcs import getCurrentBuisnessWeek
+import time
 from io import BytesIO
 from xml.etree import ElementTree as ET
 from geopy.distance import geodesic
@@ -31,13 +34,18 @@ class RouteView(ModelView):
 
 class PlanView(ModelView):
     # Custom view class for the Plan model
-    column_list = ['name', 'monthly_cost', 'stripe_price_id']
+    column_list = ['name', 'price', 'stripe_price_id']
 
 
 class SubscriptionView(ModelView):
     # Custom view class for the Subscription model
     column_list = ['user', 'plan',
                    'subscription_id', 'customer_id', 'date_start', 'date_end', 'active']
+
+class SubscriptionStatsView(ModelView):
+    # Custom view class for the Subscription model
+    column_list = ['week_of_business', 'total_revenue', 'num_customers']
+
 
 class FriendshipView(ModelView):
     # Custom view class for the Friendship model
@@ -52,6 +60,7 @@ admin.add_view(UserView(User, db.session))
 admin.add_view(RouteView(Route, db.session))
 admin.add_view(PlanView(Plan, db.session))
 admin.add_view(SubscriptionView(Subscription, db.session))
+admin.add_view(SubscriptionStatsView(SubscriptionStats, db.session))
 admin.add_view(FriendshipView(Friendship, db.session))
 admin.add_view(FriendRequestView(FriendRequest, db.session))
 
@@ -72,6 +81,10 @@ def manger_required():
 
 @app.route("/", methods=["GET", "POST"])
 def login():
+    # get all prices and turn them into an array
+    allPlans = Plan.query.all()
+    priceArray = [i.price_as_pound() for i in allPlans]
+
     # Login route
     # Create an instance of the LoginForm
     form = LoginForm()
@@ -103,7 +116,7 @@ def login():
 
         return redirect(url_for("login"))
 
-    return render_template("login.html", title="Login", form=form)
+    return render_template("login.html", title="Login", priceArray=priceArray, form=form)
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -142,7 +155,6 @@ def register():
         # Hash password and add used to the database
         hashed_password = bcrypt.generate_password_hash(
             password).decode('utf-8')
-
         user = User(email=email, first_name=first_name, last_name=last_name,
                     password_hash=hashed_password, date_created=datetime.now(), account_active=True, manager=False)
         db.session.add(user)
@@ -167,32 +179,190 @@ def logout():
 def manager():
     return render_template("manager.html")
 
+@app.route('/edit_prices', methods=["GET", "POST"])
+@manger_required()
+def edit_prices():
+    # get all prices and turn them into an array
+    allPlans = Plan.query.all()
+
+    priceArray = [i.price_as_pound() for i in allPlans]
+
+    # all forms
+    WeeklyPriceForm = ChangeWeeklyPrice()
+    MonthlyPriceForm = ChangeMonthlyPrice()
+    YearlyPriceForm = ChangeYearlyPrice()
+
+    # check if any of the forms have been submitted
+    if (WeeklyPriceForm.weekly_submit_price.data and
+        WeeklyPriceForm.validate_on_submit()):
+        allPlans[0].price = WeeklyPriceForm.weekly_new_price.data
+        db.session.commit()
+        priceArray[0] = '£{:.2f}'.format(round(WeeklyPriceForm.weekly_new_price.data, 2))
+        
+    if (MonthlyPriceForm.monthly_submit_price.data and
+        MonthlyPriceForm.validate_on_submit()):
+        allPlans[1].price = MonthlyPriceForm.monthly_new_price.data
+        db.session.commit()
+        priceArray[1] = '£{:.2f}'.format(round(MonthlyPriceForm.monthly_new_price.data, 2))
+
+    if (YearlyPriceForm.yearly_submit_price.data and
+        YearlyPriceForm.validate_on_submit()):
+        allPlans[2].price = YearlyPriceForm.yearly_new_price.data
+        db.session.commit()
+        priceArray[2] = '£{:.2f}'.format(round(YearlyPriceForm.yearly_new_price.data, 2))
+
+
+    return render_template("edit_prices.html", priceArray=priceArray, WeeklyPriceForm=WeeklyPriceForm, MonthlyPriceForm=MonthlyPriceForm, YearlyPriceForm=YearlyPriceForm)
+
+@app.route('/faq')
+@manger_required()
+def faq():
+    return render_template("faq.html")
 
 @app.route('/manage_users', methods=["GET", "POST"])
 @manger_required()
 def manage_users():
+    allEmails = User.query.all()
+    # turn all the emails into an array
+    emailsArray = [i.email_return() for i in allEmails]
+
     UserSearchForm = UserSearch()
 
+    # if the user has inputted a search
     if (UserSearchForm.submitSearch.data and
             UserSearchForm.validate_on_submit()):
 
+        # if the input is nothing, then just display all users
         if UserSearchForm.userEmail.data == "":
             users = User.query.all()
 
+        # otherwise display every email that matches
+        # (should just be 1)
         else:
             users = User.query.filter_by(
                 email=UserSearchForm.userEmail.data).all()
 
+    # if nothing inputted, show all
     else:
         users = User.query.all()
 
-    return render_template("manage_users.html", users=users, UserSearch=UserSearchForm)
+    return render_template("manage_users.html", users=users, UserSearch=UserSearchForm, emails=emailsArray)
 
 
-@app.route('/view_revenue')
+@app.route('/view_revenue', methods=["GET", "POST"])
 @manger_required()
 def view_revenue():
-    return render_template("view_revenue.html")
+    """generates the data needed to plot the graphs
+    theres a wiki on how the estimated stats work, but briefly explained here
+
+    """
+    # this is the diff between the start week and current week
+    # so number of weeks since first week
+    currentWeek = getCurrentBuisnessWeek()
+
+    # gets all the stats saved, in descending order of week (high to low)
+    # apart from the current week, if its there, as we dont know if theres going to be more sales
+    allWeekStats = SubscriptionStats.query.filter(SubscriptionStats.week_of_business != currentWeek).order_by(SubscriptionStats.week_of_business.desc()).all()
+    
+    # create needed variables and arrays, so dont get error if theres not enough stats
+    weeks_future = []
+    revData_future = []
+    customerData_future = []
+    CWGR_rev = 0
+    CWGR_cus = 0
+    noEstimate = False
+
+    # if we dont get anything from the stats, then we cant do anything
+    # if theres only 1 week, we cant figure out an esitmate
+    if not allWeekStats or len(allWeekStats) == 1:
+        noEstimate = True
+        for i in range(1, 53):
+            revData_future.append(0)
+            customerData_future.append(0)
+
+    # if there is at least 2 weeks in stats (not including current week)
+    else:
+        # if theres less than 4 weeks of stats, just the lastest week and earliest week
+        if len(allWeekStats) < 4:
+            # Compound Weekly Growth Rate, based on earilest week in database
+            CWGR_rev = ((allWeekStats[0].total_revenue / allWeekStats[-1].total_revenue) ** (1 / ((allWeekStats[0].week_of_business - allWeekStats[-1].week_of_business) + 1)))
+            CWGR_cus = ((allWeekStats[0].num_customers / allWeekStats[-1].num_customers) ** (1 / ((allWeekStats[0].week_of_business - allWeekStats[-1].week_of_business) + 1)))
+
+        # otherwise can use the lastest week and 4 entries before that
+        # not necessarily 4 weeks, as can have weeks with 0, this is taken into account in the formula
+        else :
+            # Compound Weekly Growth Rate, based on lastest datapoint 4 datapoints ago in database
+            CWGR_rev = ((allWeekStats[0].total_revenue / allWeekStats[3].total_revenue) ** (1 / ((allWeekStats[0].week_of_business - allWeekStats[3].week_of_business) + 1)))
+            CWGR_cus = ((allWeekStats[0].num_customers / allWeekStats[3].num_customers) ** (1 / ((allWeekStats[0].week_of_business - allWeekStats[3].week_of_business) + 1)))
+
+        # set to last completed weeks value
+        lastRevValue = allWeekStats[0].total_revenue
+        lastCusValue = allWeekStats[0].num_customers
+
+        # loop for a year (52 week) and calcualte each data point
+        # compounding, builds on the last weeks value
+        for i in range(1, 53):
+            lastRevValue = lastRevValue * CWGR_rev
+            lastCusValue = lastCusValue * CWGR_cus
+            revData_future.append(lastRevValue)
+            customerData_future.append(lastCusValue)
+            weeks_future.append("Week " + str(i))
+
+    # set so doesnt error if not enough data
+    revData_past = []
+    weeks_past = []
+    numOfWeeks = 4
+
+    ChangeRevWeeksForm = ChangeRevWeeks()
+    # if the input is valid
+    if (ChangeRevWeeksForm.submitWeeks.data and
+        ChangeRevWeeksForm.validate_on_submit()):
+
+        # get how many weeks they want
+        numOfWeeks = ChangeRevWeeksForm.weeks.data
+
+    # if there isnt any input then just display the past 4 weeks
+    else:
+        numOfWeeks = 4
+
+    # loop over all the weeks we want
+    for i in range(0, numOfWeeks):
+        # get the week with the corresponding week
+        week = SubscriptionStats.query.filter_by(week_of_business=currentWeek).first()
+
+        # always adding to start of list, index 0, want to go from low to high
+
+        # if there isnt that week in the database, then that week must have no rev
+        # just add 0
+        if not week:
+            revData_past.insert(0, 0)
+        
+        # otherwise, insert the rev in the datapoint
+        else:
+            revData_past.insert(0, week.total_revenue)
+
+        # create weeks array for x axis
+        if len(weeks_past) == 0:
+            weeks_past.insert(0, "Week " + str(currentWeek) + " (Current Week)")
+
+        else:
+            weeks_past.insert(0, "Week " + str(currentWeek))
+
+        # index the current week down
+        currentWeek -= 1
+
+    # get total revenue - all time
+    total_rev = 0
+    # re done as last time the current week was removed
+    allWeekStats = SubscriptionStats.query.all()
+    for i in allWeekStats:
+        total_rev += i.total_revenue
+
+    # round to 2dp with trailing 0's
+    CWGR_rev = '{:.2f}'.format(round(CWGR_rev, 2))
+    CWGR_cus = '{:.2f}'.format(round(CWGR_cus, 2))
+
+    return render_template("view_revenue.html", ChangeRevWeeksForm=ChangeRevWeeksForm, noEstimate=noEstimate, weeks_future=weeks_future, revData_future=revData_future, customerData_future=customerData_future, CWGR_cus=CWGR_cus, CWGR_rev=CWGR_rev, revData_past=revData_past, weeks_past=weeks_past, total_rev=total_rev)
 
 
 @app.route('/friends')
@@ -208,6 +378,10 @@ def friends():
 @app.route('/profile')
 @login_required
 def profile():
+    # get all prices and turn them into an array
+    allPlans = Plan.query.all()
+    priceArray = [i.price_as_pound() for i in allPlans]
+
     # Pass data to retrive user details
     # Variable to keep track of subscription auto renewal status for the user. By default, set to off
     autoRenewal = False
@@ -229,17 +403,16 @@ def profile():
     subscription_form = SubscriptionForm()
     account_form = AccountForm()
 
-    return render_template("profile.html", current_user=current_user, userPlan=userPlan, expiryDate=expiryDate, autoRenewal=autoRenewal, subscription_form=subscription_form, account_form=account_form)
+    return render_template("profile.html", priceArray=priceArray, current_user=current_user, userPlan=userPlan, expiryDate=expiryDate, autoRenewal=autoRenewal, subscription_form=subscription_form, account_form=account_form)
 
 
 @app.route('/user',  methods=['GET', 'POST'])
 @login_required
 def user():
-    """Render map page from templates.
+    # get all prices and turn them into an array
+    allPlans = Plan.query.all()
+    priceArray = [i.price_as_pound() for i in allPlans]
 
-    Returns:
-        render_template: render template, with map.html
-    """
     # File upload form
     all_routes = Route.query.filter_by(user_id=current_user.id).all()
     friends = getFriends()
@@ -270,7 +443,7 @@ def user():
     if current_user_current_subscription() == False:
         disabled = True
 
-    return render_template("user.html", title='Map', friend_names=friend_names, friend_emails=friend_emails, friend_routes=friend_route_info,  FileUploadForm=file_upload_form, routes=all_routes, route_info_list=route_info_list, disabled=disabled)
+    return render_template("user.html", title='Map', priceArray=priceArray, friend_names=friend_names, friend_emails=friend_emails, friend_routes=friend_route_info,  FileUploadForm=file_upload_form, routes=all_routes, route_info_list=route_info_list, disabled=disabled)
 
 
 def getRouteInfoList(inputList,outputList):
@@ -322,6 +495,7 @@ def getRoute():
         splitData = route.split("\\n")
         route = "".join(splitData)[2:][:-1]
         data[i.id] = route
+        data[str(i.id)+"_name"] = i.name
 
     # return as a json
     return json.dumps(data)
@@ -348,7 +522,8 @@ def getFriendRoute():
         splitData = route.split("\\n")
         route = "".join(splitData)[2:][:-1]
         data[i.id] = route
-
+        data[str(i.id)+"_name"] = i.name
+        
     # return as a json
     return json.dumps(data)
 
@@ -420,6 +595,7 @@ def checkout():
 
 
 @app.route("/cancel_subscription", methods=['POST'])
+@csrf.exempt
 def cancel_subscription():
     stripe.api_key = stripe_keys["secret_key"]
 
@@ -490,6 +666,11 @@ def stripe_webhook():
         if user and plan:
             create_subscription(user, plan, subscription_id, customer_id)
             print('Subscription created')
+
+            # add to stats
+            subCost = plan.cost
+            addToStats(subCost)
+
         else:
             print('User or plan not found')
 
@@ -519,6 +700,26 @@ def create_subscription(user, plan, subscription_id, customer_id):
     db.session.commit()
 
     print(f"Subscription created for {user.email} with plan {plan.name}")
+    
+    
+def addToStats(subCost):
+    # this is the diff between the start week and current week
+    # so number of weeks since first week
+    currentWeek = getCurrentBuisnessWeek()
+
+    currentWeekdb = SubscriptionStats.query.filter_by(week_of_business=currentWeek).first()
+
+    # if the week of the year already exists in the database, then just add on the revenue
+    if currentWeekdb:
+        currentWeekdb.total_revenue = currentWeekdb.total_revenue + subCost
+        currentWeekdb.num_customers = currentWeekdb.num_customers + 1
+
+    else:
+        newWeek = SubscriptionStats(week_of_business=currentWeek, total_revenue=subCost, num_customers=1)
+        db.session.add(newWeek)
+
+    db.session.commit()
+
 
 
 def current_user_active_subscription():

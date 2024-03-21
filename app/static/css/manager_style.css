@@ -1,63 +1,67 @@
+/* Background Image: https://www.vecteezy.com/vector-art/20980070-beautiful-white-islamic-pattern-on-gray-background-ramadan-background-vector */
+
 t.container-fluid {
     padding: 20px;
     margin-top: 20px;
 
 }
 
-/* Custom blue navbar */
-.custom-blue-bg {
-    background-color: #00B4C5 !important;
-    color: black;
+.container-fluid{
+    overflow-y: auto;
 }
 
 
-/* Main manager page styling */
+/* MAIN MANAGER PAGE STYLING */
 h1{
     text-align: center;
     justify-content: center;
+    text-decoration: underline;
+    /* background-color: #ffffff; */
 }
 
-.quadrant-container {
-    position: relative;
-    width: 100%;
-    height: 60vh;
-    display: flex;
-    flex-direction: column;
+h2{
+    text-align: center;
+    justify-content: center;
+
 }
 
-.top-quadrants,
-.bottom-quadrants {
+body{
+    font-family: 'K2D', sans-serif;
+    background-image: url(../images/manager_pic.jpg);
+}
+
+/* Stlying for the main page */
+.box-container{
+    margin-top: 70px;
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
-    flex: 1;
-    margin-bottom: 20px;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
-.quadrant {
-    flex: 1;
+.box{
+    width: calc(50% - 25px);
+    margin-bottom: 40px;
+    border-style: solid;
+    border-color: black;
+    border-radius: 20px;
+    border-width: 5px;
+    height: 150px;
+    font-size: 30px;
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
     text-align: center;
-    background-color: #00B4C5;
-    margin: 10px;
-    color: #111111;
+    color: white;
+    background-color: #343a40;
+    font-family: 'K2D', sans-serif;
 }
-.oval {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    width: 300px;
-    height: 150px; 
-    border-radius: 50%; 
-    background-color: transparent;
-    margin: 20px;
-    color: black;
-    font-size: 24px;
+.box:hover {
+    opacity: 0.93;
 }
 
-
+/* Styling for the footer */
 .footer {
     position: fixed;
     bottom: 0;
@@ -67,11 +71,26 @@ h1{
     color: white;
     padding: 5px 0;
     text-align: center;
-}
+} 
 
+/* STLYING FOR THE MANAGE USERS PAGE */
+.table-container {
+    width: 100%;
+    overflow-y: auto;
+    max-height: 56vh;
+    overflow-x: auto;
+    border-style: solid;
+    border-color: black;
+    border-radius: 8px;
+    margin-top: 50px;
+    background-color: #ffffff;
+}
 table {
     width: 100%;
     border-collapse: collapse;
+    overflow-x: auto;
+    overflow-y: auto;
+    
 }
 th, td {
     border: 1px solid #dddddd;
@@ -80,15 +99,9 @@ th, td {
 }
 th {
     background-color: #f2f2f2;
-}
-button.enabled {
-    background-color: green;
-    color: white;
-}
-
-button.disabled {
-    background-color: red;
-    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 1;
 }
 
 #revenueEstimates {
@@ -101,6 +114,7 @@ button.disabled {
     color: #000000;
     margin: 0 auto;
     width: 40%;
+    /* background-color: #ffffff; */
 }
 
 
@@ -112,11 +126,67 @@ button.disabled {
     font-weight: 700;
 }
 
-.formButton {
-    text-align: center;
-    padding-top: 20px;
+/* In order to style Jinja Produced Buttons */
+form[name="searchUsers"] input[type="submit"] {
+    background-color: #343a40;
+    color: white; 
+    padding: 6px 16px;
+    border: solid 1px #000000; 
+    border-radius: 5px; 
+    cursor: pointer;
+
 }
 
+form[name="searchUsers"] input[type="submit"]:hover {
+    opacity: 0.8;
+}
+
+.search-form {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.form-group {
+    width: 100%;
+    display: flex;
+    align-items: flex-start;
+}
+
+.bar-button {
+    display: flex;
+    align-items: center; 
+}
+
+.form-grp {
+    flex: 1;
+    margin-right: 10px;
+}
+
+.formButton {
+    flex: 0;
+    margin-left: 10px;
+}
+
+.form-control{
+    padding: 10px;
+    border: 1px solid #000000;
+    border-radius: 5px;
+}
+.input-field
+{
+    flex : 1;
+}
+
+
+/*STYLING FOR THE REVENUE PAGE*/
+.week-label {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 5px; 
+    display: block; 
+    text-decoration: underline;
+}
 
 /* for toggle switch */
 /* The switch - the box around the slider */
@@ -125,67 +195,175 @@ button.disabled {
     display: inline-block;
     width: 60px;
     height: 34px;
-  }
+}
   
-  /* Hide default HTML checkbox */
-  .switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
-  
-  /* The slider */
-  .slider {
-    position: absolute;
-    cursor: pointer;
+/* Hide default HTML checkbox */
+.switch input {
+opacity: 0;
+width: 0;
+height: 0;
+}
+
+/* The slider */
+.slider {
+position: absolute;
+cursor: pointer;
+top: 0;
+left: 0;
+right: 0;
+bottom: 0;
+background-color: #ccc;
+-webkit-transition: .4s;
+transition: .4s;
+}
+
+.slider:before {
+position: absolute;
+content: "";
+height: 26px;
+width: 26px;
+left: 4px;
+bottom: 4px;
+background-color: white;
+-webkit-transition: .4s;
+transition: .4s;
+}
+
+input:checked + .slider {
+background-color: #2196F3;
+}
+
+input:focus + .slider {
+box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+-webkit-transform: translateX(26px);
+-ms-transform: translateX(26px);
+transform: translateX(26px);
+}
+
+.currency-info {
+    font-size: 20px;
+    font-weight: bold;
+    color: #343a40; 
+    margin-top: 20px;
+    padding: 8px;
+    background-color: #f8f9fa;
+    border: 2px solid #343a40; 
+    border-radius: 5px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+
+/* for revenue page */
+.chart-container {
+    height: 70vh; 
+    width: 100%;
+    padding: 20px;
+    background-color: #ffffff;
+    overflow-y: auto;
+}
+
+
+.faq-box{
+    background-color: #ffffff;
+    border: #000000 1px solid;
+    overflow-y: auto;
+}
+
+.faq-item {
+    margin-bottom: 20px;
+}
+.faq-question {
+    font-weight: bold;
+    align-items: center;
+}
+
+
+/*Styling for the FAQ page */
+.overlay {
+    display: none;
+    position: fixed;
     top: 0;
     left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc;
-    -webkit-transition: .4s;
-    transition: .4s;
-  }
-  
-  .slider:before {
-    position: absolute;
-    content: "";
-    height: 26px;
-    width: 26px;
-    left: 4px;
-    bottom: 4px;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.popup-form {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     background-color: white;
-    -webkit-transition: .4s;
-    transition: .4s;
-  }
-  
-  input:checked + .slider {
-    background-color: #2196F3;
-  }
-  
-  input:focus + .slider {
-    box-shadow: 0 0 1px #2196F3;
-  }
-  
-  input:checked + .slider:before {
-    -webkit-transform: translateX(26px);
-    -ms-transform: translateX(26px);
-    transform: translateX(26px);
-  }
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+.btn-primary {
+    width: 100%; 
+    background-color: #343a40; 
+    color: white; 
+    padding: 10px; 
+    border: none; 
+    border-radius: 5px; 
+    cursor: pointer; 
+}
 
-
-  
-
+/* stlying used on smaller screens */
 @media screen and (max-width: 768px) {
-    .quadrant-container {
-        height: 100%;
-        flex-direction: column;
-        margin-top: 0;
+    .container-fluid{
+        overflow-y: auto;
+        height: 80vh;
     }
-    .quadrant {
-        width: calc(50% - 40px);
+    h1{
+        font-size: 22px;
+    }
+
+    .footer {
+        font-size: 7px;
+    }
+
+    .box {
+        width: 100%; 
+        font-size: 20px;
+        height: 75px;
+    }
+
+    table{
+        font-size: 12px;
+    }
+    th, td {
+        border: 1px solid #dddddd;
+        padding: 2px;
+        text-align: left;
+    }
+    .form {
+        color: #000000;
+        margin: 0 auto;
+        width: 90%;
+    }
+
+    .form-control {
+        width: 100%; 
+    }
+
+    .currency-info {
+        font-size: 12px;
+        padding: 4px;
+    }
+
+    .chart-container{
+       margin-bottom: 20px;
+       overflow-y: scroll;
+       height: 70vh;
     }
 }
+
 
 
 
