@@ -375,7 +375,7 @@ def friends():
     return render_template("friends.html", current_user=current_user, friends=getFriends())
 
 
-@app.route('/profile')
+@app.route('/profile', methods=["GET", "POST"])
 @login_required
 def profile():
     # get all prices and turn them into an array

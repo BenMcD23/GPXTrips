@@ -82,7 +82,6 @@ class ChangeYearlyPrice(FlaskForm):
 # User Management Forms
 class SubscriptionForm(FlaskForm):
     cancel_subscription = SubmitField('Cancel Subscription')
-    renew_subscription = SubmitField('Renew Subscription')
 
 
 class AccountForm(FlaskForm):
