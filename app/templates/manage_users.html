@@ -3,88 +3,93 @@
 {% block title %}Manage Users{% endblock %}
 
 {% block content %}
+<fieldset>
+  <legend><h1>View & Manage Users</h1></legend>
 
-<h1>View & Manage Users</h1>
 
-<!-- This page will allow you to view and manage registered users. You can enable or disable their accounts. -->
+  <!-- This page will allow you to view and manage registered users. You can enable or disable their accounts. -->
 
-<div class="form">
-  <form method="post" action="" name="searchUsers" class="search-form">
-    {{ UserSearch.hidden_tag() }}
+  <div class="form">
+    <form method="post" action="" name="searchUsers" class="search-form">
+      {{ UserSearch.hidden_tag() }}
 
-    <div class="form-grp">
-      <label for="userEmail">Search Users By Email</label>
-      <div class="bar-button">
-        {% if UserSearch.userEmail.errors %}
-        {{ UserSearch.userEmail(class="form-control form-control-lg is-invalid") }}
-        <div class="invalid-feedback">
-            {% for error in UserSearch.userEmail.errors %}
-                <span>• {{ error }}</span>
-                <br>
-            {% endfor %}
-        </div>
-        {% else %}
-        {{ UserSearch.userEmail(class="form-control" , placeholder="User email") }}
-        {% endif %}
-    
-        <div class="formButton">
-          {{ UserSearch.submitSearch }}
+      <div class="form-grp">
+        <label for="userEmail"><h2>Search Users By Email</h2></label>
+        <div class="bar-button">
+          {% if UserSearch.userEmail.errors %}
+          {{ UserSearch.userEmail(class="form-control form-control-lg is-invalid") }}
+          <div class="invalid-feedback">
+              {% for error in UserSearch.userEmail.errors %}
+                  <span>• {{ error }}</span>
+                  <br>
+              {% endfor %}
+          </div>
+          {% else %}
+          {{ UserSearch.userEmail(class="form-control" , placeholder="User email") }}
+          {% endif %}
+      
+          <div class="formButton">
+            {{ UserSearch.submitSearch }}
+          </div>
+
         </div>
 
       </div>
 
-    </div>
+    </form>
+  </div>
+</fieldset>
 
-  </form>
-</div>
 
-<script nonce="{{ csp_nonce() }}">
-  // on load
-  $(document).ready(function(){
-      // autocomplete the search box
-      $('#userEmail').autocomplete({
-          source: {{ emails | tojson }},
-          });
-      });
+  <script nonce="{{ csp_nonce() }}">
+    // on load
+    $(document).ready(function(){
+        // autocomplete the search box
+        $('#userEmail').autocomplete({
+            source: {{ emails | tojson }},
+            });
+        });
 
-</script>
+  </script>
 
-<div class="table-container">
-  <table>
-    <tr>
-      <th>Name</th>
-      <th>Surname</th>
-      <th>Email Address</th>
-      <th>Account Created</th>
-      <th>Membership</th>
-      <th>Account Activated</th>
-      <th>Manager Account</th>
+<fieldset>
+  <legend class="no-padding-margin"><h2>Registered Users</h2></legend>
+  <div class="table-container">
+    <table>
+      <tr>
+        <th>Name</th>
+        <th>Surname</th>
+        <th>Email Address</th>
+        <th>Account Created</th>
+        <th>Membership</th>
+        <th>Account Activated</th>
+        <th>Manager Account</th>
 
-    </tr>
-    {% for user in users %}
-    <tr>
-      <td>{{ user.first_name }}</td>
-      <td>{{ user.last_name }}</td>
-      <td>{{ user.email }}</td>
-      <td>{{ user.date_created }}</td>
-      <td>Plan {{ user.subscriptions[-1].plan_id }}</td>
-      <td>
-          <label class="switch" for="user_{{ user.id }}">.
-            <input id="user_{{ user.id }}" name="userState" type="checkbox" {% if user.account_active== True %} checked {% else %} {% endif %}>
+      </tr>
+      {% for user in users %}
+      <tr>
+        <td>{{ user.first_name }}</td>
+        <td>{{ user.last_name }}</td>
+        <td>{{ user.email }}</td>
+        <td>{{ user.date_created }}</td>
+        <td>Plan {{ user.subscriptions[-1].plan_id }}</td>
+        <td>
+            <label class="switch" for="user_{{ user.id }}">.
+              <input id="user_{{ user.id }}" name="userState" type="checkbox" {% if user.account_active== True %} checked {% else %} {% endif %}>
+              <span class="slider"></span>
+            </label>
+        </td>
+        <td>
+          <label class="switch" for="manager_{{ user.id }}">.
+            <input id="manager_{{ user.id }}" name="userManger" type="checkbox" {% if user.manager== True %} checked {% else %} {% endif %}>
             <span class="slider"></span>
           </label>
       </td>
-      <td>
-        <label class="switch" for="manager_{{ user.id }}">.
-          <input id="manager_{{ user.id }}" name="userManger" type="checkbox" {% if user.manager== True %} checked {% else %} {% endif %}>
-          <span class="slider"></span>
-        </label>
-    </td>
-    </tr>
-    {% endfor %}
-  </table>
-</div>
-
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+</fieldset>
 <!-- LEAVE HERE AS NEEDS TO LOAD AFTER FOR CHECKBOX -->
 <script src="../static/js/manager.js"></script>
 

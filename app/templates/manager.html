@@ -5,34 +5,34 @@
 
 {% block content %}
 
-
-<div class="container-fluid ">
-    <h1>Manager Dashboard</h1>
-
-    <div class="box-container">
+<fieldset>
+    <legend><h1>Manager Dashboard</h1></legend>
+    <div class="container-fluid ">
+        <div class="box-container">
+    
+            <a href="/manage_users" class="box">
+                <span>View and Manage Registered Users</span>
+            </a>
         
-        <a href="/manage_users" class="box">
-            <span>View and Manage Registered Users</span>
-        </a>
-    
-        <a href="/view_revenue" class="box">
-            <span>View Revenue & Estimates</span>
-        </a>
-            
-    
-        <!-- Optional settings -->
-    
-        <a href="/edit_prices" class="box">
-            <span>Amend Pricing Information</span>
-        </a>
-    
-    
-        <a href="/faq" class="box">
-            <span>FAQ Management</span>
-        </a>
-    </div>
+            <a href="/view_revenue" class="box">
+                <span>View Revenue & Estimates</span>
+            </a>
+                
+        
+            <!-- Optional settings -->
+        
+            <a href="/edit_prices" class="box">
+                <span>Amend Pricing Information</span>
+            </a>
+        
+            <!-- Obsolete FAQ Page - Removed from main but available for future implementation -->
+            <!-- <a href="/faq" class="box">
+                <span>FAQ Management</span>
+            </a> -->
+        </div>
 
-</div>
+    </div>
+</fieldset>
 
 
 
