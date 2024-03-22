@@ -7,7 +7,12 @@
     background-position: center;
 }
 
+body{
+    font-family: 'K2D', sans-serif;
+  }
+
 .card {
+    margin: 0 auto;
     opacity: 0.83;
     overflow: auto;
     width: fit-content;
@@ -18,6 +23,10 @@
 
 .card:hover {
     opacity: 1;
+}
+
+.cardOneStyle {
+    max-height: 90vh; 
 }
 
 a {
@@ -43,15 +52,6 @@ a:hover {
     color: red;
 }
 
-.cardOneStyle {
-    width: 30vw;
-}
-
-.cardTwoStyle {
-    width: 40vw; 
-    max-width: 100%; 
-    height: 60vh;
-}
 
 .linkStyle {
     width: fit-content; 
