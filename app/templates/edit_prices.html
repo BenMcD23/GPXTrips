@@ -22,7 +22,7 @@
             <tbody>
                 <tr>
                     <td><h3>Weekly Subscription</h3></td>
-                    <td><h3>£{{ priceArray[0] }}</h3></td> 
+                    <td><h3>{{ priceArray[0] }}</h3></td> 
                     <!-- change to the ctual value from DB.as this would not be true after one update -->
                     <td>
                         <form method="post" action="" name="changeRev">
@@ -40,15 +40,16 @@
                             {% else %}
                             {{ WeeklyPriceForm.weekly_new_price(class="form-control", placeholder="£", id="weeklyPrice") }}
                             {% endif %}
+                        
+                            </td>
+                            <td>   
+                                {{ WeeklyPriceForm.weekly_submit_price(class="btn-primary") }}
+                            </td>
                         </form>
-                    </td>
-                    <td>   
-                        {{ WeeklyPriceForm.weekly_submit_price(class="btn-primary") }}
-                    </td>
                 </tr>
                 <tr>
                     <td><h3>Monthly Subscription</h3></td>
-                    <td><h3>£{{ priceArray[1] }}</h3></td> 
+                    <td><h3>{{ priceArray[1] }}</h3></td> 
                     <!-- change to the ctual value from DB.as this would not be true after one update -->
                     <td>
                         <form method="post" action="" name="changeRev">
@@ -67,17 +68,19 @@
                             {{ MonthlyPriceForm.monthly_new_price(class="form-control", placeholder="£", id="monthlyPrice") }}
                             {% endif %}
             
-                        </form>
+                        
                                     
-                    </td>
-                    <td>   
-                        {{ MonthlyPriceForm.monthly_submit_price(class="btn-primary")}}
-                    </td>
+                            </td>
+                            <td>   
+                                {{ MonthlyPriceForm.monthly_submit_price(class="btn-primary")}}
+                            </td>
+
+                        </form>
 
                 </tr>
                 <tr>
                     <td><h3>Yearly Subscription</h3></td>
-                    <td><h3>£{{ priceArray[2] }}</h3></td> 
+                    <td><h3>{{ priceArray[2] }}</h3></td> 
                     <!-- change to the ctual value from DB.as this would not be true after one update -->
                     <td>
                         <form method="post" action="" name="changeRev">
@@ -95,11 +98,12 @@
                             {% else %}
                             {{ YearlyPriceForm.yearly_new_price(class="form-control", placeholder="£", id="yearlyPrice") }}
                             {% endif %}
-                        </form>                
-                    </td>
-                    <td>   
-                        {{ YearlyPriceForm.yearly_submit_price(class="btn-primary") }}
-                    </td>
+                                       
+                            </td>
+                            <td>   
+                                {{ YearlyPriceForm.yearly_submit_price(class="btn-primary") }}
+                            </td>
+                        </form> 
                 </tr>
             </tbody>
         </table>
