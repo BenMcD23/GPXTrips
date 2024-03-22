@@ -32,7 +32,7 @@
                     <legend>Manage Account</legend>
                     <br>
                     <form method="get" action="{{ url_for('change_email') }}" id="changeEmailForm">
-                        <button aria-label="Click to change your email" type="submit" class="btn btn-outline-dark">Change Email</button>
+                        <button aria-label="Click to change your email" type="submit" class="btn btn-outline-dark mb-1">Change Email</button>
                     </form>
                     <form method="post" action="{{ url_for('change_password') }}" id="changePasswordForm">
                         {{ account_form.hidden_tag() }}
