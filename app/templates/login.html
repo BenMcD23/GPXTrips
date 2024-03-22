@@ -1,10 +1,10 @@
 {% extends "base_login_reg.html" %}
 {% block title %}GPXTrips{% endblock %}
 {% block content %} 
-<div class="d-flex justify-content-center align-items-center vh-100">
-    <div class = "row justify-content-center flex-md-row flex-column">
-        <div class="col-md-6 col-sm-10">
-            <div id="cardNumberOne" class="card p-5 text-center cardOneStyle">
+<div class="d-flex justify-content-center align-items-center">
+    <div class = "row justify-content-center flex-sm-row flex-column">
+        <div class="col">
+            <div id="cardNumberOne" class="card p-5 mt-4 text-center cardOneStyle">
                 <h1>GPXTrips</h1>
                 <hr>
                 <nav class="navbar navbar-expand-sm navbar-light">
@@ -36,8 +36,8 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-6 col-sm-10">
-            <div id="cardNumberTwo" class="card p-5 text-center cardTwoStyle">
+        <div class="col-auto text-center">
+            <div id="cardNumberTwo" class="card mt-4 p-5 cardOneStyle">
                 <h1>Log Into Your Account</h1>
                 <form action="" method="post" name="loginForm" class="text-left">
                     {{ form.hidden_tag() }}
