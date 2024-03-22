@@ -109,10 +109,10 @@ function updateRoutesTableWithState(routes) {
         var newRow = '<tr>' +
             '<td>' + routeInfo.name + '</td>' +
             '<td>' +
-                '<div class="form-check">' +
-                    '<input class="form-check-input" type="checkbox" name="addToMap" id="' + routeInfo.id + '"' + (checkboxes[routeInfo.id] ? ' checked' : '') + '>' +
-                    '<label class="form-check-label" for="' + routeInfo.id + '"></label>' +
-                '</div>' +
+                '<label class="switch" for="' + routeInfo.id + '"' + '>' +
+                    '<input type="checkbox" name="addToMap" id="' + routeInfo.id + '"' + (checkboxes[routeInfo.id] ? ' checked' : '') + '>' +
+                    '<span class="slider"></label>' +
+                '</label>' +
             '</td>' +
             '<td>' + routeInfo.user.first_name + ' ' + routeInfo.user.last_name + '</td>' +
             '<td>' +
