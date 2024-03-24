@@ -11,14 +11,11 @@ from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
 import stripe
 import json
-import gpxpy
 from functools import wraps
-from .funcs import getCurrentBuisnessWeek
-import time
 from io import BytesIO
-from xml.etree import ElementTree as ET
-from geopy.distance import geodesic
-from dateutil import parser
+
+# our functions
+from .funcs import *
 
 
 class UserView(ModelView):
@@ -42,6 +39,7 @@ class SubscriptionView(ModelView):
     column_list = ['user', 'plan',
                    'subscription_id', 'customer_id', 'date_start', 'date_end', 'active']
 
+
 class SubscriptionStatsView(ModelView):
     # Custom view class for the Subscription model
     column_list = ['week_of_business', 'total_revenue', 'num_customers']
@@ -51,9 +49,11 @@ class FriendshipView(ModelView):
     # Custom view class for the Friendship model
     column_list = ['user1_id', 'user2_id']
 
+
 class FriendRequestView(ModelView):
     # Custom view class for the Friend Request model
-    column_list=['sender_user_id','receiver_user_id']
+    column_list = ['sender_user_id', 'receiver_user_id']
+
 
 # Add views for each model using the custom view classes
 admin.add_view(UserView(User, db.session))
@@ -81,58 +81,64 @@ def manger_required():
 
 @app.route("/", methods=["GET", "POST"])
 def login():
-    # get all prices and turn them into an array
-    allPlans = Plan.query.all()
-    priceArray = [i.price_as_pound() for i in allPlans]
+    """allows user to login, all validation done here"""
+    # get all prices
+    priceArray = getPrices()
 
-    # Login route
     # Create an instance of the LoginForm
-    form = LoginForm()
+    loginForm = LoginForm()
 
-    if request.method == 'POST':
+    # if submit button pressed and form is valid
+    if (loginForm.submit_login.data and
+            loginForm.validate_on_submit()):
         # Query the user by email
-        user = User.query.filter_by(email=form.email.data).first()
+        user = User.query.filter_by(email=loginForm.email.data).first()
 
-        if user:
-            if user.account_active:
-                if user.check_password(form.password.data):
-                    remember_me = form.rememberMe.data
-                    login_user(user, remember=remember_me)
-                    if user.manager:
-                        # if theyre a manager then redirect to manager page
-                        return redirect(url_for("manager"))
-                    # if theyre just a normal user then redirect to user page
-                    return redirect(url_for("user"))
-                else:
-                    # Redirect to back login if password is incorrect
-                    flash("Password is wrong!", category="error")
-            else:
-                # if the account isnt active
-                flash("Account is deactivated, please contact support.",
-                      category="error")
-        else:
-            # Redirect to back login if account does not exist
+        # if the user email doesnt exist in database
+        if not user:
             flash("Account does not exist!", category="error")
 
-        return redirect(url_for("login"))
+        # if the account isnt active
+        elif not user.account_active:
+            flash("Account is deactivated, please contact support.",
+                  category="error")
 
-    return render_template("login.html", title="Login", priceArray=priceArray, form=form)
+        # if password is correct, login user
+        elif user.check_password(loginForm.password.data):
+            remember_me = loginForm.rememberMe.data
+            login_user(user, remember=remember_me)
+
+            # if they're a manager, redirect to manager page
+            if user.manager:
+                return redirect(url_for("manager"))
+
+            # otherwise they're just a normal user, redirect to user page
+            return redirect(url_for("user"))
+
+        # other wise, password is incorrect
+        else:
+            flash("Password is wrong!", category="error")
+
+    return render_template("login.html", title="Login", priceArray=priceArray, loginForm=loginForm)
 
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
+    """allows user to register, all validation done here"""
     # Register route
     # Create an instance of the RegistrationForm
-    form = RegistrationForm()
+    registerForm = RegistrationForm()
 
-    if request.method == 'POST':
+    # if submit button pressed and form is valid
+    if (registerForm.submit_register.data and
+            registerForm.validate_on_submit()):
         # Request data from form
-        email = form.email.data
-        first_name = form.first_name.data
-        last_name = form.last_name.data
-        password = form.password.data
-        confirm_password = form.confirm_password.data
-        tandc_confirm = form.TandCConfirm.data
+        email = registerForm.email.data
+        first_name = registerForm.first_name.data
+        last_name = registerForm.last_name.data
+        password = registerForm.password.data
+        confirm_password = registerForm.confirm_password.data
+        tandc_confirm = registerForm.TandCConfirm.data
 
         existing_email = User.query.filter_by(email=email).first()
         if existing_email:
@@ -163,7 +169,7 @@ def register():
         # Redirect to login after successful registration
         return redirect(url_for("login"))
 
-    return render_template("registration.html", title="Register", form=form)
+    return render_template("registration.html", title="Register", registerForm=registerForm)
 
 
 @app.route("/logout", methods=["GET", "POST"])
@@ -179,49 +185,61 @@ def logout():
 def manager():
     return render_template("manager.html")
 
+
 @app.route('/edit_prices', methods=["GET", "POST"])
 @manger_required()
 def edit_prices():
-    # get all prices and turn them into an array
+    """allows manager to edit the prices
+    does not change price in stripe"""
+    # get all plans
     allPlans = Plan.query.all()
+    # get all prices
+    priceArray = getPrices()
 
-    priceArray = [i.price_as_pound() for i in allPlans]
-
-    # all forms
+    # all forms initialisation
     WeeklyPriceForm = ChangeWeeklyPrice()
     MonthlyPriceForm = ChangeMonthlyPrice()
     YearlyPriceForm = ChangeYearlyPrice()
 
     # check if any of the forms have been submitted
+    # when they have, change the price in the db and array
     if (WeeklyPriceForm.weekly_submit_price.data and
-        WeeklyPriceForm.validate_on_submit()):
+            WeeklyPriceForm.validate_on_submit()):
         allPlans[0].price = WeeklyPriceForm.weekly_new_price.data
         db.session.commit()
-        priceArray[0] = '£{:.2f}'.format(round(WeeklyPriceForm.weekly_new_price.data, 2))
-        
+        priceArray[0] = '£{:.2f}'.format(
+            round(WeeklyPriceForm.weekly_new_price.data, 2))
+
     if (MonthlyPriceForm.monthly_submit_price.data and
-        MonthlyPriceForm.validate_on_submit()):
+            MonthlyPriceForm.validate_on_submit()):
         allPlans[1].price = MonthlyPriceForm.monthly_new_price.data
         db.session.commit()
-        priceArray[1] = '£{:.2f}'.format(round(MonthlyPriceForm.monthly_new_price.data, 2))
+        priceArray[1] = '£{:.2f}'.format(
+            round(MonthlyPriceForm.monthly_new_price.data, 2))
 
     if (YearlyPriceForm.yearly_submit_price.data and
-        YearlyPriceForm.validate_on_submit()):
+            YearlyPriceForm.validate_on_submit()):
         allPlans[2].price = YearlyPriceForm.yearly_new_price.data
         db.session.commit()
-        priceArray[2] = '£{:.2f}'.format(round(YearlyPriceForm.yearly_new_price.data, 2))
-
+        priceArray[2] = '£{:.2f}'.format(
+            round(YearlyPriceForm.yearly_new_price.data, 2))
 
     return render_template("edit_prices.html", priceArray=priceArray, WeeklyPriceForm=WeeklyPriceForm, MonthlyPriceForm=MonthlyPriceForm, YearlyPriceForm=YearlyPriceForm)
+
 
 @app.route('/faq')
 @manger_required()
 def faq():
     return render_template("faq.html")
 
+
 @app.route('/manage_users', methods=["GET", "POST"])
 @manger_required()
 def manage_users():
+    """shows all the users in the database
+    can activate/deactivate the account + manager activate/deactivate
+    also some info about the user"""
+
     allEmails = User.query.all()
     # turn all the emails into an array
     emailsArray = [i.email_return() for i in allEmails]
@@ -253,17 +271,16 @@ def manage_users():
 @manger_required()
 def view_revenue():
     """generates the data needed to plot the graphs
-    theres a wiki on how the estimated stats work, but briefly explained here
-
-    """
+    theres a wiki on how the estimated stats work, but briefly explained here"""
     # this is the diff between the start week and current week
     # so number of weeks since first week
     currentWeek = getCurrentBuisnessWeek()
 
     # gets all the stats saved, in descending order of week (high to low)
     # apart from the current week, if its there, as we dont know if theres going to be more sales
-    allWeekStats = SubscriptionStats.query.filter(SubscriptionStats.week_of_business != currentWeek).order_by(SubscriptionStats.week_of_business.desc()).all()
-    
+    allWeekStats = SubscriptionStats.query.filter(SubscriptionStats.week_of_business != currentWeek).order_by(
+        SubscriptionStats.week_of_business.desc()).all()
+
     # create needed variables and arrays, so dont get error if theres not enough stats
     weeks_future = []
     revData_future = []
@@ -285,15 +302,19 @@ def view_revenue():
         # if theres less than 4 weeks of stats, just the lastest week and earliest week
         if len(allWeekStats) < 4:
             # Compound Weekly Growth Rate, based on earilest week in database
-            CWGR_rev = ((allWeekStats[0].total_revenue / allWeekStats[-1].total_revenue) ** (1 / ((allWeekStats[0].week_of_business - allWeekStats[-1].week_of_business) + 1)))
-            CWGR_cus = ((allWeekStats[0].num_customers / allWeekStats[-1].num_customers) ** (1 / ((allWeekStats[0].week_of_business - allWeekStats[-1].week_of_business) + 1)))
+            CWGR_rev = ((allWeekStats[0].total_revenue / allWeekStats[-1].total_revenue) ** (
+                1 / ((allWeekStats[0].week_of_business - allWeekStats[-1].week_of_business) + 1)))
+            CWGR_cus = ((allWeekStats[0].num_customers / allWeekStats[-1].num_customers) ** (
+                1 / ((allWeekStats[0].week_of_business - allWeekStats[-1].week_of_business) + 1)))
 
         # otherwise can use the lastest week and 4 entries before that
         # not necessarily 4 weeks, as can have weeks with 0, this is taken into account in the formula
-        else :
+        else:
             # Compound Weekly Growth Rate, based on lastest datapoint 4 datapoints ago in database
-            CWGR_rev = ((allWeekStats[0].total_revenue / allWeekStats[3].total_revenue) ** (1 / ((allWeekStats[0].week_of_business - allWeekStats[3].week_of_business) + 1)))
-            CWGR_cus = ((allWeekStats[0].num_customers / allWeekStats[3].num_customers) ** (1 / ((allWeekStats[0].week_of_business - allWeekStats[3].week_of_business) + 1)))
+            CWGR_rev = ((allWeekStats[0].total_revenue / allWeekStats[3].total_revenue) ** (
+                1 / ((allWeekStats[0].week_of_business - allWeekStats[3].week_of_business) + 1)))
+            CWGR_cus = ((allWeekStats[0].num_customers / allWeekStats[3].num_customers) ** (
+                1 / ((allWeekStats[0].week_of_business - allWeekStats[3].week_of_business) + 1)))
 
         # set to last completed weeks value
         lastRevValue = allWeekStats[0].total_revenue
@@ -316,7 +337,7 @@ def view_revenue():
     ChangeRevWeeksForm = ChangeRevWeeks()
     # if the input is valid
     if (ChangeRevWeeksForm.submitWeeks.data and
-        ChangeRevWeeksForm.validate_on_submit()):
+            ChangeRevWeeksForm.validate_on_submit()):
 
         # get how many weeks they want
         numOfWeeks = ChangeRevWeeksForm.weeks.data
@@ -328,7 +349,8 @@ def view_revenue():
     # loop over all the weeks we want
     for i in range(0, numOfWeeks):
         # get the week with the corresponding week
-        week = SubscriptionStats.query.filter_by(week_of_business=currentWeek).first()
+        week = SubscriptionStats.query.filter_by(
+            week_of_business=currentWeek).first()
 
         # always adding to start of list, index 0, want to go from low to high
 
@@ -336,14 +358,15 @@ def view_revenue():
         # just add 0
         if not week:
             revData_past.insert(0, 0)
-        
+
         # otherwise, insert the rev in the datapoint
         else:
             revData_past.insert(0, week.total_revenue)
 
         # create weeks array for x axis
         if len(weeks_past) == 0:
-            weeks_past.insert(0, "Week " + str(currentWeek) + " (Current Week)")
+            weeks_past.insert(
+                0, "Week " + str(currentWeek) + " (Current Week)")
 
         else:
             weeks_past.insert(0, "Week " + str(currentWeek))
@@ -368,29 +391,31 @@ def view_revenue():
 @app.route('/friends')
 @login_required
 def friends():
+    """friends page, can view manage friends + add new friends"""
     # Query all friends of the current user + pending friends requests
-    if current_user_current_subscription() == False:
+    if current_user_current_subscription(current_user.id) == False:
         # If user doesn't have an active subscription, redirect to user page
         return redirect(url_for('user'))
-    return render_template("friends.html", current_user=current_user, friends=getFriends())
+    return render_template("friends.html", current_user=current_user, friends=getFriends(current_user.id))
 
 
 @app.route('/profile', methods=["GET", "POST"])
 @login_required
 def profile():
-    # get all prices and turn them into an array
-    allPlans = Plan.query.all()
-    priceArray = [i.price_as_pound() for i in allPlans]
+    """own users profile
+    cancel sub + change email, pass + delete account"""
+    # get all prices
+    priceArray = getPrices()
 
     # Pass data to retrive user details
     # Variable to keep track of subscription auto renewal status for the user. By default, set to off
     autoRenewal = False
 
-    if current_user_current_subscription() == False:
-        # If user doesn't have an active subscription, redirect to user page
+    # If user doesn't have an active subscription, redirect to user page
+    if current_user_current_subscription(current_user.id) == False:
         return redirect(url_for('user'))
 
-    if current_user_active_subscription() != False:
+    if current_user_active_subscription(current_user.id) != False:
         # Auto-renewal is on
         autoRenewal = True
 
@@ -409,17 +434,19 @@ def profile():
 @app.route('/user',  methods=['GET', 'POST'])
 @login_required
 def user():
-    # get all prices and turn them into an array
-    allPlans = Plan.query.all()
-    priceArray = [i.price_as_pound() for i in allPlans]
+    """main map page
+    displays tracks + friends"""
+    # get all prices
+    priceArray = getPrices()
 
     # File upload form
     all_routes = Route.query.filter_by(user_id=current_user.id).all()
-    friends = getFriends()
+    friends = getFriends(current_user.id)
     friend_routes = []
     friend_names = []
     friend_emails = []
-    
+
+    # loop through all friends and create arrays for routes
     for f in friends:
         for r in f.routes:
             friend_routes.append(r)
@@ -432,63 +459,31 @@ def user():
     # Build route info lists for both the user and their friends
     route_info_list = []
     friend_route_info = []
-    getRouteInfoList(routes,route_info_list)
+    getRouteInfoList(routes, route_info_list)
     getRouteInfoList(friend_routes, friend_route_info)
-    
-    
+
     # Disables the page unless set otherwise
     disabled = False
 
     # If User doesnt have an active subscription then display the subscribe card, and disable the rest of the poge
-    if current_user_current_subscription() == False:
+    if current_user_current_subscription(current_user.id) == False:
         disabled = True
 
     return render_template("user.html", title='Map', priceArray=priceArray, friend_names=friend_names, friend_emails=friend_emails, friend_routes=friend_route_info,  FileUploadForm=file_upload_form, routes=all_routes, route_info_list=route_info_list, disabled=disabled)
 
 
-def getRouteInfoList(inputList,outputList):
-    for route in inputList:
-        gpx_data_decoded = route.gpx_data.decode('ascii')
-        gpx_data = gpx_data_decoded.replace('\\r', '\r').replace('\\n', '\n')
-        gpx_data = "".join(gpx_data)[2:][:-1]  # Trim excess characters
-        # Calculate route information
-        length, duration, start_point, end_point = calculate_route_info(gpx_data)
-        route_info = {
-            'id': route.id,
-            'name': route.name,
-            'user': {
-                'first_name': route.user.first_name,
-                'last_name': route.user.last_name
-            },
-            'length': length,
-            'duration': duration,
-            'start': start_point,
-            'end': end_point,
-            'upload_time': route.upload_time.strftime("%Y-%m-%d %H:%M:%S")
-        }
-        outputList.append(route_info)
 
-
-
-# for user search (manger view)
-@app.route('/emails')
-def tagsDic():
-    allEmails = User.query.all()
-    # turn all the emails into a dictionary
-    dicEmails = [i.email_as_dict() for i in allEmails]
-    # change dictionary into a json
-    return jsonify(dicEmails)
-
-
-@app.route('/getRoute', methods=['GET'])
+@app.route('/getUserRoute', methods=['GET'])
 def getRoute():
+    """gets all the current logged in users routes
+    then sends them to JavaScript to be displayed"""
     # post all routes to JavaScript
     # get the current logged in users routes
     routes = current_user.routes
 
     # dic for all data go in, goes into json
     data = {}
-    # loop for all the routes
+
     for i in routes:
         # decode each route and get rid of \n
         route = i.gpx_data.decode('ascii')
@@ -503,11 +498,12 @@ def getRoute():
 
 @app.route('/getFriendRoute', methods=['GET'])
 def getFriendRoute():
+    """gets alll the current users friends routes to be displayed"""
     # post all routes to JavaScript
     # get the friends of the currently logged in users
-    friends = getFriends()
+    friends = getFriends(current_user.id)
     routes = []
-    
+
     # get the routes of the users friends
     for f in friends:
         for r in f.routes:
@@ -515,7 +511,7 @@ def getFriendRoute():
 
     # dic for all data go in, goes into json
     data = {}
-    # loop for all the routes
+    
     for i in routes:
         # decode each route and get rid of \n
         route = i.gpx_data.decode('ascii')
@@ -523,13 +519,15 @@ def getFriendRoute():
         route = "".join(splitData)[2:][:-1]
         data[i.id] = route
         data[str(i.id)+"_name"] = i.name
-        
+
+
     # return as a json
     return json.dumps(data)
 
 
 @app.route('/accountState', methods=['POST'])
 def accountState():
+    """changes the state of the account when stripe webhook is ran?"""
     # get data posted
     data = request.get_json()
 
@@ -542,6 +540,7 @@ def accountState():
 
 @app.route('/accountManger', methods=['POST'])
 def accountManger():
+    """need explanation"""
     # get data posted
     data = request.get_json()
 
@@ -554,15 +553,23 @@ def accountManger():
 
 @app.route("/stripe")
 def get_publishable_key():
+    """gets stripe key"""
     stripe_config = {"publicKey": stripe_keys["publishable_key"]}
     return jsonify(stripe_config)
 
 
 @app.route("/checkout")
 def checkout():
+    """stripe checkout function
+    after sucessfull checkout this is ran to,
+    create the sub in stripe"""
+
+    # this is will need to be changed on deploy
     domain_url = "http://localhost:5000/"
+    # get the key
     stripe.api_key = stripe_keys["secret_key"]
 
+    # try and add to stripe
     try:
         plan_duration = request.args.get("plan_duration", "1_year")
         # Get the corresponding price ID based on plan_duration
@@ -590,19 +597,26 @@ def checkout():
             ]
         )
         return jsonify({"sessionId": checkout_session["id"]})
+        
+    # return the error, shown in website
     except Exception as e:
         return jsonify(error=str(e)), 403
 
 
 @app.route("/cancel_subscription", methods=['POST'])
-@csrf.exempt
 def cancel_subscription():
+    """allows the user to cancel their current sub
+    still get access to website for length of current sub left"""
+    # get the stripe key
     stripe.api_key = stripe_keys["secret_key"]
 
+    # get the current sub
     latest_subscription = Subscription.query.filter_by(
         user_id=current_user.id, active=True).order_by(Subscription.date_start.desc()).first()
 
+    # if theres a current sub
     if latest_subscription:
+        # try and cancel the sub
         try:
             # Cancel the subscription (at the end of the billing period).
             stripe.Subscription.cancel(
@@ -614,19 +628,25 @@ def cancel_subscription():
             db.session.commit()
 
             return redirect(url_for("profile"))
+        
+        # if somehow the user could cancel a sub that didnt exist, show error
         except Exception as e:
             return jsonify(error=str(e)), 403
+    
+    # if somehow the user could cancel a sub that didnt exist, show error
     else:
         return jsonify(error="No active subscription found."), 403
 
 
 @app.route("/success")
 def success():
+    """sucess when payment made"""
     return redirect(url_for('user'))
 
 
 @app.route("/cancel")
 def cancelled():
+    """for when cancel payment"""
     flash("Payment cancelled.")
     return redirect(url_for("manage_subscription"))
 
@@ -634,6 +654,8 @@ def cancelled():
 @app.route('/webhook', methods=['POST'])
 @csrf.exempt
 def stripe_webhook():
+    """stripe webhook
+    ran when new sub, or new sub payment comes out"""
     print("webhook reached")
 
     payload = request.data
@@ -663,6 +685,7 @@ def stripe_webhook():
         print(user, plan, plan_id)
         print(subscription_id)
 
+        # if successfull create the subscription and add price to stats
         if user and plan:
             create_subscription(user, plan, subscription_id, customer_id)
             print('Subscription created')
@@ -677,86 +700,15 @@ def stripe_webhook():
     return jsonify({'success': True})
 
 
-def create_subscription(user, plan, subscription_id, customer_id):
-    # Method to create a subscription in the database.
-    if plan.name == "Weekly":
-        date_end = datetime.now() + timedelta(weeks=1)
-    elif plan.name == "Monthly":
-        date_end = datetime.now() + timedelta(weeks=4)
-    else:
-        date_end = datetime.now() + timedelta(weeks=52)
-
-    subscription = Subscription(
-        user=user,
-        plan_id=plan.id,
-        date_start=datetime.utcnow(),
-        date_end=date_end,
-        subscription_id=subscription_id,
-        customer_id=customer_id,
-        active=True
-    )
-
-    db.session.add(subscription)
-    db.session.commit()
-
-    print(f"Subscription created for {user.email} with plan {plan.name}")
-    
-    
-def addToStats(subCost):
-    # this is the diff between the start week and current week
-    # so number of weeks since first week
-    currentWeek = getCurrentBuisnessWeek()
-
-    currentWeekdb = SubscriptionStats.query.filter_by(week_of_business=currentWeek).first()
-
-    # if the week of the year already exists in the database, then just add on the revenue
-    if currentWeekdb:
-        currentWeekdb.total_revenue = currentWeekdb.total_revenue + subCost
-        currentWeekdb.num_customers = currentWeekdb.num_customers + 1
-
-    else:
-        newWeek = SubscriptionStats(week_of_business=currentWeek, total_revenue=subCost, num_customers=1)
-        db.session.add(newWeek)
-
-    db.session.commit()
-
-
-
-def current_user_active_subscription():
-    # Active subscription - the user has a current subscription with auto renewals ON
-    latest_subscription = Subscription.query.filter_by(
-        user_id=current_user.id).order_by(Subscription.date_start.desc()).first()
-    if latest_subscription:
-        return latest_subscription.active
-    return False
-
-
-def current_user_current_subscription():
-    # Current subscription - the user has a current subscription which expires some time in the future, irrespective of cancellation status
-    subscriptions = Subscription.query.filter_by(user_id=current_user.id).all()
-    for subscription in subscriptions:
-        if subscription.date_end > datetime.now():
-            return True
-
-    return False
-
-
-def is_valid_gpx_structure(gpx_data):
-    try:
-        # Parse GPX data
-        gpx = gpxpy.parse(gpx_data)
-        # No exception means the GPX data is structurally valid
-        return True, None
-    except gpxpy.gpx.GPXException as e:
-        error_message = f"GPX parsing error: {e}"
-        return False, error_message
-
-
 @app.route('/upload', methods=['POST'])
 def upload_file():
+    """allows user to upload a gpx file to their account
+    also checks if gpx file is valid format"""
     form = FileUploadForm(request.form)
 
+    # if form is submitted
     if form.validate_on_submit():
+        # get the file uploaded
         file = request.files['file']
 
         if file:
@@ -783,6 +735,8 @@ def upload_file():
                         db.session.commit()
 
                         return jsonify({'message': 'File uploaded successfully'}), 200
+                    
+                    # if error
                     except Exception as e:
                         db.session.rollback()  # Rollback changes if an exception occurs
                         print(f"Error: {e}")
@@ -798,9 +752,14 @@ def upload_file():
         print('Form validation failed')
         # Provide a more detailed error response for form validation failure
         return jsonify({'error': 'Form validation failed', 'errors': form.errors}), 400
-    
+
+
 @app.route('/getRouteForTable', methods=['GET'])
 def getRouteForTable():
+    """gets the routes to display on table
+    main done this way so when a file is uploaded no refresh is needed
+    uses jquery to update table without refresh
+    (refresh removed all the routes on the map, had to reselect)"""
     # get the current logged in users routes
     routes = current_user.routes
 
@@ -809,6 +768,7 @@ def getRouteForTable():
 
     # loop for all the routes
     for route in routes:
+        # set the stats of the route
         route_info = {
             'id': route.id,
             'name': route.name,
@@ -827,7 +787,8 @@ def getRouteForTable():
         gpx_data_decoded = route.gpx_data.decode('ascii')
         gpx_data = gpx_data_decoded.replace('\\r', '\r').replace('\\n', '\n')
         gpx_data = "".join(gpx_data)[2:][:-1]  # Trim excess characters
-        length, duration, start_point, end_point = calculate_route_info(gpx_data)
+        length, duration, start_point, end_point = calculate_route_info(
+            gpx_data)
         route_info['length'] = length
         route_info['duration'] = duration
         route_info['start'] = start_point
@@ -838,11 +799,16 @@ def getRouteForTable():
     # return as JSON
     return jsonify(route_info_list)
 
+
 @app.route('/getFriendsList', methods=['GET'])
 def getFriendsList():
-    friends = getFriends()
+    """gets all the users friends"""
+
+    # get friends
+    friends = getFriends(current_user.id)
     friend_infos = []
 
+    # for all the friends, get the friends info
     for friend in friends:
         friend_info = {
             'id': friend.id,
@@ -856,17 +822,23 @@ def getFriendsList():
     # return as JSON
     return jsonify(friend_infos)
 
+
 @app.route('/removeFriend', methods=['POST'])
 def removeFriend():
+    """allows user to remove a friend"""
     # get data posted
     data = request.get_json()
+    # get the id of friend we want to remove
     friend_id = data["id"]
 
     # Attempt to retrieve the friendship one way
-    friendship = Friendship.query.filter_by(user1_id=current_user.id, user2_id=friend_id).first()
+    friendship = Friendship.query.filter_by(
+        user1_id=current_user.id, user2_id=friend_id).first()
+    
     # Otherwise get it the other way
     if not friendship:
-        friendship = Friendship.query.filter_by(user1_id=friend_id, user2_id=current_user.id).first()
+        friendship = Friendship.query.filter_by(
+            user1_id=friend_id, user2_id=current_user.id).first()
 
     # Return error if friendship cannot be found in database
     if not friendship:
@@ -874,15 +846,18 @@ def removeFriend():
             'error': 'Could not find friendship'
         })
 
+    # delete friend
     db.session.delete(friendship)
     db.session.commit()
 
     return json.dumps({
-        'status':'OK'
+        'status': 'OK'
     })
+
 
 @app.route('/userSearch', methods=['POST'])
 def userSearch():
+    """so can search for friends"""
     # get data posted
     data = request.get_json()
     searchTerm = data["searchTerm"]
@@ -891,14 +866,15 @@ def userSearch():
     users = User.query.filter(User.email.contains(searchTerm)).all()
 
     # Get all outgoing friend requests to mark them as pending
-    out_frequests = FriendRequest.query.filter_by(sender_user_id=current_user.id).all()
+    out_frequests = FriendRequest.query.filter_by(
+        sender_user_id=current_user.id).all()
     pending_ids = []
     for frequest in out_frequests:
         pending_ids.append(frequest.receiver_user_id)
 
     # Get all friends to exclude them from results
     friend_ids = []
-    for friend in getFriends():
+    for friend in getFriends(current_user.id):
         friend_ids.append(friend.id)
 
     # Build list of user infos and return
@@ -912,15 +888,16 @@ def userSearch():
         # Ignore friends
         if user.id in friend_ids:
             continue
-        
+
         # Mark pending requests as pending
         pending = user.id in pending_ids
 
         # Mark incoming friend requests
-        frequest = FriendRequest.query.filter_by(sender_user_id=user.id).first()
-        frequest_id=-1
+        frequest = FriendRequest.query.filter_by(
+            sender_user_id=user.id).first()
+        frequest_id = -1
         if frequest:
-            frequest_id=frequest.id
+            frequest_id = frequest.id
 
         user_info = {
             'id': user.id,
@@ -936,8 +913,10 @@ def userSearch():
     # return as JSON
     return jsonify(user_infos)
 
+
 @app.route('/sendFriendRequest', methods=['POST'])
 def sendFriendRequest():
+    """ran when adding friend"""
     # get data posted
     data = request.get_json()
     user_id = data["id"]
@@ -952,15 +931,22 @@ def sendFriendRequest():
     db.session.commit()
 
     return json.dumps({
-        'status':'OK'
+        'status': 'OK'
     })
+
 
 @app.route('/getFriendRequestList', methods=['GET'])
 def getFriendRequestList():
-    frequests = FriendRequest.query.filter_by(receiver_user_id=current_user.id).all()
-    frequest_infos = []
+    """get all current users friend requests"""
 
+    # query db for all the friend requests
+    frequests = FriendRequest.query.filter_by(
+        receiver_user_id=current_user.id).all()
+    frequest_infos = []
+    
+    # loop for all the requests
     for frequest in frequests:
+        # get requestors info to show on table
         user = User.query.get(frequest.sender_user_id)
 
         frequest_info = {
@@ -975,33 +961,10 @@ def getFriendRequestList():
     # return as JSON
     return jsonify(frequest_infos)
 
-def friendUser(user):
-    friendship = Friendship(
-        user1_id=current_user.id,
-        user2_id=user.id
-    )
-
-    db.session.add(friendship)
-    db.session.commit()
-
-
-def getFriends():
-    outgoingfriendships = Friendship.query.filter_by(user1_id=current_user.id).all()
-    incomingfriendships = Friendship.query.filter_by(user2_id=current_user.id).all()
-
-    friends = []
-
-    for friendship in outgoingfriendships:
-        friends.append(User.query.get(friendship.user2_id))
-
-    for friendship in incomingfriendships:
-        friends.append(User.query.get(friendship.user1_id))
-
-    return friends
-
 
 @app.route('/acceptFriendRequest', methods=['POST'])
 def acceptFriendRequest():
+    """ran when accepting friend request"""
     # get data posted
     data = request.get_json()
     id = data["id"]
@@ -1010,18 +973,20 @@ def acceptFriendRequest():
     frequest = FriendRequest.query.get(id)
 
     # friend the sending user
-    friendUser(User.query.get(frequest.sender_user_id))
+    friendUser((User.query.get(frequest.sender_user_id)).id, current_user.id)
 
     # delete the friend request
     db.session.delete(frequest)
     db.session.commit()
 
     return json.dumps({
-        'status':'OK'
+        'status': 'OK'
     })
+
 
 @app.route('/declineFriendRequest', methods=['POST'])
 def declineFriendRequest():
+    """ran when declining friend request"""
     # get data posted
     data = request.get_json()
     id = data["id"]
@@ -1034,7 +999,7 @@ def declineFriendRequest():
     db.session.commit()
 
     return json.dumps({
-        'status':'OK'
+        'status': 'OK'
     })
 
 
@@ -1042,8 +1007,10 @@ def declineFriendRequest():
 @app.route('/change_email', methods=['GET', 'POST'])
 @login_required
 def change_email():
+    """allows user to change their email"""
     change_email_form = ChangeEmailForm()
 
+    # when form submitted
     if change_email_form.validate_on_submit():
 
         new_email = change_email_form.new_email.data
@@ -1052,6 +1019,7 @@ def change_email():
         subscription = Subscription.query.filter_by(
             user_id=current_user.id).first()
 
+        # if they have a sub, then change the sub email
         if subscription:
             try:
                 stripe.api_key = stripe_keys["secret_key"]
@@ -1085,6 +1053,7 @@ def change_email():
 @app.route('/change_password', methods=['GET', 'POST'])
 @login_required
 def change_password():
+    """change password page"""
     form = ChangePasswordForm()
 
     if form.validate_on_submit():
@@ -1104,6 +1073,9 @@ def change_password():
 @app.route('/delete_account', methods=['POST'])
 @login_required
 def delete_account():
+    """allows user to delete account
+    doesnt delete in essence, but sets active flag to false,
+    so cant login"""
     if request.method == 'POST':
         # Perform any additional validation or checks if needed
         # Delete the user's account from the database
@@ -1116,20 +1088,23 @@ def delete_account():
         # Handle GET request for the route if needed
         pass
 
+
 @app.route('/download/<int:route_id>', methods=['GET'])
 def download_file(route_id):
+    """allows the user to download their uploaded gpx files"""
     # Retrieve the route information from the database based on the provided route_id
     route = Route.query.get(route_id)
 
+    # if the route exists
     if route:
         # Decode the GPX data from ASCII encoding and replace escape characters
         gpx_data_decoded = route.gpx_data.decode('ascii')
         gpx_data = gpx_data_decoded.replace('\\r', '\r').replace('\\n', '\n')
         gpx_data = "".join(gpx_data)[2:][:-1]  # Trim excess characters
-        
+
         # Generate a filename for the GPX file by replacing spaces with underscores
         filename = route.name.replace(' ', '_')
-        
+
         # Return the GPX file as an attachment for download
         return send_file(BytesIO(gpx_data.encode()), attachment_filename=filename, as_attachment=True)
     else:
@@ -1139,16 +1114,20 @@ def download_file(route_id):
 
 @app.route('/deleteRoute/<int:route_id>', methods=['GET'])
 def delete_route(route_id):
+    """user can delete their routes"""
+    # if been pressed
     if request.method == 'GET':
+        # if there is no route id passed, theres an error
         if not route_id:
             return jsonify({'error': 'Route ID is missing'}), 400
 
         # Find the route by ID
         route = Route.query.get(route_id)
 
+        # if can find the route with that id, also an error
         if not route:
             return jsonify({'error': 'Route not found'}), 404
-
+        
         try:
             # Remove the route from the database
             db.session.delete(route)
@@ -1162,45 +1141,3 @@ def delete_route(route_id):
             db.session.close()
     else:
         return jsonify({'error': 'Method not allowed'}), 405
-    
-
-def calculate_route_info(gpx_data, unit='km'):
-    # Parse GPX data
-    tree = ET.fromstring(gpx_data)
-
-    # Extract track points
-    track_points = [(float(trkpt.attrib['lat']), float(trkpt.attrib['lon']))
-                    for trkpt in tree.findall('.//{http://www.topografix.com/GPX/1/1}trkpt')]
-
-    # Calculate route length
-    length = sum(geodesic(track_points[i], track_points[i + 1]).meters
-                 for i in range(len(track_points) - 1))
-
-    # Convert length to kilometers or miles based on unit preference
-    if unit == 'km':
-        length = length / 1000  # Convert meters to kilometers
-        length = round(length, 2)  # Round to 2 decimal places
-        length = f"{length} km"  # Append unit
-    elif unit == 'miles':
-        length = length * 0.000621371  # Convert meters to miles
-        length = round(length, 2)  # Round to 2 decimal places
-        length = f"{length} miles"  # Append unit
-    else:
-        length = f"{length} meters"  # Default to meters if unit is not km or miles
-
-    times = tree.findall(".//time")
-    timestamps = [parser.isoparse(time.text) for time in times]
-
-    # Calculate route duration if timestamps are available
-    duration = 0
-    if timestamps:
-        duration = (max(timestamps) - min(timestamps)).total_seconds()
-
-    # Start and end points
-    start_point = (0, 0)
-    end_point = (0, 0)
-    if track_points:
-        start_point = round(track_points[0][0], 3), round(track_points[0][1], 3)
-        end_point = round(track_points[-1][0], 3), round(track_points[-1][1], 3)
-
-    return length, duration, start_point, end_point

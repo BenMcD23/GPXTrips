@@ -61,7 +61,6 @@
         <th>Surname</th>
         <th>Email Address</th>
         <th>Account Created</th>
-        <th>Membership</th>
         <th>Account Activated</th>
         <th>Manager Account</th>
 
@@ -72,7 +71,6 @@
         <td>{{ user.last_name }}</td>
         <td>{{ user.email }}</td>
         <td>{{ user.date_created }}</td>
-        <td>Plan {{ user.subscriptions[-1].plan_id }}</td>
         <td>
             <label class="switch" for="user_{{ user.id }}">.
               <input id="user_{{ user.id }}" name="userState" type="checkbox" {% if user.account_active== True %} checked {% else %} {% endif %}>

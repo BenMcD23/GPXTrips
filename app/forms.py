@@ -43,12 +43,16 @@ class RegistrationForm(FlaskForm):
                                      InputRequired(), EqualTo('password')])
     TandCConfirm = BooleanField('Accept Terms and Conditions')
 
+    submit_register = SubmitField('Register')
+
+
 
 class LoginForm(FlaskForm):
     email = EmailField("Email", validators=[InputRequired(), Email()])
     password = PasswordField("Password", validators=[
                              InputRequired(), Length(min=8, max=32)])
     rememberMe = BooleanField('Remember Me')
+    submit_login = SubmitField('Login')
 
 
 class FileUploadForm(FlaskForm):

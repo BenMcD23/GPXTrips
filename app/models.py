@@ -55,6 +55,7 @@ class Plan(db.Model):
     def price_as_pound(self):
         return '£{:.2f}'.format(round(self.price, 2))
 
+
 class Subscription(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))

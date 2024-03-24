@@ -7,7 +7,7 @@ $(document).ready(function()
 {
   $.ajax({ 
     type: "GET",
-    url: "/getRoute", 
+    url: "/getUserRoute", 
     dataType: "json",  
     success: function(response_data){
         user_routes = response_data;

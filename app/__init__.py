@@ -32,9 +32,9 @@ bcrypt = Bcrypt(app)
 # Babel requried for Flask-Admin
 babel = Babel(app)
 
-# Termporarily commented out to allow for the Stripe-API to run.
 csrf = CSRFProtect(app)
 
+# login initialisation
 login_manager = LoginManager()
 login_manager.login_view = "login"
 login_manager.init_app(app)

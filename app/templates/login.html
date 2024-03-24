@@ -42,13 +42,13 @@
             <div id="cardNumberTwo" class="card mt-4 p-5 cardOneStyle">
                 <h1>Log Into Your Account</h1>
                 <form action="" method="post" name="loginForm" class="text-left">
-                    {{ form.hidden_tag() }}
+                    {{ loginForm.hidden_tag() }}
                     <hr>
                     <fieldset>
                         <legend class="text-center">Login Details</legend>
-                        <p aria-label="Enter Your Email Here" id="emailField" class="mb-0">{{form.email.label}}:{{ form.email(placeholder="Enter your email") }}</p>
+                        <p aria-label="Enter Your Email Here" id="emailField" class="mb-0">{{loginForm.email.label}}:{{ loginForm.email(placeholder="Enter your email") }}</p>
                         <br>
-                        <p aria-label="Enter Your Password Here" class="mt-0">{{form.password.label}}:{{ form.password(placeholder="Enter your Password") }}</p>
+                        <p aria-label="Enter Your Password Here" class="mt-0">{{loginForm.password.label}}:{{ loginForm.password(placeholder="Enter your Password") }}</p>
                         
                         {% with messages = get_flashed_messages() %}
                             {% if messages %}
@@ -61,12 +61,12 @@
                         {% endwith %}
                         <br>
                         <div class="text-center">
-                            {{ form.rememberMe }}
+                            {{ loginForm.rememberMe }}
                             <label for="rememberMe">Remember Me</label>
                         </div>
                         <br>
                     </fieldset>
-                    <input aria-label="Log In" id="logBtn" type="submit" value="Log In" class="btn btn-outline-dark"></input>
+                    {{ loginForm.submit_login(class="btn btn-outline-dark") }}
                 </form>
                 <hr>
                 <p>Don't have an account <a href="/register"><b>Create One</b></a></p>
