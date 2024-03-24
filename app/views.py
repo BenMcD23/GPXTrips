@@ -89,8 +89,7 @@ def login():
     loginForm = LoginForm()
 
     # if submit button pressed and form is valid
-    if (loginForm.submit_login.data and
-            loginForm.validate_on_submit()):
+    if request.method == 'POST':
         # Query the user by email
         user = User.query.filter_by(email=loginForm.email.data).first()
 
@@ -133,8 +132,7 @@ def register():
     registerForm = RegistrationForm()
 
     # if submit button pressed and form is valid
-    if (registerForm.submit_register.data and
-            registerForm.validate_on_submit()):
+    if request.method == 'POST':
         # Request data from form
         email = registerForm.email.data
         first_name = registerForm.first_name.data
