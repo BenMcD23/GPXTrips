@@ -118,6 +118,9 @@ def login():
         # other wise, password is incorrect
         else:
             flash("Password is wrong!", category="error")
+        
+        return redirect(url_for("login"))
+
 
     return render_template("login.html", title="Login", priceArray=priceArray, loginForm=loginForm)
 
