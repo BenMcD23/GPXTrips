@@ -4,27 +4,27 @@
 
 {% block content %}
 
-<fieldset>
-        <legend><h1>Choose Revenue Type</h1></legend>
+<fieldset aria-labelledby="chooseRevenueTypeLabel">
+        <legend><h1  id="chooseRevenueTypeLabel">Choose Revenue Type</h1></legend>
         
         <label for="revenueType"><p class="text-center fw-bold"><h2>Select Revenue Type</h2></label>
-        <select id="revenueType">
+        <select id="revenueType" aria-labelledby="revenueType">
             <option value="past">View Past Revenue</option>
             <option value="future">View Estimated Future Revenue</option>
         </select>
         
 </fieldset>
 
-<fieldset>
+<fieldset aria-labelledby="pastRevenueLabel">
     
     <!-- dont change class name, the jquery works using "past chart" -->
     <div class="past chart"> 
-        <legend><h2>Past Revenue</h2></legend>
+        <legend><h2 id="pastRevenueLabel">Past Revenue</h2></legend>
         <!-- <h1>Past Revenue</h1> -->
 
         <!-- chart of future revenue estimates -->
         <div class="chart-container">
-            <canvas id="pastChart"></canvas>
+            <canvas id="pastChart" aria-label="Past Revenue Chart"></canvas>
             <div class="form">
                 <form method="post" action="" name="changeRev">
                     
@@ -53,21 +53,21 @@
                     </div>
                 </form>
             </div>
-            <h1 class="currency-info">Total All Time Revenue: £{{ total_rev }}</h1>
+            <h1 class="currency-info" aria-label="Total All Time Revenue">Total All Time Revenue: £{{ total_rev }}</h1>
         </div>
 
     </div>
 </fieldset>
     
-<fieldset>
+<fieldset aria-labelledby="futureRevenueLabel">
     
     <!-- dont change class name, the jquery works using "future chart" -->
     <div class="future chart">
         <!-- <h1>Future Revenue Estimate</h1> -->
-        <legend><h2>Future Revenue</h2></legend>
+        <legend><h2 id="futureRevenueLabel">Future Revenue</h2></legend>
         <div class="chart-container">
             <!-- chart of future revenue estimates -->
-            <canvas id="futureChart"></canvas>
+            <canvas id="futureChart" aria-label="Future Revenue Chart"></canvas>
 
             {% if noEstimate == True %}
                 <h1 class="currency-info">There isnt enought data to estimate the revenue</h1>

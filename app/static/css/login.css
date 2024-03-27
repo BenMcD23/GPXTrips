@@ -11,6 +11,14 @@ body{
     font-family: 'K2D', sans-serif;
 }
 
+.container-fluid {
+    display: flex;
+    flex-direction: column;
+    justify-content: center; 
+    align-items: center; 
+    height: 100vh; 
+}
+
 .card {
     margin: 0 auto;
     opacity: 0.83;

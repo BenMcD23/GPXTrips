@@ -13,10 +13,10 @@
         <table>
             <thead>
                 <tr>
-                    <th>Subscription</th>
-                    <th>Current Price</th>
-                    <th>Update Price</th>
-                    <th>Confirm Update</th>
+                    <th id="subscription">Subscription</th>
+                    <th id="current_price">Current Price</th>
+                    <th id="update_price">Update Price</th>
+                    <th id="confirm">Confirm Update</th>
                 </tr>
             </thead>
             <tbody>
@@ -30,7 +30,7 @@
                             {{ WeeklyPriceForm.hidden_tag() }}
                             <label for="weeklyPrice"><h3>New Weekly Price:</h3></label>
                             {% if WeeklyPriceForm.weekly_new_price.errors %}
-                            {{ WeeklyPriceForm.weekly_new_price(class="form-control form-control-lg is-invalid", id="weeklyPrice") }}
+                            {{ WeeklyPriceForm.weekly_new_price(class="form-control form-control-lg is-invalid", id="weeklyPrice",**{"aria-labelledby": "update_price"}) }}
                             <div class="invalid-feedback">
                                 {% for error in WeeklyPriceForm.weekly_new_price.errors %}
                                     <span>• {{ error }}</span>
@@ -38,12 +38,12 @@
                                 {% endfor %}
                             </div>
                             {% else %}
-                            {{ WeeklyPriceForm.weekly_new_price(class="form-control", placeholder="£", id="weeklyPrice") }}
+                            {{ WeeklyPriceForm.weekly_new_price(class="form-control", placeholder="£", id="weeklyPrice", **{"aria-labelledby": "update_price"}) }}
                             {% endif %}
                         
                             </td>
                             <td>   
-                                {{ WeeklyPriceForm.weekly_submit_price(class="btn-primary") }}
+                                {{ WeeklyPriceForm.weekly_submit_price(class="btn-primary", **{"aria-label": "Confirm Weekly Price Update"}) }}
                             </td>
                         </form>
                 </tr>
@@ -57,7 +57,7 @@
                             {{ MonthlyPriceForm.hidden_tag() }}
                             <label for="monthlyPrice"><h3>New Monthly Price:</h3></label>
                             {% if MonthlyPriceForm.monthly_new_price.errors %}
-                            {{ MonthlyPriceForm.monthly_new_price(class="form-control form-control-lg is-invalid", id="monthlyPrice") }}
+                            {{ MonthlyPriceForm.monthly_new_price(class="form-control form-control-lg is-invalid", id="monthlyPrice",**{"aria-labelledby": "update_price"}) }}
                             <div class="invalid-feedback">
                                 {% for error in MonthlyPriceForm.monthly_new_price.errors %}
                                     <span>• {{ error }}</span>
@@ -65,14 +65,14 @@
                                 {% endfor %}
                             </div>
                             {% else %}
-                            {{ MonthlyPriceForm.monthly_new_price(class="form-control", placeholder="£", id="monthlyPrice") }}
+                            {{ MonthlyPriceForm.monthly_new_price(class="form-control", placeholder="£", id="monthlyPrice", **{"aria-labelledby": "update_price"}) }}
                             {% endif %}
             
                         
                                     
                             </td>
                             <td>   
-                                {{ MonthlyPriceForm.monthly_submit_price(class="btn-primary")}}
+                                {{ MonthlyPriceForm.monthly_submit_price(class="btn-primary", **{"aria-label": "Confirm Monthly Price Update"}) }}
                             </td>
 
                         </form>
@@ -88,7 +88,7 @@
                             {{ YearlyPriceForm.hidden_tag() }}
                             <label for="yearlyPrice"><h3>New Yearly Price:</h3></label>
                             {% if YearlyPriceForm.yearly_new_price.errors %}
-                            {{ YearlyPriceForm.yearly_new_price(class="form-control form-control-lg is-invalid", id="yearlyPrice") }}
+                            {{ YearlyPriceForm.yearly_new_price(class="form-control form-control-lg is-invalid", id="yearlyPrice", **{"aria-labelledby": "update_price"}) }}
                             <div class="invalid-feedback">
                                 {% for error in YearlyPriceForm.yearly_new_price.errors %}
                                     <span>• {{ error }}</span>
@@ -96,12 +96,12 @@
                                 {% endfor %}
                             </div>
                             {% else %}
-                            {{ YearlyPriceForm.yearly_new_price(class="form-control", placeholder="£", id="yearlyPrice") }}
+                            {{ YearlyPriceForm.yearly_new_price(class="form-control", placeholder="£", id="yearlyPrice",  **{"aria-labelledby": "update_price"}) }}
                             {% endif %}
                                        
                             </td>
                             <td>   
-                                {{ YearlyPriceForm.yearly_submit_price(class="btn-primary") }}
+                                {{ YearlyPriceForm.yearly_submit_price(class="btn-primary", **{"aria-label": "Confirm Yearly Price Update"}) }}
                             </td>
                         </form> 
                 </tr>

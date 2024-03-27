@@ -72,14 +72,14 @@
         <td>{{ user.email }}</td>
         <td>{{ user.date_created }}</td>
         <td>
-            <label class="switch" for="user_{{ user.id }}">.
-              <input id="user_{{ user.id }}" name="userState" type="checkbox" {% if user.account_active== True %} checked {% else %} {% endif %}>
+            <label class="switch" for="user_{{ user.id }}" id="userStateLabel_{{ user.id }}">.
+              <input id="user_{{ user.id }}" name="userState" type="checkbox" {% if user.account_active== True %} checked {% else %} {% endif %} aria-labelledby="userStateLabel_{{ user.id }}">
               <span class="slider"></span>
             </label>
         </td>
         <td>
-          <label class="switch" for="manager_{{ user.id }}">.
-            <input id="manager_{{ user.id }}" name="userManger" type="checkbox" {% if user.manager== True %} checked {% else %} {% endif %}>
+          <label class="switch" for="manager_{{ user.id }}" id="managerStateLabel_{{ user.id }}">.
+            <input id="manager_{{ user.id }}" name="userManger" type="checkbox" {% if user.manager== True %} checked {% else %} {% endif %} aria-labelledby="managerStateLabel_{{ user.id }}">
             <span class="slider"></span>
           </label>
       </td>
