@@ -1,6 +1,6 @@
 #login_body {
     /* IMAGE FROM "https://www.publicdomainpictures.net/pictures/170000/velka/jogging-at-sunset-1461853562JAu.jpg" */
-    background-image: url('https://www.publicdomainpictures.net/pictures/170000/velka/jogging-at-sunset-1461853562JAu.jpg');
+    background-image: url('../images/jogging-at-sunset.jpg');
     background-repeat: repeat-y;
     background-size: cover;
     /* or background-size: contain; depending on your preference */
