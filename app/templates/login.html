@@ -1,75 +1,77 @@
 {% extends "base_login_reg.html" %}
 {% block title %}GPXTrips{% endblock %}
 {% block content %} 
-<div class="d-flex justify-content-center align-items-center">
-    <div class = "row justify-content-center flex-sm-row flex-column">
-        <div class="col">
-            <div id="cardNumberOne" class="card p-5 mt-4 text-center cardOneStyle">
-                <h1>GPXTrips</h1>
-                <hr>
-                <nav class="navbar navbar-expand-sm navbar-light">
-                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                      <span class="navbar-toggler-icon"></span>
-                    </button>
-                    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                      <ul class="navbar-nav mr-auto ml-auto">
-                        <li class="nav-item"><a href='#' id="linkOne" class="nav-link active">About Us<span class="sr-only">(current)</span></a></li>
-                        <li class="nav-item"><a href='#' id="linkTwo" class="nav-link">Payment Plans</a></li>
-                      </ul>
+<div class="container-fluid">
+    <div class="d-flex justify-content-center align-items-center">
+        <div class = "row justify-content-center flex-sm-row flex-column">
+            <div class="col">
+                <div id="cardNumberOne" class="card p-5 mt-4 text-center cardOneStyle">
+                    <h1>GPXTrips</h1>
+                    <hr>
+                    <nav class="navbar navbar-expand-sm navbar-light">
+                        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                        </button>
+                        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                        <ul class="navbar-nav mr-auto ml-auto">
+                            <li class="nav-item"><a href='#' id="linkOne" class="nav-link active">About Us<span class="sr-only">(current)</span></a></li>
+                            <li class="nav-item"><a href='#' id="linkTwo" class="nav-link">Payment Plans</a></li>
+                        </ul>
+                        </div>
+                    </nav>
+                    <br>
+                    <div>
+                        <p id="cBodyOne">Are you a runner? Walker? Hiker? Biker?</p>
+                        <p id="cBodyTwo">Do you lack a record of your journeys or ever 
+                            wonder how long your journey was?
+                        </p>
+                        <p id="cBodyThree">With myGPS, throw away your bulky maps and 
+                            say goodbye to ambiguity about your route data.
+                            By uploading your GPS data trails onto our 
+                            platform, we can provide valuable insights into 
+                            your journey and store them online for viewing 
+                            anywhere on earth with an internet connection.
+                            Does this sound of Interest to you? Then please 
+                            create an account using the link on the left. 
+                            Want information about our payment plans? Then 
+                            please click on the button at the top to view
+                        </p>
                     </div>
-                  </nav>
-                <br>
-                <div>
-                    <p id="cBodyOne">Are you a runner? Walker? Hiker? Biker?</p>
-                    <p id="cBodyTwo">Do you lack a record of your journeys or ever 
-                        wonder how long your journey was?
-                    </p>
-                    <p id="cBodyThree">With myGPS, throw away your bulky maps and 
-                        say goodbye to ambiguity about your route data.
-                        By uploading your GPS data trails onto our 
-                        platform, we can provide valuable insights into 
-                        your journey and store them online for viewing 
-                        anywhere on earth with an internet connection.
-                        Does this sound of Interest to you? Then please 
-                        create an account using the link on the left. 
-                        Want information about our payment plans? Then 
-                        please click on the button at the top to view
-                    </p>
                 </div>
             </div>
-        </div>
-        <div class="col-auto text-center">
-            <div id="cardNumberTwo" class="card mt-4 p-5 cardOneStyle">
-                <h1>Log Into Your Account</h1>
-                <form action="" method="post" name="loginForm" class="text-left">
-                    {{ loginForm.hidden_tag() }}
+            <div class="col-auto text-center">
+                <div id="cardNumberTwo" class="card mt-4 p-5 cardOneStyle">
+                    <h1>Log Into Your Account</h1>
+                    <form action="" method="post" name="loginForm" class="text-left">
+                        {{ loginForm.hidden_tag() }}
+                        <hr>
+                        <fieldset>
+                            <legend class="text-center">Login Details</legend>
+                            <p aria-label="Enter Your Email Here" id="emailField" class="mb-0">{{loginForm.email.label}}:{{ loginForm.email(placeholder="Enter your email") }}</p>
+                            <br>
+                            <p aria-label="Enter Your Password Here" class="mt-0">{{loginForm.password.label}}:{{ loginForm.password(placeholder="Enter your Password") }}</p>
+                            
+                            {% with messages = get_flashed_messages() %}
+                                {% if messages %}
+                                    <ul class="list-unstyled text-center">
+                                        {% for message in messages %}
+                                            <li class="flashedMessage">{{ message }} </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            {% endwith %}
+                            <br>
+                            <div class="text-center">
+                                {{ loginForm.rememberMe }}
+                                <label for="rememberMe">Remember Me</label>
+                            </div>
+                            <br>
+                        </fieldset>
+                        {{ loginForm.submit_login(class="btn btn-outline-dark") }}
+                    </form>
                     <hr>
-                    <fieldset>
-                        <legend class="text-center">Login Details</legend>
-                        <p aria-label="Enter Your Email Here" id="emailField" class="mb-0">{{loginForm.email.label}}:{{ loginForm.email(placeholder="Enter your email") }}</p>
-                        <br>
-                        <p aria-label="Enter Your Password Here" class="mt-0">{{loginForm.password.label}}:{{ loginForm.password(placeholder="Enter your Password") }}</p>
-                        
-                        {% with messages = get_flashed_messages() %}
-                            {% if messages %}
-                                <ul class="list-unstyled text-center">
-                                    {% for message in messages %}
-                                        <li class="flashedMessage">{{ message }} </li>
-                                    {% endfor %}
-                                </ul>
-                            {% endif %}
-                        {% endwith %}
-                        <br>
-                        <div class="text-center">
-                            {{ loginForm.rememberMe }}
-                            <label for="rememberMe">Remember Me</label>
-                        </div>
-                        <br>
-                    </fieldset>
-                    {{ loginForm.submit_login(class="btn btn-outline-dark") }}
-                </form>
-                <hr>
-                <p>Don't have an account <a href="/register"><b>Create One</b></a></p>
+                    <p>Don't have an account <a href="/register"><b>Create One</b></a></p>
+                </div>
             </div>
         </div>
     </div>
