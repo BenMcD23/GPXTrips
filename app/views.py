@@ -649,7 +649,7 @@ def success():
 def cancelled():
     """for when cancel payment"""
     flash("Payment cancelled.")
-    return redirect(url_for("manage_subscription"))
+    return redirect(url_for('user'))
 
 
 @app.route('/webhook', methods=['POST'])
