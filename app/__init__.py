@@ -21,7 +21,7 @@ app = Flask(__name__)
 app.config.from_object('config')
 
 # For admin views in http://localhost:5000/admin
-admin = Admin(app,template_mode='bootstrap4')
+admin = Admin(app, template_mode='bootstrap4')
 
 # security stuff, configured below
 talisman = Talisman(app)
@@ -49,14 +49,15 @@ from app import views, models
 def load_user(user_id):
     return models.User.query.get(int(user_id))
 
+
 # configure talisman
 csp = {
     # all the external links
     'default-src': [
         '\'self\'',
-        "https://js.stripe.com/"  
+        "https://js.stripe.com/"
     ],
-    
+
     # external image links
     'img-src': [
         "'self' data:",
@@ -116,7 +117,7 @@ talisman.x_xss_protection = True
 talisman.session_cookie_secure = True
 talisman.session_cookie_samesite = 'Lax'
 talisman.frame_options_allow_from = 'https://www.google.com'
- 
+
 # # add to Talisman
 talisman.content_security_policy = csp
 talisman.strict_transport_security = hsts

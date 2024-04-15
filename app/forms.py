@@ -10,16 +10,19 @@ import re
 
 def emailSearch_Validator(form, userEmail):
     # if the email isnt in the database and isnt an empty string
-    if not models.User.query.filter_by(email=userEmail.data).all() and userEmail.data!="":
+    if not models.User.query.filter_by(email=userEmail.data).all() and userEmail.data != "":
         raise ValidationError('That user email does not exist.')
+
 
 def revWeeks_Validator(form, weeks):
     numberOfWeeks = getCurrentBuisnessWeek()
     if weeks.data > numberOfWeeks:
-        raise ValidationError("There are only " + str(numberOfWeeks) + " weeks of data.")
+        raise ValidationError("There are only " +
+                              str(numberOfWeeks) + " weeks of data.")
 
     elif weeks.data <= 0:
         raise ValidationError("Value must be larger than 0. (1+)")
+
 
 def price_Validator(form, new_price):
     if not re.match(r'^[0-9]\d*(\.\d{1,2})?$', str(new_price.data)):
@@ -27,9 +30,10 @@ def price_Validator(form, new_price):
 
     elif new_price.data <= 0:
         raise ValidationError("Price must be larger than 0.")
-    
+
     # elif len(new_price.data.rsplit('.')[-1]) == 2:
     #     print('2 digits after decimal point')
+
 
 class RegistrationForm(FlaskForm):
     email = EmailField("Email", validators=[InputRequired(), Email()])
@@ -44,7 +48,6 @@ class RegistrationForm(FlaskForm):
     TandCConfirm = BooleanField('Accept Terms and Conditions')
 
     submit_register = SubmitField('Register')
-
 
 
 class LoginForm(FlaskForm):
@@ -64,22 +67,29 @@ class UserSearch(FlaskForm):
     userEmail = StringField('userEmail', validators=[emailSearch_Validator])
     submitSearch = SubmitField('Search')
 
+
 class ChangeRevWeeks(FlaskForm):
-    weeks = IntegerField('weeks', validators=[InputRequired(), revWeeks_Validator])
+    weeks = IntegerField('weeks', validators=[
+                         InputRequired(), revWeeks_Validator])
     submitWeeks = SubmitField('Submit')
 
 
 # to change prices
 class ChangeWeeklyPrice(FlaskForm):
-    weekly_new_price = FloatField('new_price', validators=[InputRequired(), price_Validator])
+    weekly_new_price = FloatField('new_price', validators=[
+                                  InputRequired(), price_Validator])
     weekly_submit_price = SubmitField('Update')
 
+
 class ChangeMonthlyPrice(FlaskForm):
-    monthly_new_price = FloatField('new_price', validators=[InputRequired(), price_Validator])
+    monthly_new_price = FloatField('new_price', validators=[
+                                   InputRequired(), price_Validator])
     monthly_submit_price = SubmitField('Update')
 
+
 class ChangeYearlyPrice(FlaskForm):
-    yearly_new_price = FloatField('new_price', validators=[InputRequired(), price_Validator])
+    yearly_new_price = FloatField('new_price', validators=[
+                                  InputRequired(), price_Validator])
     yearly_submit_price = SubmitField('Update')
 
 

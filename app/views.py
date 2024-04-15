@@ -117,9 +117,8 @@ def login():
         # other wise, password is incorrect
         else:
             flash("Password is wrong!", category="error")
-        
-        return redirect(url_for("login"))
 
+        return redirect(url_for("login"))
 
     return render_template("login.html", title="Login", priceArray=priceArray, loginForm=loginForm)
 
@@ -473,7 +472,6 @@ def user():
     return render_template("user.html", title='Map', priceArray=priceArray, friend_names=friend_names, friend_emails=friend_emails, friend_routes=friend_route_info,  FileUploadForm=file_upload_form, routes=all_routes, route_info_list=route_info_list, disabled=disabled)
 
 
-
 @app.route('/getUserRoute', methods=['GET'])
 def getRoute():
     """gets all the current logged in users routes
@@ -512,7 +510,7 @@ def getFriendRoute():
 
     # dic for all data go in, goes into json
     data = {}
-    
+
     for i in routes:
         # decode each route and get rid of \n
         route = i.gpx_data.decode('ascii')
@@ -520,7 +518,6 @@ def getFriendRoute():
         route = "".join(splitData)[2:][:-1]
         data[i.id] = route
         data[str(i.id)+"_name"] = i.name
-
 
     # return as a json
     return json.dumps(data)
@@ -598,7 +595,7 @@ def checkout():
             ]
         )
         return jsonify({"sessionId": checkout_session["id"]})
-        
+
     # return the error, shown in website
     except Exception as e:
         return jsonify(error=str(e)), 403
@@ -629,11 +626,11 @@ def cancel_subscription():
             db.session.commit()
 
             return redirect(url_for("profile"))
-        
+
         # if somehow the user could cancel a sub that didnt exist, show error
         except Exception as e:
             return jsonify(error=str(e)), 403
-    
+
     # if somehow the user could cancel a sub that didnt exist, show error
     else:
         return jsonify(error="No active subscription found."), 403
@@ -736,7 +733,7 @@ def upload_file():
                         db.session.commit()
 
                         return jsonify({'message': 'File uploaded successfully'}), 200
-                    
+
                     # if error
                     except Exception as e:
                         db.session.rollback()  # Rollback changes if an exception occurs
@@ -835,7 +832,7 @@ def removeFriend():
     # Attempt to retrieve the friendship one way
     friendship = Friendship.query.filter_by(
         user1_id=current_user.id, user2_id=friend_id).first()
-    
+
     # Otherwise get it the other way
     if not friendship:
         friendship = Friendship.query.filter_by(
@@ -944,7 +941,7 @@ def getFriendRequestList():
     frequests = FriendRequest.query.filter_by(
         receiver_user_id=current_user.id).all()
     frequest_infos = []
-    
+
     # loop for all the requests
     for frequest in frequests:
         # get requestors info to show on table
@@ -1128,7 +1125,7 @@ def delete_route(route_id):
         # if can find the route with that id, also an error
         if not route:
             return jsonify({'error': 'Route not found'}), 404
-        
+
         try:
             # Remove the route from the database
             db.session.delete(route)
