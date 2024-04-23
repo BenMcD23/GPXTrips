@@ -78,9 +78,11 @@ function updateFriendsList() {
     });
 }
 
+// for removing a friend
 $(document).on('click', '.removeFriendButton', function() {
     id = $(this).attr("data-friend-id");
 
+    // post the friends id, remove relation
     $.ajax({ 
         url: '/removeFriend', 
         type: 'POST', 
@@ -103,12 +105,14 @@ $(document).on('click', '.removeFriendButton', function() {
 function updateUserSearch() {
     searchTerm = $("#userSearch").val();
 
+    // post search term
     $.ajax({
         url: "/userSearch",
         type: "POST",
         contentType: 'application/json', 
         data: JSON.stringify({searchTerm}),
-        
+
+        // and get all search values returned
         success: function(user_infos) {
             // Update the table with current friends
             var tableBody = $('#searchlistresults');
@@ -154,7 +158,7 @@ $(document).on('click', '#userSearchButton', function() {
 
 $(document).on('click', '.addFriendButton', function() {
     id = $(this).attr("data-user-id");
-
+    // post id of user want to add, add relation
     $.ajax({ 
         url: '/sendFriendRequest', 
         type: 'POST', 
@@ -175,6 +179,8 @@ $(document).on('click', '.addFriendButton', function() {
 
 // Function to update list of incoming friend requests
 function updateFriendRequestList() {
+
+    // gets list of all incoming friend requests
     $.ajax({
         type: "GET",
         url: "/getFriendRequestList",
@@ -204,6 +210,7 @@ function updateFriendRequestList() {
 $(document).on('click', '.acceptRequestButton', function() {
     id = $(this).attr("data-frequest-id");
 
+    // post id of accepted friend request to add relation
     $.ajax({ 
         url: '/acceptFriendRequest', 
         type: 'POST', 
@@ -225,6 +232,7 @@ $(document).on('click', '.acceptRequestButton', function() {
 $(document).on('click', '.declineRequestButton', function() {
     id = $(this).attr("data-frequest-id");
 
+    // post id of declined friend request to add relation
     $.ajax({ 
         url: '/declineFriendRequest', 
         type: 'POST', 
