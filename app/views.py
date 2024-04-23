@@ -525,7 +525,8 @@ def getFriendRoute():
 
 @app.route('/accountState', methods=['POST'])
 def accountState():
-    """changes the state of the account when stripe webhook is ran?"""
+    """gets if the account is active or deactive
+    (true/false)"""
     # get data posted
     data = request.get_json()
 
@@ -536,9 +537,10 @@ def accountState():
     return jsonify(data=data)
 
 
-@app.route('/accountManger', methods=['POST'])
-def accountManger():
-    """need explanation"""
+@app.route('/accountManager', methods=['POST'])
+def accountManager():
+    """gets if the account is a manager account
+    (true/false)"""
     # get data posted
     data = request.get_json()
 
