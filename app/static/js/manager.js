@@ -84,7 +84,7 @@ function changeMangement(id){
 
     // then post the state with the id, so can be changed in database
     $.ajax({ 
-        url: '/accountManger', 
+        url: '/accountManager', 
         type: 'POST', 
         contentType: 'application/json', 
         data: JSON.stringify({id, state}), 

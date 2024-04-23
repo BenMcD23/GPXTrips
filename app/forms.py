@@ -4,18 +4,18 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, EmailField, SubmitField, BooleanField, IntegerField, FloatField
 from wtforms.validators import InputRequired, Length, Email, ValidationError, DataRequired, EqualTo
 from flask_wtf.file import FileField
-from .funcs import getCurrentBuisnessWeek
+from .funcs import get_current_buisness_week
 import re
 
 
-def emailSearch_Validator(form, userEmail):
+def email_search_Validator(form, userEmail):
     # if the email isnt in the database and isnt an empty string
     if not models.User.query.filter_by(email=userEmail.data).all() and userEmail.data != "":
         raise ValidationError('That user email does not exist.')
 
 
-def revWeeks_Validator(form, weeks):
-    numberOfWeeks = getCurrentBuisnessWeek()
+def rev_weeks_Validator(form, weeks):
+    numberOfWeeks = get_current_buisness_week()
     if weeks.data > numberOfWeeks:
         raise ValidationError("There are only " +
                               str(numberOfWeeks) + " weeks of data.")
@@ -30,9 +30,6 @@ def price_Validator(form, new_price):
 
     elif new_price.data <= 0:
         raise ValidationError("Price must be larger than 0.")
-
-    # elif len(new_price.data.rsplit('.')[-1]) == 2:
-    #     print('2 digits after decimal point')
 
 
 class RegistrationForm(FlaskForm):
@@ -64,13 +61,13 @@ class FileUploadForm(FlaskForm):
 
 
 class UserSearch(FlaskForm):
-    userEmail = StringField('userEmail', validators=[emailSearch_Validator])
+    userEmail = StringField('userEmail', validators=[email_search_Validator])
     submitSearch = SubmitField('Search')
 
 
 class ChangeRevWeeks(FlaskForm):
     weeks = IntegerField('weeks', validators=[
-                         InputRequired(), revWeeks_Validator])
+                         InputRequired(), rev_weeks_Validator])
     submitWeeks = SubmitField('Submit')
 
 

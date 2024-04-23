@@ -83,7 +83,7 @@ def manger_required():
 def login():
     """allows user to login, all validation done here"""
     # get all prices
-    priceArray = getPrices()
+    priceArray = get_prices()
 
     # Create an instance of the LoginForm
     loginForm = LoginForm()
@@ -194,7 +194,7 @@ def edit_prices():
     # get all plans
     allPlans = Plan.query.all()
     # get all prices
-    priceArray = getPrices()
+    priceArray = get_prices()
 
     # all forms initialisation
     WeeklyPriceForm = ChangeWeeklyPrice()
@@ -274,7 +274,7 @@ def view_revenue():
     theres a wiki on how the estimated stats work, but briefly explained here"""
     # this is the diff between the start week and current week
     # so number of weeks since first week
-    currentWeek = getCurrentBuisnessWeek()
+    currentWeek = get_current_buisness_week()
 
     # gets all the stats saved, in descending order of week (high to low)
     # apart from the current week, if its there, as we dont know if theres going to be more sales
@@ -396,7 +396,7 @@ def friends():
     if current_user_current_subscription(current_user.id) == False:
         # If user doesn't have an active subscription, redirect to user page
         return redirect(url_for('user'))
-    return render_template("friends.html", current_user=current_user, friends=getFriends(current_user.id))
+    return render_template("friends.html", current_user=current_user, friends=get_friends(current_user.id))
 
 
 @app.route('/profile', methods=["GET", "POST"])
@@ -405,15 +405,11 @@ def profile():
     """own users profile
     cancel sub + change email, pass + delete account"""
     # get all prices
-    priceArray = getPrices()
+    priceArray = get_prices()
 
     # Pass data to retrive user details
     # Variable to keep track of subscription auto renewal status for the user. By default, set to off
     autoRenewal = False
-
-    # If user doesn't have an active subscription, redirect to user page
-    if current_user_current_subscription(current_user.id) == False:
-        return redirect(url_for('user'))
 
     if current_user_active_subscription(current_user.id) != False:
         # Auto-renewal is on
@@ -437,11 +433,11 @@ def user():
     """main map page
     displays tracks + friends"""
     # get all prices
-    priceArray = getPrices()
+    priceArray = get_prices()
 
     # File upload form
     all_routes = Route.query.filter_by(user_id=current_user.id).all()
-    friends = getFriends(current_user.id)
+    friends = get_friends(current_user.id)
     friend_routes = []
     friend_names = []
     friend_emails = []
@@ -459,8 +455,8 @@ def user():
     # Build route info lists for both the user and their friends
     route_info_list = []
     friend_route_info = []
-    getRouteInfoList(routes, route_info_list)
-    getRouteInfoList(friend_routes, friend_route_info)
+    get_route_info_list(routes, route_info_list)
+    get_route_info_list(friend_routes, friend_route_info)
 
     # Disables the page unless set otherwise
     disabled = False
@@ -473,7 +469,7 @@ def user():
 
 
 @app.route('/getUserRoute', methods=['GET'])
-def getRoute():
+def get_route():
     """gets all the current logged in users routes
     then sends them to JavaScript to be displayed"""
     # post all routes to JavaScript
@@ -496,11 +492,11 @@ def getRoute():
 
 
 @app.route('/getFriendRoute', methods=['GET'])
-def getFriendRoute():
+def get_friend_route():
     """gets alll the current users friends routes to be displayed"""
     # post all routes to JavaScript
     # get the friends of the currently logged in users
-    friends = getFriends(current_user.id)
+    friends = get_friends(current_user.id)
     routes = []
 
     # get the routes of the users friends
@@ -524,7 +520,7 @@ def getFriendRoute():
 
 
 @app.route('/accountState', methods=['POST'])
-def accountState():
+def account_state():
     """gets if the account is active or deactive
     (true/false)"""
     # get data posted
@@ -538,7 +534,7 @@ def accountState():
 
 
 @app.route('/accountManager', methods=['POST'])
-def accountManager():
+def account_manager():
     """gets if the account is a manager account
     (true/false)"""
     # get data posted
@@ -692,7 +688,7 @@ def stripe_webhook():
 
             # add to stats
             subCost = plan.price
-            addToStats(subCost)
+            add_to_stats(subCost)
 
         else:
             print('User or plan not found')
@@ -755,7 +751,7 @@ def upload_file():
 
 
 @app.route('/getRouteForTable', methods=['GET'])
-def getRouteForTable():
+def get_route_for_table():
     """gets the routes to display on table
     main done this way so when a file is uploaded no refresh is needed
     uses jquery to update table without refresh
@@ -801,11 +797,11 @@ def getRouteForTable():
 
 
 @app.route('/getFriendsList', methods=['GET'])
-def getFriendsList():
+def get_friends_list():
     """gets all the users friends"""
 
     # get friends
-    friends = getFriends(current_user.id)
+    friends = get_friends(current_user.id)
     friend_infos = []
 
     # for all the friends, get the friends info
@@ -824,7 +820,7 @@ def getFriendsList():
 
 
 @app.route('/removeFriend', methods=['POST'])
-def removeFriend():
+def remove_friend():
     """allows user to remove a friend"""
     # get data posted
     data = request.get_json()
@@ -856,7 +852,7 @@ def removeFriend():
 
 
 @app.route('/userSearch', methods=['POST'])
-def userSearch():
+def user_search():
     """so can search for friends"""
     # get data posted
     data = request.get_json()
@@ -874,7 +870,7 @@ def userSearch():
 
     # Get all friends to exclude them from results
     friend_ids = []
-    for friend in getFriends(current_user.id):
+    for friend in get_friends(current_user.id):
         friend_ids.append(friend.id)
 
     # Build list of user infos and return
@@ -915,7 +911,7 @@ def userSearch():
 
 
 @app.route('/sendFriendRequest', methods=['POST'])
-def sendFriendRequest():
+def send_friend_request():
     """ran when adding friend"""
     # get data posted
     data = request.get_json()
@@ -936,7 +932,7 @@ def sendFriendRequest():
 
 
 @app.route('/getFriendRequestList', methods=['GET'])
-def getFriendRequestList():
+def get_friend_request_list():
     """get all current users friend requests"""
 
     # query db for all the friend requests
@@ -963,7 +959,7 @@ def getFriendRequestList():
 
 
 @app.route('/acceptFriendRequest', methods=['POST'])
-def acceptFriendRequest():
+def accept_friend_request():
     """ran when accepting friend request"""
     # get data posted
     data = request.get_json()
@@ -973,7 +969,7 @@ def acceptFriendRequest():
     frequest = FriendRequest.query.get(id)
 
     # friend the sending user
-    friendUser((User.query.get(frequest.sender_user_id)).id, current_user.id)
+    friend_user((User.query.get(frequest.sender_user_id)).id, current_user.id)
 
     # delete the friend request
     db.session.delete(frequest)
@@ -985,7 +981,7 @@ def acceptFriendRequest():
 
 
 @app.route('/declineFriendRequest', methods=['POST'])
-def declineFriendRequest():
+def decline_friend_request():
     """ran when declining friend request"""
     # get data posted
     data = request.get_json()

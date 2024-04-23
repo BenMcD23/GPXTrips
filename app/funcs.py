@@ -8,7 +8,7 @@ import gpxpy
 
 
 # misc func
-def getCurrentBuisnessWeek():
+def get_current_buisness_week():
     """gets the current buisness week
     starts from the 01/02/2024
 
@@ -24,7 +24,7 @@ def getCurrentBuisnessWeek():
 
 
 # misc func
-def getPrices():
+def get_prices():
     """just gets the current prices set in db
 
     Returns:
@@ -111,7 +111,7 @@ def create_subscription(user, plan, subscription_id, customer_id):
 
 
 # sub func / stats
-def addToStats(subCost):
+def add_to_stats(subCost):
     """adds each purchase to the stats table
     for each purchase
 
@@ -120,7 +120,7 @@ def addToStats(subCost):
     """
     # this is the diff between the start week and current week
     # so number of weeks since first week
-    currentWeek = getCurrentBuisnessWeek()
+    currentWeek = get_current_buisness_week()
 
     currentWeekdb = SubscriptionStats.query.filter_by(
         week_of_business=currentWeek).first()
@@ -140,7 +140,7 @@ def addToStats(subCost):
 
 
 # route func
-def getRouteInfoList(inputList, outputList):
+def get_route_info_list(inputList, outputList):
     """gets the route info so can display route stats
 
     Args:
@@ -246,7 +246,7 @@ def is_valid_gpx_structure(gpx_data):
 
 
 # friend func
-def friendUser(user_friend_id, current_user_id):
+def friend_user(user_friend_id, current_user_id):
     """creates the relationship between 2 users
 
     Args:
@@ -264,7 +264,7 @@ def friendUser(user_friend_id, current_user_id):
 
 
 # friend func
-def getFriends(current_user_id):
+def get_friends(current_user_id):
     """gets all the outgoing and incoming friends 
 
     Args:
