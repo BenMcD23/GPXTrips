@@ -102,7 +102,7 @@ class AccountForm(FlaskForm):
 
 
 class ChangeEmailForm(FlaskForm):
-    new_email = StringField('New Email', validators=[DataRequired(), Email()])
+    new_email = EmailField('New Email', validators=[DataRequired(), Email()])
     submit = SubmitField('Change Email')
 
 
@@ -111,6 +111,6 @@ class ChangePasswordForm(FlaskForm):
                                  DataRequired(), Length(min=8, max=32)])
     new_password = PasswordField('New Password', validators=[
                                  DataRequired(), Length(min=8, max=32)])
-    confirm_password = PasswordField('Confirm New Password', validators=[
-                                     DataRequired(), EqualTo('new_password')])
+    confirm_password = PasswordField("Confirm New Password", validators=[
+                                     InputRequired(), EqualTo('new_password')])
     submit = SubmitField('Change Password')

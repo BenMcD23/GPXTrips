@@ -225,6 +225,9 @@ body {
     order: 3;
 }
 
+.flashedMessage {
+    color: red;
+}
 
 .form {
     position: relative;

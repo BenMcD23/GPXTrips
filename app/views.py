@@ -415,11 +415,16 @@ def profile():
         # Auto-renewal is on
         autoRenewal = True
 
-    # retrieve the users plan (year/month/week) and the expiry date of plan from db
-    userPlan = Subscription.query.filter_by(
-        user_id=current_user.id).first().plan.name
-    expiryDate = (Subscription.query.filter_by(
-        user_id=current_user.id).first().date_end).date()
+
+    if current_user_current_subscription(current_user.id) == True:
+        # retrieve the users plan (year/month/week) and the expiry date of plan from db
+        userPlan = Subscription.query.filter_by(
+            user_id=current_user.id).first().plan.name
+        expiryDate = (Subscription.query.filter_by(
+            user_id=current_user.id).first().date_end).date()
+    else:
+        userPlan = None
+        expiryDate = None
 
     subscription_form = SubscriptionForm()
     account_form = AccountForm()
@@ -1007,41 +1012,46 @@ def change_email():
     change_email_form = ChangeEmailForm()
 
     # when form submitted
-    if change_email_form.validate_on_submit():
+    if request.method == 'POST':
 
         new_email = change_email_form.new_email.data
 
-        # Find the user's subscription
-        subscription = Subscription.query.filter_by(
-            user_id=current_user.id).first()
-
-        # if they have a sub, then change the sub email
-        if subscription:
-            try:
-                stripe.api_key = stripe_keys["secret_key"]
-                # Retrieve the Stripe customer ID associated with the subscription
-                customer_id = subscription.customer_id
-
-                print(customer_id)
-                # Update user's email address on Stripe
-                stripe.Customer.modify(
-                    customer_id,
-                    email=new_email
-                )
-                flash('Email address has been updated successfully!', 'success')
-            except Exception as e:
-                flash(
-                    'Failed to update email address on Stripe. Please try again later.', 'error')
-                app.logger.error(f"Stripe error: {e}")
+        existing_email = User.query.filter_by(email=new_email).first()
+        if existing_email:
+            # Check provided email has an account that exists
+            flash("Email already in use. Please choose a different email.",
+                  category="error")
+            
         else:
-            flash('User subscription not found.', 'error')
+            # Find the user's subscription
+            subscription = Subscription.query.filter_by(
+                user_id=current_user.id).first()
 
-        # Update user's email address in your database
-        current_user.email = new_email
-        db.session.commit()
+            # if they have a sub, then change the sub email
+            if subscription:
+                try:
+                    stripe.api_key = stripe_keys["secret_key"]
+                    # Retrieve the Stripe customer ID associated with the subscription
+                    customer_id = subscription.customer_id
 
-        # Redirect to profile page after email change
-        return redirect(url_for('profile'))
+                    print(customer_id)
+                    # Update user's email address on Stripe
+                    stripe.Customer.modify(
+                        customer_id,
+                        email=new_email
+                    )
+                except Exception as e:
+                    flash(
+                        'Failed to update email address on Stripe. Please try again later.', 'error')
+                    app.logger.error(f"Stripe error: {e}")
+
+
+            # Update user's email address in your database
+            current_user.email = new_email
+            db.session.commit()
+
+            # alert user email has been updated
+            flash('Email address has been updated successfully!', 'success')
 
     return render_template("change_email.html", change_email_form=change_email_form)
 
@@ -1052,16 +1062,23 @@ def change_password():
     """change password page"""
     form = ChangePasswordForm()
 
-    if form.validate_on_submit():
-        # Check if old password matches
+    if request.method == 'POST':
+        # Check if old password is correct
         if current_user.check_password(form.old_password.data):
-            # Update password
-            current_user.set_password(form.new_password.data)
-            db.session.commit()
-            flash('Your password has been updated successfully.', 'success')
-            return redirect(url_for('profile'))
+            # checking if the 2 new passwords match
+            if form.new_password.data == form.confirm_password.data:
+                # Update password
+                current_user.set_password(form.new_password.data)
+                db.session.commit()
+                flash('Your password has been updated successfully.', 'success')
+            else:
+                # otherwise alert user that they dont match
+                print("nah")
+                flash(
+                    "Passwords do not match. Please make sure your passwords match.", category="error")
         else:
             flash('Invalid old password. Please try again.', 'error')
+
 
     return render_template('change_password.html', form=form)
 

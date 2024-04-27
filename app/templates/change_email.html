@@ -19,6 +19,15 @@
                             {{ change_email_form.new_email(class="form-control", placeholder="Enter new email address") }}
                         </div>
                         <button type="submit" class="btn btn-outline-dark">Change Email</button>
+                        {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                            <ul class="list-unstyled">
+                                {% for message in messages %}
+                                    <li class="flashedMessage">{{ message }} </li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    {% endwith %}
                     </form>
                 </fieldset>
             </div>
