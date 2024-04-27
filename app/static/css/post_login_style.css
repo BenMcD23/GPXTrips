@@ -359,6 +359,11 @@ body {
     pointer-events: none;
 }
 
+/* disables certain buttons */
+.disabledButton {
+    pointer-events: none;
+}
+
 .blur {
     filter: blur(5px);
 }

@@ -404,6 +404,7 @@ def friends():
 def profile():
     """own users profile
     cancel sub + change email, pass + delete account"""
+
     # get all prices
     priceArray = get_prices()
 
@@ -429,7 +430,14 @@ def profile():
     subscription_form = SubscriptionForm()
     account_form = AccountForm()
 
-    return render_template("profile.html", priceArray=priceArray, current_user=current_user, userPlan=userPlan, expiryDate=expiryDate, autoRenewal=autoRenewal, subscription_form=subscription_form, account_form=account_form)
+    # Disables the friends link if user has no sub
+    noSubProfile = False
+
+    # If User doesnt have an active subscription then disables friend link
+    if current_user_current_subscription(current_user.id) == False:
+        noSubProfile = True
+
+    return render_template("profile.html", priceArray=priceArray, current_user=current_user, userPlan=userPlan, expiryDate=expiryDate, autoRenewal=autoRenewal, subscription_form=subscription_form, account_form=account_form, noSubProfile=noSubProfile)
 
 
 @app.route('/user',  methods=['GET', 'POST'])
@@ -1053,7 +1061,14 @@ def change_email():
             # alert user email has been updated
             flash('Email address has been updated successfully!', 'success')
 
-    return render_template("change_email.html", change_email_form=change_email_form)
+    # Disables the friends link if user has no sub
+    noSubProfile = False
+
+    # If User doesnt have an active subscription then disables friend link
+    if current_user_current_subscription(current_user.id) == False:
+        noSubProfile = True
+
+    return render_template("change_email.html", change_email_form=change_email_form, noSubProfile=noSubProfile)
 
 
 @app.route('/change_password', methods=['GET', 'POST'])
@@ -1062,7 +1077,7 @@ def change_password():
     """change password page"""
     form = ChangePasswordForm()
 
-    if request.method == 'POST':
+    if form.validate_on_submit():
         # Check if old password is correct
         if current_user.check_password(form.old_password.data):
             # checking if the 2 new passwords match
@@ -1073,14 +1088,19 @@ def change_password():
                 flash('Your password has been updated successfully.', 'success')
             else:
                 # otherwise alert user that they dont match
-                print("nah")
                 flash(
                     "Passwords do not match. Please make sure your passwords match.", category="error")
         else:
             flash('Invalid old password. Please try again.', 'error')
 
+    # Disables the friends link if user has no sub
+    noSubProfile = False
 
-    return render_template('change_password.html', form=form)
+    # If User doesnt have an active subscription then disables friend link
+    if current_user_current_subscription(current_user.id) == False:
+        noSubProfile = True
+    
+    return render_template('change_password.html', form=form, noSubProfile=noSubProfile)
 
 
 @app.route('/delete_account', methods=['POST'])

@@ -24,14 +24,12 @@
     <div id="csrfToken" data-value="{{ csrf_token() }}" type="hidden"></div>
 
 </head>
+<!-- if no sub, then disable page from clicks -->
 {% if disabled %}
 <body class="disabledPage">
 {% else %}
 <body>
 {% endif %}
-    <!-- <header class="bg-dark text-white text-center py-4">
-        <h1>Welcome to Your Dashboard</h1>
-    </header> -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="#">GPXTrips</a>
@@ -41,13 +39,13 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ml-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="user">Home</a>
+                        <a id="homeLink" class="nav-link" href="user">Home</a>
                     </li>
                     <li class="nav-item">
                         <a id="profileLink" class="nav-link" href="profile">Profile</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="friends">Friends</a>
+                        <a id="friendLink" class="nav-link" href="friends">Friends</a>
                     </li>
                     <li class="nav-item">
                         <a id="logoutLink" class="nav-link" href="logout">Logout</a>
@@ -71,5 +69,12 @@
         </footer>
     </section>
 
+<!-- if on profile page, just want to disable friends page from clicks -->
+{% if noSubProfile %}    
+<script nonce="{{ csp_nonce() }}">
+    let homeButton = document.getElementById("friendLink")
+    homeButton.style.pointerEvents = 'none';
+</script>
+{% endif %}
 </body>
 </html>

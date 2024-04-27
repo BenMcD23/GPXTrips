@@ -70,7 +70,8 @@ $(document).ready(function()
   logoutButton.style.pointerEvents = 'auto';
   let profileButton = document.getElementById("profileLink")
   profileButton.style.pointerEvents = 'auto';
-  
+  let homeButton = document.getElementById("homeLink")
+  homeButton.style.pointerEvents = 'auto';
 
 })
 
